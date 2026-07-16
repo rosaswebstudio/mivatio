@@ -1,0 +1,172 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Vatio from '../components/Vatio.jsx';
+
+const title = 'Precio de la luz hoy y mañana, hora a hora | Vatio';
+const description =
+  'Consulta el precio de la luz (PVPC) hoy y mañana, hora a hora y en directo, por comunidad. Descubre a qué hora es más barata la luz. Datos oficiales de Red Eléctrica.';
+
+const faqs = [
+  {
+    q: '¿A qué hora es más barata la luz hoy?',
+    a: 'Suele ser de madrugada (entre las 00:00 y las 07:00) y, algunos días, al mediodía cuando hay mucha producción solar. Varía cada día: en Vatio las horas más baratas aparecen en verde y las más caras en rojo, actualizado en directo para hoy.',
+  },
+  {
+    q: '¿A qué hora es más cara la luz?',
+    a: 'Normalmente en las horas punta de la tarde-noche (entre las 19:00 y las 22:00), cuando más se consume. Puedes ver el máximo del día y su hora exacta en el panel de arriba.',
+  },
+  {
+    q: '¿Cuándo se publica el precio de la luz de mañana?',
+    a: 'Red Eléctrica publica los precios del día siguiente cada tarde, en torno a las 20:15h. Vatio muestra una cuenta atrás y carga los precios de mañana automáticamente en cuanto están disponibles.',
+  },
+  {
+    q: '¿Qué es el PVPC?',
+    a: 'El PVPC (Precio Voluntario para el Pequeño Consumidor) es la tarifa regulada de electricidad en España. Tiene un precio distinto para cada hora del día y es la referencia para quienes tienen contratada la tarifa regulada.',
+  },
+  {
+    q: '¿Los precios incluyen impuestos?',
+    a: 'Por defecto se muestra el precio base del PVPC, sin impuestos. Puedes activar el impuesto eléctrico (5,11%) y el IVA (21% o 10%) desde el ajuste que hay justo bajo el precio para ver el coste final aproximado.',
+  },
+  {
+    q: '¿De dónde salen los datos?',
+    a: 'De la API oficial de Red Eléctrica de España (REData/ESIOS). Todo se consulta en directo desde tu navegador, sin intermediarios.',
+  },
+];
+
+const siteFallback = 'https://mivatio.es';
+const siteUrl = (Astro.site ?? new URL(siteFallback)).href.replace(/\/$/, '');
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebApplication',
+      '@id': `${siteUrl}/#app`,
+      name: 'Vatio — precio de la luz en directo',
+      url: `${siteUrl}/`,
+      description,
+      applicationCategory: 'UtilitiesApplication',
+      operatingSystem: 'Web',
+      inLanguage: 'es-ES',
+      isAccessibleForFree: true,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+      featureList: [
+        'Precio de la luz hoy y mañana hora a hora',
+        'Horas más baratas y más caras del día',
+        'Precio por comunidad (Península, Canarias, Baleares, Ceuta, Melilla)',
+        'Mejor momento para poner electrodomésticos',
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': `${siteUrl}/#faq`,
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+  ],
+};
+---
+<Layout title={title} description={description} canonicalPath="/">
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  <div class="min-h-screen w-full" style="background-color:#0B0D12;">
+    <div class="mx-auto flex max-w-5xl justify-center gap-8">
+      <!-- Columna principal -->
+      <main class="w-full max-w-2xl">
+        <!-- Cabecera SEO -->
+        <header class="px-4 pt-7 pb-1">
+          <h1 class="text-xl font-bold tracking-tight text-[#ECEAE3] sm:text-2xl">
+            Precio de la luz hoy y mañana, <span class="text-[#2DD4BF]">hora a hora</span>
+          </h1>
+          <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">
+            El precio del PVPC en directo. Mira a qué hora es más barata la luz hoy, consulta
+            los precios de mañana y planifica tus electrodomésticos.
+          </p>
+        </header>
+
+        <!-- App (island Preact, se hidrata en el cliente) -->
+        <Vatio client:load />
+
+        <!-- CTA afiliado + publicidad -->
+        <div class="px-4">
+          <a href="#" rel="sponsored nofollow noopener"
+            class="mt-2 flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-colors"
+            style="background-color:#14171F;border:1px solid #232733;">
+            <div>
+              <p class="text-sm font-semibold text-[#ECEAE3]">¿Pagas de más en tu factura?</p>
+              <p class="text-xs text-[#8A8F9C]">Compara tarifas de luz y ahorra (enlace de ejemplo)</p>
+            </div>
+            <span class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold" style="background-color:#2DD4BF;color:#0B0D12;">Comparar</span>
+          </a>
+
+          <div class="mt-4 flex min-h-[100px] w-full flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-3 text-center"
+            style="border-color:#232733;background-color:#14171F80;">
+            <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#5A6070]">Publicidad</span>
+            <span class="mt-1 text-xs text-[#5A6070]">Banner responsive (AdSense)</span>
+          </div>
+        </div>
+
+        <!-- FAQ (SEO) -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-[#ECEAE3]">Preguntas frecuentes</h2>
+          <div class="mt-3 divide-y" style="border-color:#232733;">
+            {faqs.map((f) => (
+              <details class="group py-3" style="border-color:#232733;">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-[#ECEAE3]">
+                  <span>{f.q}</span>
+                  <span class="text-[#2DD4BF] transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <!-- Texto SEO -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-[#ECEAE3]">Sobre el precio de la luz en España</h2>
+          <div class="mt-2 space-y-3 text-sm leading-relaxed text-[#8A8F9C]">
+            <p>
+              El precio de la luz cambia cada hora según la oferta y la demanda del mercado
+              eléctrico. Conocer las horas más baratas te permite mover consumos como la lavadora,
+              el lavavajillas o la carga del coche eléctrico a los tramos donde el kWh cuesta menos.
+            </p>
+            <p>
+              Vatio muestra el PVPC oficial hora a hora para Península, Canarias, Baleares, Ceuta y
+              Melilla, resaltando en verde las horas baratas y en rojo las caras, y calcula la mejor
+              franja para cada electrodoméstico. Los precios de mañana se publican cada tarde sobre
+              las 20:15h.
+            </p>
+          </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="px-4 pt-8 pb-8">
+          <p class="text-xs leading-relaxed text-[#5A6070]">
+            Vatio es una herramienta informativa. Los precios provienen de la API pública de Red
+            Eléctrica de España (REData/ESIOS) y son orientativos; tu factura puede variar según tu
+            comercializadora, peajes e impuestos aplicables. No es asesoramiento contractual.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <a href="/aviso-legal" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Aviso legal</a>
+            <a href="/privacidad" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Privacidad</a>
+            <a href="/cookies" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Cookies</a>
+          </div>
+          <p class="mt-3 text-xs text-[#5A6070]">© {new Date().getFullYear()} Vatio</p>
+        </footer>
+      </main>
+
+      <!-- Anuncio lateral fijo (solo escritorio) -->
+      <aside class="hidden shrink-0 pt-7 pr-4 lg:block" style="width:300px;">
+        <div class="sticky top-6 flex min-h-[600px] w-[300px] flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-3 text-center"
+          style="border-color:#232733;background-color:#14171F80;">
+          <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#5A6070]">Publicidad</span>
+          <span class="mt-1 text-xs text-[#5A6070]">Rascacielos 300x600 (fijo)</span>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

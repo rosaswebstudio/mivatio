@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mivatio.es/sitemap-index.xml

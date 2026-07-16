@@ -1,0 +1,107 @@
+---
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/600.css';
+import '@fontsource/jetbrains-mono/700.css';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  canonicalPath?: string;
+  image?: string;
+}
+
+const {
+  title,
+  description,
+  canonicalPath = '/',
+  image = '/og-image.png',
+} = Astro.props;
+
+const siteFallback = 'https://mivatio.es';
+const canonicalURL = new URL(canonicalPath, Astro.site ?? siteFallback).href;
+const imageURL = new URL(image, Astro.site ?? siteFallback).href;
+
+const adsenseClient = 'ca-pub-XXXXXXXXXXXXXXXX';
+const ga4Id = 'G-XXXXXXXXXX';
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0B0D12" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Vatio" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={imageURL} />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:site_name" content="Vatio" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={imageURL} />
+
+    <!--
+      PASO 1 (consentimiento): Consent Mode v2 de Google. Descomenta ANTES que GA4/AdSense.
+      Deniega todo por defecto; la CMP certificada (usa "Privacidad y mensajes" de AdSense,
+      que es gratuita) actualizará el estado cuando el usuario elija en el banner.
+      <script is:inline>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){ dataLayer.push(arguments); }
+        gtag('consent', 'default', {
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+          analytics_storage: 'denied',
+          wait_for_update: 500
+        });
+      </script>
+    -->
+
+    <!--
+      PASO 2: Google AdSense (con la cuenta aprobada, pon tu ID real y descomenta).
+      El banner de cookies se activa desde AdSense: Privacidad y mensajes -> GDPR -> crear mensaje.
+      <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`} crossorigin="anonymous"></script>
+    -->
+
+    <!--
+      Google Analytics 4: descomenta cuando tengas tu Measurement ID.
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}></script>
+      <script is:inline define:vars={{ ga4Id }}>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){ dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', ga4Id);
+      </script>
+    -->
+
+    <slot name="head" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
