@@ -27,7 +27,7 @@ const canonicalURL = new URL(canonicalPath, Astro.site ?? siteFallback).href;
 const imageURL = new URL(image, Astro.site ?? siteFallback).href;
 
 const adsenseClient = 'ca-pub-XXXXXXXXXXXXXXXX';
-const ga4Id = 'G-XXXXXXXXXX';
+const ga4Id = 'G-WR89VZBTSW';
 ---
 <!doctype html>
 <html lang="es">
@@ -65,22 +65,19 @@ const ga4Id = 'G-XXXXXXXXXX';
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageURL} />
 
-    <!--
-      PASO 1 (consentimiento): Consent Mode v2 de Google. Descomenta ANTES que GA4/AdSense.
-      Deniega todo por defecto; la CMP certificada (usa "Privacidad y mensajes" de AdSense,
-      que es gratuita) actualizará el estado cuando el usuario elija en el banner.
-      <script is:inline>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){ dataLayer.push(arguments); }
-        gtag('consent', 'default', {
-          ad_storage: 'denied',
-          ad_user_data: 'denied',
-          ad_personalization: 'denied',
-          analytics_storage: 'denied',
-          wait_for_update: 500
-        });
-      </script>
-    -->
+    <!-- Consent Mode v2: todo denegado por defecto. La CMP certificada (Privacidad y
+         mensajes de AdSense) actualizará el estado cuando el usuario elija en el banner. -->
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500
+      });
+    </script>
 
     <!--
       PASO 2: Google AdSense (con la cuenta aprobada, pon tu ID real y descomenta).
@@ -88,16 +85,14 @@ const ga4Id = 'G-XXXXXXXXXX';
       <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`} crossorigin="anonymous"></script>
     -->
 
-    <!--
-      Google Analytics 4: descomenta cuando tengas tu Measurement ID.
-      <script async src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}></script>
-      <script is:inline define:vars={{ ga4Id }}>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){ dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', ga4Id);
-      </script>
-    -->
+    <!-- Google Analytics 4 -->
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}></script>
+    <script is:inline define:vars={{ ga4Id }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    </script>
 
     <slot name="head" />
   </head>
