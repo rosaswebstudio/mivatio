@@ -90,14 +90,16 @@ const jsonLd = {
         <!-- App (island Preact, se hidrata en el cliente) -->
         <Vatio client:load />
 
-        <!-- CTA afiliado + publicidad -->
+        {/* CTA de afiliado y hueco de AdSense: OCULTOS hasta tener el enlace real de
+            Awin y la cuenta de AdSense aprobada. Para reactivarlos, quitar este comentario
+            y poner el href real del comparador de tarifas.
         <div class="px-4">
           <a href="#" rel="sponsored nofollow noopener"
             class="mt-2 flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-colors"
             style="background-color:#14171F;border:1px solid #232733;">
             <div>
               <p class="text-sm font-semibold text-[#ECEAE3]">¿Pagas de más en tu factura?</p>
-              <p class="text-xs text-[#8A8F9C]">Compara tarifas de luz y ahorra (enlace de ejemplo)</p>
+              <p class="text-xs text-[#8A8F9C]">Compara tarifas de luz y ahorra</p>
             </div>
             <span class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold" style="background-color:#2DD4BF;color:#0B0D12;">Comparar</span>
           </a>
@@ -108,6 +110,7 @@ const jsonLd = {
             <span class="mt-1 text-xs text-[#5A6070]">Banner responsive (AdSense)</span>
           </div>
         </div>
+        */}
 
         <!-- FAQ (SEO) -->
         <section class="px-4 pt-8">
@@ -159,7 +162,8 @@ const jsonLd = {
         </footer>
       </main>
 
-      <!-- Anuncio lateral fijo (solo escritorio) -->
+      {/* Anuncio lateral fijo (solo escritorio): OCULTO hasta tener AdSense aprobado.
+          Al reactivarlo, sustituir el marcador por la unidad real <ins class="adsbygoogle">.
       <aside class="hidden shrink-0 pt-7 pr-4 lg:block" style="width:300px;">
         <div class="sticky top-6 flex min-h-[600px] w-[300px] flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-3 text-center"
           style="border-color:#232733;background-color:#14171F80;">
@@ -167,6 +171,7 @@ const jsonLd = {
           <span class="mt-1 text-xs text-[#5A6070]">Rascacielos 300x600 (fijo)</span>
         </div>
       </aside>
+      */}
     </div>
   </div>
 </Layout>
