@@ -26,7 +26,7 @@ const siteFallback = 'https://mivatio.es';
 const canonicalURL = new URL(canonicalPath, Astro.site ?? siteFallback).href;
 const imageURL = new URL(image, Astro.site ?? siteFallback).href;
 
-const adsenseClient = 'ca-pub-XXXXXXXXXXXXXXXX';
+const adsenseClient = 'ca-pub-7893833945255002';
 const ga4Id = 'G-WR89VZBTSW';
 ---
 <!doctype html>
@@ -80,11 +80,9 @@ const ga4Id = 'G-WR89VZBTSW';
       });
     </script>
 
-    <!--
-      PASO 2: Google AdSense (con la cuenta aprobada, pon tu ID real y descomenta).
-      El banner de cookies se activa desde AdSense: Privacidad y mensajes -> GDPR -> crear mensaje.
-      <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`} crossorigin="anonymous"></script>
-    -->
+    <!-- Google AdSense (código de verificación del sitio). El banner de cookies (CMP) se
+         gestiona desde AdSense -> Privacidad y mensajes. -->
+    <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClient}`} crossorigin="anonymous"></script>
 
     <!-- Google Analytics 4 -->
     <script async src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}></script>
