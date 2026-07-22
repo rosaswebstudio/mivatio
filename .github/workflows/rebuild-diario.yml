@@ -1,22 +1,50 @@
-# Las páginas "cuánto cuesta poner..." se generan en el build con el PVPC del día, así
-# que hay que redesplegar cada día o mostrarían los precios de ayer.
+# Cada día: añade el precio medio de hoy al histórico y redespliega la web.
 #
-# Se lanza a las 23:15 UTC: en horario de verano son las 01:15 en Madrid y en invierno
-# las 00:15, o sea siempre poco después de medianoche peninsular, de modo que las páginas
-# pasan al día nuevo cuanto antes. Red Eléctrica publica los precios del día siguiente
-# la tarde anterior, así que a esa hora ya están disponibles.
+# Las páginas "cuánto cuesta poner..." y el bloque de tendencia se generan en el build
+# con el PVPC del día, así que sin esto mostrarían los precios de ayer. Si el histórico
+# cambia (lo normal), el propio commit dispara el despliegue de Vercel; si no, se llama
+# al deploy hook.
 name: Rebuild diario
 
 on:
   schedule:
+    # 23:15 UTC: poco después de medianoche peninsular (00:15 invierno / 01:15 verano),
+    # cuando Red Eléctrica ya ha publicado los precios del día.
     - cron: '15 23 * * *'
   workflow_dispatch: # permite lanzarlo a mano desde la pestaña Actions
 
 jobs:
-  redesplegar:
+  actualizar:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # necesario para comitear el histórico
     steps:
-      - name: Lanzar despliegue en Vercel
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Añadir el día de hoy al histórico
+        run: node scripts/historico.mjs
+
+      - name: Comitear si hay cambios
+        id: commit
+        run: |
+          if git diff --quiet -- src/data/historico.json; then
+            echo "cambios=no" >> "$GITHUB_OUTPUT"
+            echo "El histórico no ha cambiado."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/data/historico.json
+            git commit -m "Histórico del precio de la luz: $(date -u +%Y-%m-%d)"
+            git push
+            echo "cambios=si" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Redesplegar si no hubo commit
+        if: steps.commit.outputs.cambios == 'no'
         env:
           HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
         run: |

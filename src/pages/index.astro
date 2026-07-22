@@ -2,6 +2,8 @@
 import Layout from '../layouts/Layout.astro';
 import Vatio from '../components/Vatio.jsx';
 import { ELECTRODOMESTICOS } from '../lib/electrodomesticos.js';
+import TendenciaLuz from '../components/TendenciaLuz.astro';
+import historico from '../data/historico.json';
 
 // Coma decimal: "1,2 kWh", no "1.2 kWh".
 const kwhTxt = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 2 });
@@ -115,6 +117,8 @@ const jsonLd = {
           </div>
         </div>
         */}
+
+        <TendenciaLuz fechas={historico.fechas} media={historico.media} min={historico.min} max={historico.max} />
 
         <!-- Coste por electrodoméstico (enlazado interno hacia las páginas generadas) -->
         <section class="px-4 pt-8">

@@ -1,0 +1,198 @@
+---
+// Precio medio de la luz por meses, a partir del histórico diario.
+// SEO perenne ("precio de la luz en junio de 2026"). Se genera en el build.
+import Layout from '../layouts/Layout.astro';
+import historico from '../data/historico.json';
+
+const { fechas, media, min, max } = historico as {
+  fechas: string[]; media: (number | null)[]; min: (number | null)[]; max: (number | null)[];
+};
+
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+// Agrupa los días por mes natural.
+const grupos = new Map<string, { medias: number[]; mins: number[]; maxs: number[] }>();
+fechas.forEach((f, i) => {
+  const v = media[i];
+  if (typeof v !== 'number') return;
+  const clave = f.slice(0, 7); // AAAA-MM
+  if (!grupos.has(clave)) grupos.set(clave, { medias: [], mins: [], maxs: [] });
+  const g = grupos.get(clave)!;
+  g.medias.push(v);
+  if (typeof min[i] === 'number') g.mins.push(min[i] as number);
+  if (typeof max[i] === 'number') g.maxs.push(max[i] as number);
+});
+
+const prom = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+const meses = [...grupos.entries()]
+  .map(([clave, g]) => {
+    const [y, m] = clave.split('-');
+    return {
+      clave,
+      nombre: `${MESES[Number(m) - 1]} de ${y}`,
+      dias: g.medias.length,
+      media: prom(g.medias),
+      minMedia: Math.min(...g.medias),
+      maxMedia: Math.max(...g.medias),
+      minAbs: g.mins.length ? Math.min(...g.mins) : null,
+      maxAbs: g.maxs.length ? Math.max(...g.maxs) : null,
+    };
+  })
+  .sort((a, b) => b.clave.localeCompare(a.clave)); // más reciente primero
+
+const cent = (n: number) => (n * 100).toLocaleString('es-ES', { maximumFractionDigits: 1 });
+const eur = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+
+const masBarato = meses.length ? meses.reduce((min, m) => (m.media < min.media ? m : min), meses[0]) : null;
+const masCaro = meses.length ? meses.reduce((max, m) => (m.media > max.media ? m : max), meses[0]) : null;
+const maxMediaMes = meses.length ? Math.max(...meses.map((m) => m.media)) : 1;
+
+const fechaLarga = fechas.length
+  ? new Date(fechas[fechas.length - 1] + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+  : '';
+
+const title = 'Precio medio de la luz por meses (histórico del PVPC)';
+const description = 'Precio medio de la luz mes a mes según el PVPC de Red Eléctrica: media, mínimo y máximo de cada mes, con el histórico de los últimos meses. Datos oficiales, sin impuestos.';
+const rutaCanonica = '/precio-medio-mensual/';
+const siteUrl = (Astro.site ?? new URL('https://mivatio.es')).href.replace(/\/$/, '');
+
+const faqs = masBarato && masCaro ? [
+  {
+    q: '¿Cuál ha sido el mes más barato y el más caro?',
+    a: `De los meses con datos, el más barato fue ${masBarato.nombre}, con una media de ${cent(masBarato.media)} céntimos por kWh, y el más caro ${masCaro.nombre}, con ${cent(masCaro.media)} céntimos. Son medias del precio base del PVPC, sin impuestos.`,
+  },
+  {
+    q: '¿Estos precios incluyen impuestos?',
+    a: 'No. Son el precio base del PVPC publicado por Red Eléctrica, sin el impuesto eléctrico ni el IVA. Tu factura final añade esos impuestos y el término de potencia contratada.',
+  },
+  {
+    q: '¿Con qué frecuencia se actualiza?',
+    a: `Esta página se recalcula a diario con los precios de Red Eléctrica. La última actualización es del ${fechaLarga}.`,
+  },
+] : [];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${siteUrl}/` },
+        { '@type': 'ListItem', position: 2, name: 'Precio medio por meses', item: siteUrl + rutaCanonica },
+      ],
+    },
+    ...(faqs.length ? [{
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+    }] : []),
+  ],
+};
+---
+<Layout title={title} description={description} canonicalPath={rutaCanonica}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  <div class="min-h-screen w-full" style="background-color:#0B0D12;">
+    <div class="mx-auto flex max-w-5xl justify-center gap-8">
+      <main class="w-full max-w-2xl">
+        <nav aria-label="Migas de pan" class="px-4 pt-6 text-xs text-[#5A6070]">
+          <a href="/" class="hover:text-[#2DD4BF]">Inicio</a>
+          <span class="mx-1.5">/</span>
+          <span class="text-[#8A8F9C]">Precio medio por meses</span>
+        </nav>
+
+        <header class="px-4 pt-4">
+          <h1 class="text-2xl font-bold tracking-tight text-[#ECEAE3] sm:text-3xl">
+            Precio medio de la luz <span class="text-[#2DD4BF]">por meses</span>
+          </h1>
+          <p class="mt-3 text-sm leading-relaxed text-[#8A8F9C]">
+            La media mensual del PVPC según los datos de Red Eléctrica. Sirve para ver la tendencia
+            de fondo, más allá del sube y baja de cada día.
+          </p>
+          <p class="mt-2 text-xs text-[#5A6070]">Península, sin impuestos. Actualizado el {fechaLarga}.</p>
+        </header>
+
+        {masBarato && masCaro && (
+          <section class="grid grid-cols-2 gap-3 px-4 pt-5">
+            <div class="rounded-2xl border border-[#232733] bg-[#14171F] p-4">
+              <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Mes más barato</p>
+              <p class="mt-1 text-xl font-bold text-[#2DD4BF]">{cent(masBarato.media)} <span class="text-sm font-semibold text-[#5A6070]">cent</span></p>
+              <p class="text-xs text-[#5A6070]">{masBarato.nombre}</p>
+            </div>
+            <div class="rounded-2xl border border-[#232733] bg-[#14171F] p-4">
+              <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Mes más caro</p>
+              <p class="mt-1 text-xl font-bold text-[#F2545B]">{cent(masCaro.media)} <span class="text-sm font-semibold text-[#5A6070]">cent</span></p>
+              <p class="text-xs text-[#5A6070]">{masCaro.nombre}</p>
+            </div>
+          </section>
+        )}
+
+        <!-- Tabla de meses con barra proporcional -->
+        <section class="px-4 pt-6">
+          <div class="overflow-hidden rounded-2xl border border-[#232733] bg-[#14171F]">
+            {meses.map((m) => (
+              <div class="border-b border-[#232733] px-4 py-3 last:border-0">
+                <div class="flex items-baseline justify-between gap-3">
+                  <p class="text-sm font-semibold capitalize text-[#ECEAE3]">{m.nombre}</p>
+                  <p class="font-mono text-base font-bold text-[#ECEAE3]">{cent(m.media)} <span class="text-xs font-semibold text-[#5A6070]">cent/kWh</span></p>
+                </div>
+                <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#0B0D12]">
+                  <div class="h-full rounded-full bg-[#2DD4BF]" style={`width:${Math.round((m.media / maxMediaMes) * 100)}%`}></div>
+                </div>
+                <p class="mt-1.5 text-xs text-[#5A6070]">
+                  {m.dias} días · media diaria de {cent(m.minMedia)} a {cent(m.maxMedia)} cent
+                  {m.minAbs != null && m.maxAbs != null && ` · horas sueltas desde ${cent(m.minAbs)} hasta ${cent(m.maxAbs)} cent`}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p class="mt-2 text-xs text-[#5A6070]">
+            La media mensual es el promedio de las medias diarias. El primer y el último mes pueden
+            tener pocos días si el histórico no los cubre enteros.
+          </p>
+        </section>
+
+        <!-- CTA a la app -->
+        <section class="px-4 pt-6">
+          <a href="/" class="flex items-center justify-between gap-3 rounded-2xl border border-[#232733] bg-[#14171F] px-4 py-3.5 transition-colors hover:border-[#2DD4BF]/50">
+            <div>
+              <p class="text-sm font-semibold text-[#ECEAE3]">El precio de la luz de hoy, hora a hora</p>
+              <p class="text-xs text-[#8A8F9C]">En directo y por comunidad</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-[#2DD4BF] px-3 py-1.5 text-xs font-semibold text-[#0B0D12]">Abrir</span>
+          </a>
+        </section>
+
+        {faqs.length > 0 && (
+          <section class="px-4 pt-8">
+            <h2 class="text-base font-bold text-[#ECEAE3]">Preguntas frecuentes</h2>
+            <div class="mt-3 divide-y divide-[#232733]">
+              {faqs.map((f) => (
+                <details class="group py-3">
+                  <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-[#ECEAE3]">
+                    <span>{f.q}</span>
+                    <span class="text-[#2DD4BF] transition-transform group-open:rotate-45">+</span>
+                  </summary>
+                  <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <footer class="px-4 pt-10 pb-8">
+          <p class="text-xs leading-relaxed text-[#5A6070]">
+            Medias calculadas a partir del PVPC horario publicado por Red Eléctrica para la Península,
+            sin impuestos. Los precios cambian cada día. Página informativa.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <a href="/" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Inicio</a>
+            <a href="/aviso-legal" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Aviso legal</a>
+            <a href="/privacidad" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Privacidad</a>
+            <a href="/cookies" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Cookies</a>
+          </div>
+          <p class="mt-3 text-xs text-[#5A6070]">© {new Date().getFullYear()} Vatio</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+</Layout>

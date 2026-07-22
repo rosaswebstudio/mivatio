@@ -1,0 +1,85 @@
+---
+// Bloque "cómo evoluciona el precio de la luz": media diaria, tendencia y gráfica.
+// Se calcula en el build a partir de src/data/historico.json. Sin JavaScript.
+import { analizar, veredicto, puntosSparkline } from '../lib/tendencia.js';
+
+interface Props {
+  fechas: string[];
+  media: (number | null)[];
+  min: (number | null)[];
+  max: (number | null)[];
+}
+
+const { fechas, media, min, max } = Astro.props;
+
+const ANCHO = 320;
+const ALTO = 70;
+
+const a = analizar(media);
+const v = veredicto(a);
+const puntos = puntosSparkline(media, ANCHO, ALTO);
+
+const cent = (n: number) => (n * 100).toLocaleString('es-ES', { maximumFractionDigits: 1 });
+const eur = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+
+const COLOR = { rojo: '#F2545B', verde: '#2DD4BF', neutro: '#F5B83D' } as Record<string, string>;
+const colorV = v ? COLOR[v.color] : '#F5B83D';
+
+const dias = a?.dias ?? 0;
+const fmtFecha = (f: string) =>
+  new Date(f + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+const desde = fechas.length ? fmtFecha(fechas[0]) : '';
+const hasta = fechas.length ? fmtFecha(fechas[fechas.length - 1]) : '';
+
+// Mínimo y máximo de la serie de medias, con su fecha, para el pie de la gráfica.
+const validos = media
+  .map((valor, i) => ({ valor, fecha: fechas[i] }))
+  .filter((p): p is { valor: number; fecha: string } => typeof p.valor === 'number');
+const diaBarato = validos.reduce((min, p) => (p.valor < min.valor ? p : min), validos[0]);
+const diaCaro = validos.reduce((max, p) => (p.valor > max.valor ? p : max), validos[0]);
+---
+{v && a && (
+  <section class="px-4 pt-8">
+    <h2 class="text-base font-bold text-[#ECEAE3]">Cómo evoluciona el precio de la luz</h2>
+
+    <div class="mt-3 rounded-2xl border border-[#232733] bg-[#14171F] p-4">
+      <div class="flex items-start gap-3">
+        <span class="mt-0.5 h-10 w-1 shrink-0 rounded-full" style={`background-color:${colorV}`}></span>
+        <div>
+          <p class="text-base font-bold" style={`color:${colorV}`}>{v.titulo}</p>
+          <p class="mt-1 text-sm leading-relaxed text-[#8A8F9C]">{v.texto}</p>
+        </div>
+      </div>
+
+      <div class="mt-4 grid gap-4 sm:grid-cols-[1fr_auto]">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Media de hoy</p>
+          <p class="mt-1 font-mono text-2xl font-bold text-[#ECEAE3]">
+            {cent(a.actual)} <span class="text-sm font-semibold text-[#5A6070]">cent/kWh</span>
+          </p>
+          <p class="mt-1 text-xs text-[#8A8F9C]">
+            Media de los últimos {dias} días: <strong class="text-[#ECEAE3]">{cent(a.media)} cent/kWh</strong>
+          </p>
+        </div>
+
+        <svg viewBox={`0 0 ${ANCHO} ${ALTO}`} preserveAspectRatio="none" class="h-20 w-full sm:w-64" role="img"
+          aria-label={`Evolución del precio medio de la luz en los últimos ${dias} días`}>
+          <polyline points={puntos} fill="none" stroke={colorV} stroke-width="2"
+            stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+        </svg>
+      </div>
+
+      <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-[#232733] pt-3 text-xs text-[#8A8F9C]">
+        <span>Día más barato: <strong class="text-[#2DD4BF]">{cent(diaBarato.valor)} cent</strong> ({fmtFecha(diaBarato.fecha)})</span>
+        <span>Día más caro: <strong class="text-[#F2545B]">{cent(diaCaro.valor)} cent</strong> ({fmtFecha(diaCaro.fecha)})</span>
+        <a href="/precio-medio-mensual/" class="ml-auto font-semibold text-[#2DD4BF] hover:underline">Ver medias por mes →</a>
+      </div>
+
+      <p class="mt-3 text-[11px] leading-relaxed text-[#5A6070]">
+        Media diaria del PVPC en la Península, del {desde} al {hasta}, sin impuestos. Es la evolución
+        real publicada por Red Eléctrica, no una predicción: nadie puede saber qué hará el precio
+        mañana. Precios en céntimos de euro por kWh.
+      </p>
+    </div>
+  </section>
+)}
