@@ -1,0 +1,28 @@
+# Las páginas "cuánto cuesta poner..." se generan en el build con el PVPC del día, así
+# que hay que redesplegar cada día o mostrarían los precios de ayer.
+#
+# Se lanza a las 23:15 UTC: en horario de verano son las 01:15 en Madrid y en invierno
+# las 00:15, o sea siempre poco después de medianoche peninsular, de modo que las páginas
+# pasan al día nuevo cuanto antes. Red Eléctrica publica los precios del día siguiente
+# la tarde anterior, así que a esa hora ya están disponibles.
+name: Rebuild diario
+
+on:
+  schedule:
+    - cron: '15 23 * * *'
+  workflow_dispatch: # permite lanzarlo a mano desde la pestaña Actions
+
+jobs:
+  redesplegar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lanzar despliegue en Vercel
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::Falta el secreto VERCEL_DEPLOY_HOOK (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+          curl -fsS -X POST "$HOOK" -o /dev/null
+          echo "Despliegue solicitado a Vercel."

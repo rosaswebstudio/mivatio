@@ -1,0 +1,323 @@
+---
+// Página por electrodoméstico: cuánto cuesta usarlo con el precio real de hoy y
+// cuánto se ahorra eligiendo la hora. Se genera en el build; el ajuste de consumo
+// es lo único que lleva JavaScript.
+import Layout from '../../layouts/Layout.astro';
+import { ELECTRODOMESTICOS } from '../../lib/electrodomesticos.js';
+import { cargarPrecios, franjas, resumenDia } from '../../lib/datos-build.js';
+
+export async function getStaticPaths() {
+  const { fecha, horas } = await cargarPrecios();
+  const dia = resumenDia(horas);
+  return ELECTRODOMESTICOS.map((ap) => ({
+    params: { aparato: ap.slug },
+    props: { ap, fecha, horas, dia, franja: franjas(horas, ap.horas) },
+  }));
+}
+
+interface Hora { hora: number; precio: number }
+interface Franja { inicio: number; fin: number; media: number }
+
+interface Props {
+  ap: {
+    slug: string; nombre: string; accion: string; kwh: number; rango: [number, number];
+    horas: number; usosSemana: number; unidad: string; unidadPlural: string;
+    programable: boolean; detalle: string; consejo: string;
+  };
+  fecha: string;
+  horas: Hora[];
+  dia: { min: number; max: number; media: number; horaMin: number; horaMax: number };
+  franja: { mejor: Franja; peor: Franja };
+}
+
+const { ap, fecha, horas, dia, franja } = Astro.props;
+
+const eur = (n: number) => n.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const eur3 = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+const hh = (h: number) => String(h).padStart(2, '0') + ':00';
+const tramo = (f: Franja) => `${hh(f.inicio)} a ${hh((f.fin + 1) % 24)}`;
+
+const costeBarato = ap.kwh * franja.mejor.media;
+const costeCaro = ap.kwh * franja.peor.media;
+const costeMedio = ap.kwh * dia.media;
+const ahorroUso = costeCaro - costeBarato;
+const ahorroAnual = ahorroUso * ap.usosSemana * 52;
+
+const fechaLarga = new Date(fecha + 'T12:00:00').toLocaleDateString('es-ES', {
+  day: 'numeric', month: 'long', year: 'numeric',
+});
+
+const otros = ELECTRODOMESTICOS.filter((e) => e.slug !== ap.slug);
+
+const title = `¿Cuánto cuesta ${ap.accion}? Precio real de hoy`;
+const description = `Con el precio de la luz de hoy, ${ap.accion} cuesta ${eur(costeBarato)} en la franja más barata y ${eur(costeCaro)} en la más cara. Calcula el coste con el consumo de tu aparato.`;
+
+const rutaCanonica = `/cuanto-cuesta/${ap.slug}/`;
+const siteUrl = (Astro.site ?? new URL('https://mivatio.es')).href.replace(/\/$/, '');
+
+const faqs = [
+  {
+    q: `¿Cuánto consume ${ap.nombre.toLowerCase()}?`,
+    a: `Lo típico son unos ${ap.kwh} kWh por ${ap.unidad}, aunque el rango real va de ${ap.rango[0]} a ${ap.rango[1]} kWh. ${ap.detalle}`,
+  },
+  {
+    q: `¿A qué hora sale más barato ${ap.accion}?`,
+    a: ap.programable
+      ? `Hoy, ${fechaLarga}, la franja de ${ap.horas} horas más barata es de ${tramo(franja.mejor)}, a una media de ${eur3(franja.mejor.media)} €/kWh. La más cara es de ${tramo(franja.peor)}. Los precios cambian cada día, así que conviene mirarlos antes de programarlo.`
+      : `Hoy la electricidad está más barata de ${tramo(franja.mejor)} y más cara de ${tramo(franja.peor)}. Este aparato no siempre se puede programar, pero si puedes elegir el momento, la diferencia es real.`,
+  },
+  {
+    q: `¿Cuánto se ahorra al año eligiendo bien la hora?`,
+    a: `Usándolo ${ap.usosSemana} veces por semana, la diferencia entre hacerlo en la franja más barata y en la más cara es de unos ${eur(ahorroAnual)} al año con los precios de hoy. Es una estimación: el precio de la luz cambia a diario y tu consumo real puede ser distinto.`,
+  },
+  {
+    q: '¿Estos precios llevan impuestos?',
+    a: 'No. Se muestra el precio base del PVPC, sin impuesto eléctrico ni IVA, que es la referencia habitual para comparar horas. Tu factura final incluirá además esos impuestos y el término de potencia contratada.',
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${siteUrl}/` },
+        { '@type': 'ListItem', position: 2, name: `Cuánto cuesta ${ap.accion}`, item: siteUrl + rutaCanonica },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question', name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+  ],
+};
+
+// Colores de la app (Vatio.jsx)
+const CHEAP = '#2DD4BF', MIDC = '#F5B83D', EXP = '#F2545B';
+const colorHora = (p: number) => {
+  const t = dia.max > dia.min ? (p - dia.min) / (dia.max - dia.min) : 0.5;
+  return t < 0.34 ? CHEAP : t > 0.67 ? EXP : MIDC;
+};
+const alturaMax = 90;
+const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
+---
+<Layout title={title} description={description} canonicalPath={rutaCanonica}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  <div class="min-h-screen w-full" style="background-color:#0B0D12;">
+    <div class="mx-auto flex max-w-5xl justify-center gap-8">
+      <main class="w-full max-w-2xl">
+        <nav aria-label="Migas de pan" class="px-4 pt-6 text-xs text-[#5A6070]">
+          <a href="/" class="hover:text-[#2DD4BF]">Inicio</a>
+          <span class="mx-1.5">/</span>
+          <span class="text-[#8A8F9C]">Cuánto cuesta {ap.accion}</span>
+        </nav>
+
+        <header class="px-4 pt-4">
+          <h1 class="text-2xl font-bold tracking-tight text-[#ECEAE3] sm:text-3xl">
+            ¿Cuánto cuesta <span class="text-[#2DD4BF]">{ap.accion}</span>?
+          </h1>
+          <p class="mt-3 text-sm leading-relaxed text-[#8A8F9C]">
+            Con el precio real de la luz de hoy, {ap.accion} cuesta
+            <strong class="text-[#2DD4BF]">{eur(costeBarato)}</strong> si lo haces en la franja más
+            barata y <strong class="text-[#F2545B]">{eur(costeCaro)}</strong> si lo haces en la más
+            cara. La misma tarea, el mismo aparato: solo cambia la hora.
+          </p>
+          <p class="mt-2 text-xs text-[#5A6070]">
+            PVPC de {fechaLarga} en la Península, sin impuestos. Datos oficiales de Red Eléctrica.
+          </p>
+        </header>
+
+        <!-- Cifras -->
+        <section class="grid grid-cols-2 gap-3 px-4 pt-5">
+          <div class={card}>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">En la franja barata</p>
+            <p class="mt-1 text-xl font-bold text-[#2DD4BF]" data-out="barato">{eur(costeBarato)}</p>
+            <p class="text-xs text-[#5A6070]">{tramo(franja.mejor)}</p>
+          </div>
+          <div class={card}>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">En la franja cara</p>
+            <p class="mt-1 text-xl font-bold text-[#F2545B]" data-out="caro">{eur(costeCaro)}</p>
+            <p class="text-xs text-[#5A6070]">{tramo(franja.peor)}</p>
+          </div>
+          <div class={card}>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Coste medio del día</p>
+            <p class="mt-1 text-xl font-bold text-[#ECEAE3]" data-out="medio">{eur(costeMedio)}</p>
+            <p class="text-xs text-[#5A6070]">por {ap.unidad}</p>
+          </div>
+          <div class={card}>
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Ahorro al año</p>
+            <p class="mt-1 text-xl font-bold text-[#F5B83D]" data-out="anual">{eur(ahorroAnual)}</p>
+            <p class="text-xs text-[#5A6070]">{ap.usosSemana} {ap.usosSemana === 1 ? ap.unidad : ap.unidadPlural} por semana</p>
+          </div>
+        </section>
+
+        <!-- Ajuste del consumo: los valores son estimaciones -->
+        <section class="px-4 pt-5">
+          <div class="rounded-2xl border border-[#2DD4BF]/25 bg-[#2DD4BF]/5 p-4">
+            <p class="text-sm font-semibold text-[#ECEAE3]">Ajusta el consumo a tu aparato</p>
+            <p class="mt-1 text-xs leading-relaxed text-[#8A8F9C]">
+              Partimos de <strong class="text-[#ECEAE3]">{ap.kwh} kWh por {ap.unidad}</strong>, que es
+              un valor típico. El consumo real de este tipo de aparato va de {ap.rango[0]} a
+              {ap.rango[1]} kWh según el modelo, los años que tenga y el programa que uses, así que
+              cambia el número si conoces el de tu casa y las cifras de arriba se recalculan.
+            </p>
+            <div class="mt-3 flex flex-wrap items-center gap-3">
+              <label class="flex items-center gap-2 text-sm text-[#8A8F9C]">
+                Consumo
+                <input id="kwh" type="number" min="0.1" max="200" step="0.1" value={ap.kwh}
+                  class="w-24 rounded-lg border border-[#232733] bg-[#0B0D12] px-2 py-1.5 text-sm text-[#ECEAE3] outline-none focus:border-[#2DD4BF]" />
+                kWh
+              </label>
+              <label class="flex items-center gap-2 text-sm text-[#8A8F9C]">
+                Usos por semana
+                <input id="usos" type="number" min="1" max="50" step="1" value={ap.usosSemana}
+                  class="w-20 rounded-lg border border-[#232733] bg-[#0B0D12] px-2 py-1.5 text-sm text-[#ECEAE3] outline-none focus:border-[#2DD4BF]" />
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- Precio hora a hora -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-[#ECEAE3]">El precio de la luz hoy, hora a hora</h2>
+          <p class="mt-1 text-sm text-[#8A8F9C]">
+            En verde las horas baratas y en rojo las caras. La franja marcada es el mejor bloque de
+            {ap.horas} {ap.horas === 1 ? 'hora' : 'horas'} seguidas para {ap.accion}.
+          </p>
+          <div class="mt-3 rounded-2xl border border-[#232733] bg-[#14171F] p-4">
+            <div class="flex items-end justify-between gap-[2px]" style={`height:${alturaMax + 10}px`}>
+              {horas.map((h) => {
+                const alto = 8 + ((h.precio - dia.min) / (dia.max - dia.min || 1)) * alturaMax;
+                const dentro = h.hora >= franja.mejor.inicio && h.hora <= franja.mejor.fin;
+                return (
+                  <div class="flex flex-1 flex-col items-center justify-end" style={`height:${alturaMax + 10}px`}
+                    title={`${hh(h.hora)} · ${eur3(h.precio)} €/kWh`}>
+                    <div class="w-full rounded-t-[3px]"
+                      style={`height:${alto}px;background-color:${colorHora(h.precio)};${dentro ? 'outline:1.5px solid #2DD4BF;outline-offset:1px;' : ''}`}></div>
+                  </div>
+                );
+              })}
+            </div>
+            <div class="mt-2 flex justify-between text-[10px] text-[#5A6070]">
+              <span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#8A8F9C]">
+              <span>Mínimo <strong class="text-[#2DD4BF]">{eur3(dia.min)}</strong> a las {hh(dia.horaMin)}</span>
+              <span>Máximo <strong class="text-[#F2545B]">{eur3(dia.max)}</strong> a las {hh(dia.horaMax)}</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- CTA a la app -->
+        <section class="px-4 pt-6">
+          <a href="/" class="flex items-center justify-between gap-3 rounded-2xl border border-[#232733] bg-[#14171F] px-4 py-3.5 transition-colors hover:border-[#2DD4BF]/50">
+            <div>
+              <p class="text-sm font-semibold text-[#ECEAE3]">Mira el precio de la luz en directo</p>
+              <p class="text-xs text-[#8A8F9C]">Hoy y mañana, hora a hora y por comunidad</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-[#2DD4BF] px-3 py-1.5 text-xs font-semibold text-[#0B0D12]">Abrir</span>
+          </a>
+        </section>
+
+        <!-- Detalle y consejo -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-[#ECEAE3]">Qué consume realmente</h2>
+          <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">{ap.detalle}</p>
+          <div class="mt-3 rounded-xl border border-[#232733] bg-[#14171F] px-4 py-3">
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#F5B83D]">Cómo gastar menos</p>
+            <p class="mt-1 text-sm leading-relaxed text-[#8A8F9C]">{ap.consejo}</p>
+          </div>
+        </section>
+
+        <!-- Otros aparatos -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-[#ECEAE3]">Cuánto cuesta usar otros aparatos</h2>
+          <div class="mt-3 grid gap-2 sm:grid-cols-2">
+            {otros.map((o) => (
+              <a href={`/cuanto-cuesta/${o.slug}/`}
+                class="flex items-center justify-between gap-2 rounded-xl border border-[#232733] bg-[#14171F] px-3 py-2.5 text-sm transition-colors hover:border-[#2DD4BF]/50">
+                <span class="text-[#ECEAE3]">{o.nombre}</span>
+                <span class="text-xs text-[#5A6070]">{o.kwh} kWh</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-[#ECEAE3]">Preguntas frecuentes</h2>
+          <div class="mt-3 divide-y divide-[#232733]">
+            {faqs.map((f) => (
+              <details class="group py-3">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-[#ECEAE3]">
+                  <span>{f.q}</span>
+                  <span class="text-[#2DD4BF] transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <footer class="px-4 pt-10 pb-8">
+          <p class="text-xs leading-relaxed text-[#5A6070]">
+            Los consumos son valores típicos y orientativos: varían según el modelo, su antigüedad y
+            el uso que le des. Los precios son el PVPC publicado por Red Eléctrica para la Península
+            el {fechaLarga}, sin impuestos, y cambian cada día. Esta página es informativa y no
+            constituye asesoramiento.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <a href="/" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Inicio</a>
+            <a href="/aviso-legal" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Aviso legal</a>
+            <a href="/privacidad" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Privacidad</a>
+            <a href="/cookies" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Cookies</a>
+          </div>
+          <p class="mt-3 text-xs text-[#5A6070]">© {new Date().getFullYear()} Vatio</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script
+    type="application/json"
+    id="datos-coste"
+    set:html={JSON.stringify({
+      barato: franja.mejor.media,
+      caro: franja.peor.media,
+      medio: dia.media,
+    })}
+  />
+
+  <script>
+    // Recalcula las cifras cuando el visitante ajusta el consumo de su aparato.
+    const crudo = document.getElementById('datos-coste')?.textContent;
+    const kwhInp = document.getElementById('kwh') as HTMLInputElement | null;
+    const usosInp = document.getElementById('usos') as HTMLInputElement | null;
+
+    if (crudo && kwhInp && usosInp) {
+      const p = JSON.parse(crudo) as { barato: number; caro: number; medio: number };
+      const eur = (n: number) =>
+        n.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const salida = (nombre: string) => document.querySelector(`[data-out="${nombre}"]`);
+
+      const actualizar = () => {
+        const kwh = Math.max(0, parseFloat(kwhInp.value.replace(',', '.')) || 0);
+        const usos = Math.max(1, Math.round(parseFloat(usosInp.value) || 1));
+        const barato = kwh * p.barato;
+        const caro = kwh * p.caro;
+        salida('barato')!.textContent = eur(barato);
+        salida('caro')!.textContent = eur(caro);
+        salida('medio')!.textContent = eur(kwh * p.medio);
+        salida('anual')!.textContent = eur((caro - barato) * usos * 52);
+      };
+
+      kwhInp.addEventListener('input', actualizar);
+      usosInp.addEventListener('input', actualizar);
+    }
+  </script>
+</Layout>

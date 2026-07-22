@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Vatio from '../components/Vatio.jsx';
+import { ELECTRODOMESTICOS } from '../lib/electrodomesticos.js';
 
 const title = 'Precio de la luz hoy y mañana, hora a hora | Vatio';
 const description =
@@ -111,6 +112,25 @@ const jsonLd = {
           </div>
         </div>
         */}
+
+        <!-- Coste por electrodoméstico (enlazado interno hacia las páginas generadas) -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-[#ECEAE3]">¿Cuánto cuesta poner cada electrodoméstico?</h2>
+          <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">
+            El precio de hoy aplicado a lo que gasta cada aparato, y cuánto ahorras al año
+            eligiendo la hora buena.
+          </p>
+          <div class="mt-3 grid gap-2 sm:grid-cols-2">
+            {ELECTRODOMESTICOS.map((e) => (
+              <a href={`/cuanto-cuesta/${e.slug}/`}
+                class="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm transition-colors"
+                style="background-color:#14171F;border:1px solid #232733;">
+                <span class="text-[#ECEAE3]">Cuánto cuesta {e.accion}</span>
+                <span class="shrink-0 text-xs text-[#5A6070]">{e.kwh} kWh</span>
+              </a>
+            ))}
+          </div>
+        </section>
 
         <!-- FAQ (SEO) -->
         <section class="px-4 pt-8">
