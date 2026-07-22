@@ -35,6 +35,8 @@ const { ap, fecha, horas, dia, franja } = Astro.props;
 const eur = (n: number) => n.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const eur3 = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 const hh = (h: number) => String(h).padStart(2, '0') + ':00';
+// Los kWh se escriben con coma decimal: "1,2 kWh", no "1.2 kWh".
+const kwh = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 2 });
 const tramo = (f: Franja) => `${hh(f.inicio)} a ${hh((f.fin + 1) % 24)}`;
 
 const costeBarato = ap.kwh * franja.mejor.media;
@@ -58,7 +60,7 @@ const siteUrl = (Astro.site ?? new URL('https://mivatio.es')).href.replace(/\/$/
 const faqs = [
   {
     q: `¿Cuánto consume ${ap.nombre.toLowerCase()}?`,
-    a: `Lo típico son unos ${ap.kwh} kWh por ${ap.unidad}, aunque el rango real va de ${ap.rango[0]} a ${ap.rango[1]} kWh. ${ap.detalle}`,
+    a: `Lo típico son unos ${kwh(ap.kwh)} kWh por ${ap.unidad}, aunque el rango real va de ${kwh(ap.rango[0])} a ${kwh(ap.rango[1])} kWh. ${ap.detalle}`,
   },
   {
     q: `¿A qué hora sale más barato ${ap.accion}?`,
@@ -123,7 +125,7 @@ const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
           </h1>
           <p class="mt-3 text-sm leading-relaxed text-[#8A8F9C]">
             Con el precio real de la luz de hoy, {ap.accion} cuesta
-            <strong class="text-[#2DD4BF]">{eur(costeBarato)}</strong> si lo haces en la franja más
+            <strong class="text-[#2DD4BF]"> {eur(costeBarato)}</strong> si lo haces en la franja más
             barata y <strong class="text-[#F2545B]">{eur(costeCaro)}</strong> si lo haces en la más
             cara. La misma tarea, el mismo aparato: solo cambia la hora.
           </p>
@@ -161,10 +163,10 @@ const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
           <div class="rounded-2xl border border-[#2DD4BF]/25 bg-[#2DD4BF]/5 p-4">
             <p class="text-sm font-semibold text-[#ECEAE3]">Ajusta el consumo a tu aparato</p>
             <p class="mt-1 text-xs leading-relaxed text-[#8A8F9C]">
-              Partimos de <strong class="text-[#ECEAE3]">{ap.kwh} kWh por {ap.unidad}</strong>, que es
-              un valor típico. El consumo real de este tipo de aparato va de {ap.rango[0]} a
-              {ap.rango[1]} kWh según el modelo, los años que tenga y el programa que uses, así que
-              cambia el número si conoces el de tu casa y las cifras de arriba se recalculan.
+              Partimos de <strong class="text-[#ECEAE3]">{kwh(ap.kwh)} kWh por {ap.unidad}</strong>, que
+              es un valor típico. El consumo real de este tipo de aparato va de {kwh(ap.rango[0])} a {kwh(ap.rango[1])} kWh
+              según el modelo, los años que tenga y el programa que uses, así que cambia el número
+              si conoces el de tu casa y las cifras de arriba se recalculan.
             </p>
             <div class="mt-3 flex flex-wrap items-center gap-3">
               <label class="flex items-center gap-2 text-sm text-[#8A8F9C]">
@@ -186,8 +188,8 @@ const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
         <section class="px-4 pt-8">
           <h2 class="text-base font-bold text-[#ECEAE3]">El precio de la luz hoy, hora a hora</h2>
           <p class="mt-1 text-sm text-[#8A8F9C]">
-            En verde las horas baratas y en rojo las caras. La franja marcada es el mejor bloque de
-            {ap.horas} {ap.horas === 1 ? 'hora' : 'horas'} seguidas para {ap.accion}.
+            En verde las horas baratas y en rojo las caras. La franja marcada es el mejor bloque
+            de {ap.horas} {ap.horas === 1 ? 'hora' : 'horas'} seguidas para {ap.accion}.
           </p>
           <div class="mt-3 rounded-2xl border border-[#232733] bg-[#14171F] p-4">
             <div class="flex items-end justify-between gap-[2px]" style={`height:${alturaMax + 10}px`}>
@@ -240,9 +242,14 @@ const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
           <div class="mt-3 grid gap-2 sm:grid-cols-2">
             {otros.map((o) => (
               <a href={`/cuanto-cuesta/${o.slug}/`}
-                class="flex items-center justify-between gap-2 rounded-xl border border-[#232733] bg-[#14171F] px-3 py-2.5 text-sm transition-colors hover:border-[#2DD4BF]/50">
-                <span class="text-[#ECEAE3]">{o.nombre}</span>
-                <span class="text-xs text-[#5A6070]">{o.kwh} kWh</span>
+                class="group flex items-center gap-2 rounded-xl border border-[#232733] bg-[#14171F] px-3 py-2.5 text-sm transition-colors hover:border-[#2DD4BF]/50">
+                <span class="min-w-0 flex-1 truncate text-[#ECEAE3]">{o.nombre}</span>
+                <span class="shrink-0 text-xs text-[#5A6070]">{kwh(o.kwh)} kWh</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                  class="h-4 w-4 shrink-0 text-[#2DD4BF] transition-transform group-hover:translate-x-0.5" aria-hidden="true">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
               </a>
             ))}
           </div>
