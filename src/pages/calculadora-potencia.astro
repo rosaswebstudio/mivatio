@@ -1,0 +1,315 @@
+---
+// Calculadora de potencia contratada: qué potencia necesitas de verdad y cuánto te
+// sobra pagar si tienes más de la que usas.
+//
+// Es la parte de la factura que casi nadie revisa: se paga todos los días del año, uses
+// o no uses la luz, y mucha gente arrastra la potencia que dejó el anterior inquilino.
+// Los precios oficiales del término de potencia están en src/lib/potencia.js, con la
+// referencia exacta del BOE y de la CNMC.
+import Layout from '../layouts/Layout.astro';
+import {
+  APARATOS, ESCALONES, COSTE_KW_ANUAL, COSTE_KW_ANUAL_CON_IMPUESTOS,
+  PUNTA_ANUAL, VALLE_ANUAL, ANIO_DATOS,
+} from '../lib/potencia.js';
+
+const eur = (n: number) => n.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 });
+const num = (n: number, d = 2) => n.toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+// Tabla de referencia: lo que cuesta al año cada escalón, solo por tenerlo contratado.
+const tabla = ESCALONES.map((kw) => ({
+  kw,
+  anual: kw * COSTE_KW_ANUAL_CON_IMPUESTOS,
+  mes: (kw * COSTE_KW_ANUAL_CON_IMPUESTOS) / 12,
+}));
+
+const ahorroEjemplo = 1.15 * COSTE_KW_ANUAL_CON_IMPUESTOS; // bajar de 5,75 a 4,6 kW
+
+const title = 'Calculadora de potencia contratada: qué potencia necesito';
+const description = `Calcula la potencia que necesitas de verdad según tus aparatos y cuánto ahorras si bajas la contratada. Cada kW cuesta ${eur(COSTE_KW_ANUAL_CON_IMPUESTOS)} al año con impuestos, lo pagas uses o no uses la luz. Precios oficiales ${ANIO_DATOS}.`;
+const rutaCanonica = '/calculadora-potencia/';
+const siteUrl = (Astro.site ?? new URL('https://mivatio.es')).href.replace(/\/$/, '');
+
+const faqs = [
+  {
+    q: '¿Qué pasa si me quedo corto de potencia?',
+    a: 'Que salta el ICP (el interruptor de control de potencia) y te quedas sin luz hasta que lo subes. No es peligroso ni rompe nada: basta con desenchufar algo y volver a subir el interruptor. Si te salta más de una vez al mes, te has quedado corto.',
+  },
+  {
+    q: '¿Cuánto cuesta cada kW de potencia contratada?',
+    a: `En ${ANIO_DATOS}, ${eur(COSTE_KW_ANUAL)} al año sin impuestos y ${eur(COSTE_KW_ANUAL_CON_IMPUESTOS)} con el impuesto eléctrico y el IVA. Y se paga los 365 días, aunque estés de vacaciones o no enciendas nada: es la parte fija de la factura.`,
+  },
+  {
+    q: '¿Cuánto se tarda en cambiar la potencia y qué cuesta?',
+    a: 'El cambio lo tramita tu comercializadora y suele tardar unos días. Tiene un coste regulado de derechos de enganche y actuaciones en el equipo de medida (unos 10-11 € más IVA cuando no hay que cambiar nada físico), y solo se puede bajar una vez cada doce meses sin coste añadido, así que conviene no hacerlo a la ligera.',
+  },
+  {
+    q: '¿Por qué hay dos potencias en mi factura?',
+    a: `Desde 2021 la tarifa 2.0TD tiene dos periodos: punta (de 8:00 a 00:00 de lunes a viernes) y valle (el resto y todo el fin de semana). Puedes contratar una potencia distinta en cada uno. La de punta es la cara (${num(PUNTA_ANUAL)} €/kW al año) y la de valle es casi simbólica (${num(VALLE_ANUAL)} €/kW al año), así que si en algún momento vas a necesitar mucha potencia de madrugada, subirla ahí sale casi gratis.`,
+  },
+  {
+    q: '¿Los vatios de los aparatos son exactos?',
+    a: 'No, son valores típicos y orientativos: un horno puede ir de 1.500 a 3.000 W según el modelo. Por eso puedes cambiar cada cifra en la calculadora. El dato exacto está en la etiqueta del aparato o en su manual.',
+  },
+  {
+    q: '¿Por qué se añade un 20% de margen?',
+    a: 'Porque los aparatos con motor o compresor (nevera, lavadora, aire acondicionado) consumen bastante más que su potencia nominal durante el arranque, y ese pico es el que hace saltar el ICP. Quedarse justo en el cálculo es quedarse a oscuras el día que coincidan dos arranques.',
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${siteUrl}/` },
+        { '@type': 'ListItem', position: 2, name: 'Calculadora de potencia', item: siteUrl + rutaCanonica },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+    },
+  ],
+};
+
+const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
+---
+<Layout title={title} description={description} canonicalPath={rutaCanonica}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  <div class="min-h-screen w-full" style="background-color:#0B0D12;">
+    <div class="mx-auto flex max-w-5xl justify-center gap-8">
+      <main class="w-full max-w-2xl">
+        <nav aria-label="Migas de pan" class="px-4 pt-6 text-xs text-[#5A6070]">
+          <a href="/" class="hover:text-[#2DD4BF]">Inicio</a>
+          <span class="mx-1.5">/</span>
+          <span class="text-[#8A8F9C]">Calculadora de potencia</span>
+        </nav>
+
+        <header class="px-4 pt-4">
+          <h1 class="text-2xl font-bold tracking-tight text-[#ECEAE3] sm:text-3xl">
+            ¿Qué <span class="text-[#2DD4BF]">potencia</span> necesito contratar?
+          </h1>
+          <p class="mt-3 text-sm leading-relaxed text-[#8A8F9C]">
+            La potencia es la parte fija de la factura: la pagas los 365 días del año, uses
+            o no uses la luz. Cada kW de más cuesta <strong class="text-[#ECEAE3]">{eur(COSTE_KW_ANUAL_CON_IMPUESTOS)} al año</strong>,
+            y mucha gente arrastra la que dejó contratada el anterior inquilino.
+          </p>
+          <p class="mt-2 text-xs text-[#5A6070]">Precios oficiales del peaje 2.0TD de {ANIO_DATOS} (CNMC y BOE).</p>
+        </header>
+
+        <!-- Paso 1: aparatos -->
+        <section class="px-4 pt-6">
+          <h2 class="text-base font-bold text-[#ECEAE3]">1. Marca lo que puedes tener encendido a la vez</h2>
+          <p class="mt-1 text-sm text-[#8A8F9C]">
+            No marques todo lo que tienes, sino lo que podría coincidir en el peor momento
+            (por ejemplo: cocinando mientras se ducha alguien). Puedes ajustar los vatios.
+          </p>
+
+          <div class="mt-3 overflow-hidden rounded-2xl border border-[#232733] bg-[#14171F]">
+            {APARATOS.map((a) => (
+              <label class="flex items-center gap-3 border-b border-[#232733] px-4 py-2.5 last:border-0">
+                <input type="checkbox" class="js-ap h-4 w-4 shrink-0 accent-[#2DD4BF]"
+                  data-id={a.id} checked={a.siempre ? true : undefined} />
+                <span class="min-w-0 flex-1 text-sm text-[#ECEAE3]">{a.nombre}</span>
+                <input type="number" min="0" step="50" value={a.vatios}
+                  class="js-w w-20 shrink-0 rounded-lg border border-[#232733] bg-[#0B0D12] px-2 py-1 text-right font-mono text-xs text-[#ECEAE3]"
+                  data-id={a.id} aria-label={`Vatios de ${a.nombre}`} />
+                <span class="shrink-0 text-xs text-[#5A6070]">W</span>
+              </label>
+            ))}
+          </div>
+        </section>
+
+        <!-- Resultado -->
+        <section class="px-4 pt-6">
+          <div class="rounded-2xl border border-[#2DD4BF]/40 bg-[#14171F] p-5">
+            <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Potencia recomendada</p>
+            <p class="mt-1 font-mono text-4xl font-bold text-[#2DD4BF]" data-out="escalon">—</p>
+            <p class="mt-1 text-sm text-[#8A8F9C]">
+              Suman <strong class="text-[#ECEAE3]" data-out="vatios">—</strong> a la vez.
+              Con el 20% de margen para los picos de arranque salen{' '}
+              <strong class="text-[#ECEAE3]" data-out="kwcalc">—</strong>, así que el escalón que te cubre es ese.
+            </p>
+            <p class="mt-2 text-xs text-[#5A6070]">
+              Coste solo de tenerla contratada: <span data-out="costeanual">—</span> al año, impuestos incluidos.
+            </p>
+          </div>
+        </section>
+
+        <!-- Paso 2: ahorro -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-[#ECEAE3]">2. ¿Cuánto te sobra pagar ahora?</h2>
+          <p class="mt-1 text-sm text-[#8A8F9C]">
+            Mira tu factura: la potencia contratada viene en kW, normalmente en la primera página.
+          </p>
+          <div class={`mt-3 ${card}`}>
+            <label class="block text-xs font-semibold uppercase tracking-wide text-[#5A6070]" for="kw-actual">
+              Potencia que tienes contratada (kW)
+            </label>
+            <input id="kw-actual" type="number" min="0" step="0.05" value="5.75"
+              class="mt-2 w-32 rounded-lg border border-[#232733] bg-[#0B0D12] px-3 py-2 font-mono text-lg text-[#ECEAE3]" />
+
+            <div class="mt-4 border-t border-[#232733] pt-4">
+              <p class="text-sm text-[#8A8F9C]" data-out="veredicto">—</p>
+              <p class="mt-2 font-mono text-3xl font-bold" data-out="ahorro">—</p>
+              <p class="text-xs text-[#5A6070]" data-out="ahorro-nota">—</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tabla de referencia -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-[#ECEAE3]">Lo que cuesta cada potencia al año</h2>
+          <p class="mt-1 text-sm text-[#8A8F9C]">Solo la parte fija, sin contar la luz que gastes. Con impuestos.</p>
+          <div class="mt-3 overflow-hidden rounded-2xl border border-[#232733] bg-[#14171F]">
+            <table class="w-full text-left text-sm">
+              <thead class="text-xs uppercase tracking-wide text-[#5A6070]">
+                <tr class="border-b border-[#232733]">
+                  <th class="px-4 py-2 font-medium">Potencia</th>
+                  <th class="px-4 py-2 text-right font-medium">Al mes</th>
+                  <th class="px-4 py-2 text-right font-medium">Al año</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#232733]">
+                {tabla.map((t) => (
+                  <tr>
+                    <td class="px-4 py-2 font-mono text-[#ECEAE3]">{num(t.kw)} kW</td>
+                    <td class="px-4 py-2 text-right font-mono text-[#8A8F9C]">{eur(t.mes)}</td>
+                    <td class="px-4 py-2 text-right font-mono text-[#ECEAE3]">{eur(t.anual)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-2 text-xs leading-relaxed text-[#5A6070]">
+            Calculado con el término de potencia del peaje 2.0TD de {ANIO_DATOS}: {num(PUNTA_ANUAL, 4)} €/kW
+            al año en punta y {num(VALLE_ANUAL, 4)} €/kW en valle, suponiendo la misma potencia en los
+            dos periodos, más el impuesto eléctrico (5,11%) y el IVA (21%).
+          </p>
+        </section>
+
+        <section class="px-4 pt-8">
+          <div class="rounded-2xl border border-[#2DD4BF]/30 bg-[#14171F] p-4">
+            <p class="text-sm font-semibold text-[#ECEAE3]">Y la otra mitad de la factura</p>
+            <p class="mt-1 text-sm leading-relaxed text-[#8A8F9C]">
+              Bajar la potencia ahorra {eur(ahorroEjemplo)} al año si pasas de 5,75 a 4,6 kW. Lo otro
+              que se puede tocar es <em>cuándo</em> consumes: las horas baratas cuestan menos de la
+              mitad que las caras.
+            </p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <a href="/" class="rounded-lg bg-[#2DD4BF] px-4 py-2 text-sm font-semibold text-[#0B0D12] transition-colors hover:bg-[#26b8a5]">Ver las horas baratas de hoy</a>
+              <a href="/pvpc-o-tarifa-fija/" class="rounded-lg border border-[#232733] px-4 py-2 text-sm font-medium text-[#8A8F9C] transition-colors hover:border-[#2DD4BF] hover:text-[#2DD4BF]">PVPC o tarifa fija</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-[#ECEAE3]">Preguntas frecuentes</h2>
+          <div class="mt-3 divide-y divide-[#232733]">
+            {faqs.map((f) => (
+              <details class="group py-3">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-[#ECEAE3]">
+                  <span>{f.q}</span>
+                  <span class="text-[#2DD4BF] transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <footer class="px-4 pt-10 pb-8">
+          <p class="text-xs leading-relaxed text-[#5A6070]">
+            Término de potencia del peaje 2.0TD de {ANIO_DATOS}: peajes de transporte y distribución
+            de la Resolución de la CNMC de 18 de diciembre de 2025, y cargos de la Orden
+            TED/1524/2025, de 23 de diciembre. Los vatios de los aparatos son valores típicos y
+            orientativos. Página informativa: para cambiar tu potencia habla con tu comercializadora.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <a href="/" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Inicio</a>
+            <a href="/aviso-legal" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Aviso legal</a>
+            <a href="/privacidad" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Privacidad</a>
+            <a href="/cookies" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Cookies</a>
+          </div>
+          <p class="mt-3 text-xs text-[#5A6070]">© {new Date().getFullYear()} Vatio</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script
+    type="application/json"
+    id="datos-potencia"
+    set:html={JSON.stringify({ escalones: ESCALONES, costeKw: COSTE_KW_ANUAL_CON_IMPUESTOS })}
+  />
+
+  <script>
+    const crudo = document.getElementById('datos-potencia')?.textContent;
+    if (crudo) {
+      const cfg = JSON.parse(crudo) as { escalones: number[]; costeKw: number };
+      const eur = (n: number) => n.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 });
+      const kwTxt = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const salida = (n: string) => document.querySelector(`[data-out="${n}"]`) as HTMLElement | null;
+
+      const casillas = [...document.querySelectorAll('.js-ap')] as HTMLInputElement[];
+      const vatios = [...document.querySelectorAll('.js-w')] as HTMLInputElement[];
+      const kwActualInp = document.getElementById('kw-actual') as HTMLInputElement | null;
+
+      const porId = new Map(vatios.map((v) => [v.dataset.id, v]));
+
+      function actualizar() {
+        let total = 0;
+        for (const c of casillas) {
+          if (!c.checked) continue;
+          const w = porId.get(c.dataset.id);
+          total += Math.max(0, parseFloat(w?.value ?? '0') || 0);
+        }
+        const kwCalc = (total * 1.2) / 1000;
+        const escalon = cfg.escalones.find((e) => e >= kwCalc) ?? cfg.escalones[cfg.escalones.length - 1];
+
+        salida('vatios')!.textContent = `${total.toLocaleString('es-ES')} W`;
+        salida('kwcalc')!.textContent = `${kwTxt(kwCalc)} kW`;
+        salida('escalon')!.textContent = `${kwTxt(escalon)} kW`;
+        salida('costeanual')!.textContent = eur(escalon * cfg.costeKw);
+
+        // Comparación con lo que tiene contratado ahora.
+        const actual = Math.max(0, parseFloat((kwActualInp?.value ?? '').replace(',', '.')) || 0);
+        const vered = salida('veredicto')!;
+        const ahorro = salida('ahorro')!;
+        const nota = salida('ahorro-nota')!;
+
+        if (!actual) {
+          vered.textContent = 'Escribe tu potencia contratada para comparar.';
+          ahorro.textContent = '—';
+          ahorro.style.color = '#ECEAE3';
+          nota.textContent = '';
+          return;
+        }
+        const diff = actual - escalon;
+        if (diff > 0.001) {
+          vered.textContent = `Tienes ${kwTxt(actual)} kW y te bastaría con ${kwTxt(escalon)} kW: te sobran ${kwTxt(diff)} kW.`;
+          ahorro.textContent = `${eur(diff * cfg.costeKw)} al año`;
+          ahorro.style.color = '#2DD4BF';
+          nota.textContent = `Son ${eur((diff * cfg.costeKw) / 12)} al mes que pagas sin usarlos.`;
+        } else if (diff < -0.001) {
+          vered.textContent = `Tienes ${kwTxt(actual)} kW y el cálculo pide ${kwTxt(escalon)} kW. Te estás quedando corto: es probable que te salte el ICP.`;
+          ahorro.textContent = `+${eur(Math.abs(diff) * cfg.costeKw)} al año`;
+          ahorro.style.color = '#F5B83D';
+          nota.textContent = 'Es lo que costaría subir a la potencia que necesitas.';
+        } else {
+          vered.textContent = `Tienes ${kwTxt(actual)} kW, justo lo que sale del cálculo. No hay nada que ajustar.`;
+          ahorro.textContent = 'Ya está ajustada';
+          ahorro.style.color = '#2DD4BF';
+          nota.textContent = '';
+        }
+      }
+
+      for (const c of casillas) c.addEventListener('change', actualizar);
+      for (const v of vatios) v.addEventListener('input', actualizar);
+      kwActualInp?.addEventListener('input', actualizar);
+      actualizar();
+    }
+  </script>
+</Layout>

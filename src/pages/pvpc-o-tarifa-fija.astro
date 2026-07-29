@@ -1,0 +1,226 @@
+---
+// PVPC vs. tarifa fija: la guía que decide entre las dos opciones reales de tarifa
+// eléctrica en España. Es la pieza de contenido con más intención comercial del sitio:
+// aquí es donde tiene sentido el CTA de comparador de tarifas cuando haya un enlace real
+// de Awin (ver el bloque comentado más abajo).
+import Layout from '../layouts/Layout.astro';
+import historico from '../data/historico.json';
+
+const { fechas, media, min, max } = historico as {
+  fechas: string[]; media: (number | null)[]; min: (number | null)[]; max: (number | null)[];
+};
+
+// Últimos 30 días con dato: la ventana que de verdad refleja "cómo ha ido el PVPC
+// últimamente", no todo el histórico acumulado.
+const N = 30;
+const idxConDato = fechas.map((_, i) => i).filter((i) => typeof media[i] === 'number');
+const ultimos = idxConDato.slice(-N);
+
+const prom = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+const mediaGeneral = ultimos.length ? prom(ultimos.map((i) => media[i] as number)) : null;
+const mediaBarata = ultimos.length ? prom(ultimos.map((i) => min[i]).filter((v): v is number => typeof v === 'number')) : null;
+const mediaCara = ultimos.length ? prom(ultimos.map((i) => max[i]).filter((v): v is number => typeof v === 'number')) : null;
+
+// Volatilidad día a día: cuánto se ha movido la media diaria en la ventana. Es el número
+// que explica por qué el PVPC da vértigo a quien quiere una factura previsible.
+const mediasDiarias = ultimos.map((i) => media[i] as number);
+const diaBarato = mediasDiarias.length ? Math.min(...mediasDiarias) : null;
+const diaCaro = mediasDiarias.length ? Math.max(...mediasDiarias) : null;
+const volatilidadPct = diaBarato != null && diaCaro != null && diaBarato > 0
+  ? Math.round(((diaCaro - diaBarato) / diaBarato) * 100)
+  : null;
+
+// Cuánto se ahorra moviendo el consumo a la hora barata en vez de a la media del día.
+const ahorroDesplazandoPct = mediaGeneral != null && mediaBarata != null && mediaGeneral > 0
+  ? Math.round(((mediaGeneral - mediaBarata) / mediaGeneral) * 100)
+  : null;
+
+const cent = (n: number) => (n * 100).toLocaleString('es-ES', { maximumFractionDigits: 1 });
+
+const fechaLarga = fechas.length
+  ? new Date(fechas[fechas.length - 1] + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+  : '';
+
+const title = 'PVPC o tarifa fija: cuál te conviene según cómo consumes';
+const description = `Comparativa real entre el PVPC (precio de la luz por horas) y la tarifa fija, con datos de los últimos ${N} días: cuánto varía el precio de un día a otro y cuánto se ahorra moviendo el consumo a la hora barata. Para saber cuál te conviene sin adivinar.`;
+const rutaCanonica = '/pvpc-o-tarifa-fija/';
+const siteUrl = (Astro.site ?? new URL('https://mivatio.es')).href.replace(/\/$/, '');
+
+const faqs = [
+  {
+    q: '¿Qué diferencia hay entre el PVPC y una tarifa fija?',
+    a: 'El PVPC (tarifa regulada) tiene un precio distinto cada hora, que sigue al mercado eléctrico: unas horas son mucho más baratas que otras, y el día en conjunto también sube y baja. La tarifa fija, en cambio, tiene un precio único por kWh durante todo el contrato, igual a las 3 de la madrugada que a las 9 de la noche: pagas siempre lo mismo por kWh, sepas o no cuándo consumes.',
+  },
+  {
+    q: '¿Cuánto varía el precio del PVPC en la práctica?',
+    a: volatilidadPct != null
+      ? `En los últimos ${N} días, el día más barato tuvo una media de ${diaBarato != null ? cent(diaBarato) : '—'} céntimos/kWh y el más caro de ${diaCaro != null ? cent(diaCaro) : '—'}, una diferencia del ${volatilidadPct}%. Eso es solo la variación día a día; dentro de un mismo día, la hora más cara puede costar dos o tres veces más que la más barata.`
+      : 'Varía bastante: la hora más cara del día suele costar dos o tres veces más que la más barata, y la media del día también sube y baja según haya más o menos viento y sol en el mix eléctrico.',
+  },
+  {
+    q: '¿A quién le conviene el PVPC?',
+    a: 'A quien puede mover consumo a las horas baratas: lavadora, lavavajillas, secadora o la carga del coche eléctrico programados de madrugada. También a quien prioriza el precio medio más bajo a largo plazo sobre la previsibilidad mes a mes, porque el PVPC no tiene margen comercial añadido.',
+  },
+  {
+    q: '¿A quién le conviene la tarifa fija?',
+    a: 'A quien consume igual a cualquier hora (trabajo por turnos, teletrabajo con equipos siempre encendidos, negocios con horario fijo) y no puede desplazar el consumo, o a quien prefiere saber de antemano cuánto va a pagar por kWh sin sorpresas de un mes a otro.',
+  },
+  {
+    q: '¿Se puede cambiar de una a otra sin coste?',
+    a: 'Sí. Cambiar de comercializadora o de tipo de tarifa es gratuito y no exige cambiar de instalación ni de contador; solo hay que avisar con la antelación que marque tu contrato actual, si lo tienes con permanencia.',
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${siteUrl}/` },
+        { '@type': 'ListItem', position: 2, name: 'PVPC o tarifa fija', item: siteUrl + rutaCanonica },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+    },
+  ],
+};
+
+const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
+---
+<Layout title={title} description={description} canonicalPath={rutaCanonica}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  <div class="min-h-screen w-full" style="background-color:#0B0D12;">
+    <div class="mx-auto flex max-w-5xl justify-center gap-8">
+      <main class="w-full max-w-2xl">
+        <nav aria-label="Migas de pan" class="px-4 pt-6 text-xs text-[#5A6070]">
+          <a href="/" class="hover:text-[#2DD4BF]">Inicio</a>
+          <span class="mx-1.5">/</span>
+          <span class="text-[#8A8F9C]">PVPC o tarifa fija</span>
+        </nav>
+
+        <header class="px-4 pt-4">
+          <h1 class="text-2xl font-bold tracking-tight text-[#ECEAE3] sm:text-3xl">
+            PVPC o <span class="text-[#2DD4BF]">tarifa fija</span>: cuál te conviene
+          </h1>
+          <p class="mt-3 text-sm leading-relaxed text-[#8A8F9C]">
+            No hay una respuesta única: depende de si puedes mover tu consumo a horas baratas o
+            no. Aquí tienes los números reales de los últimos {N} días para decidir con datos, no
+            con la opinión de turno.
+          </p>
+          <p class="mt-2 text-xs text-[#5A6070]">Datos del PVPC de Red Eléctrica, Península. Actualizado el {fechaLarga}.</p>
+        </header>
+
+        {mediaGeneral != null && (
+          <section class="grid grid-cols-2 gap-3 px-4 pt-5">
+            <div class={card}>
+              <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Media del PVPC</p>
+              <p class="mt-1 text-xl font-bold text-[#ECEAE3]">{cent(mediaGeneral)} <span class="text-sm font-semibold text-[#5A6070]">cent/kWh</span></p>
+              <p class="text-xs text-[#5A6070]">últimos {N} días</p>
+            </div>
+            <div class={card}>
+              <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Variación día a día</p>
+              <p class="mt-1 text-xl font-bold" style="color:#F2545B;">{volatilidadPct != null ? `${volatilidadPct}%` : '—'}</p>
+              <p class="text-xs text-[#5A6070]">entre el día más barato y el más caro</p>
+            </div>
+            {ahorroDesplazandoPct != null && (
+              <div class={`${card} col-span-2`}>
+                <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Si mueves el consumo a la hora barata</p>
+                <p class="mt-1 text-xl font-bold text-[#2DD4BF]">Ahorras de media un {ahorroDesplazandoPct}%</p>
+                <p class="text-xs text-[#5A6070]">frente a consumir a la media del día, según la hora más barata de cada jornada</p>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* CTA de comparador: OCULTO hasta tener el enlace real de un anunciante de
+            energía en Awin (o programa directo de Selectra/papernest/Holaluz). Es el
+            punto de la web con más intención comercial: aquí es donde va, no colado
+            a la fuerza en la home. Para activarlo, quitar el comentario y poner el
+            href real.
+        <section class="px-4 pt-6">
+          <a href="#" rel="sponsored nofollow noopener"
+            class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-colors"
+            style="background-color:#14171F;border:1px solid #232733;">
+            <div>
+              <p class="text-sm font-semibold text-[#ECEAE3]">¿Quieres saber cuál te conviene de verdad?</p>
+              <p class="text-xs text-[#8A8F9C]">Compara tarifas con tu consumo real</p>
+            </div>
+            <span class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold" style="background-color:#2DD4BF;color:#0B0D12;">Comparar</span>
+          </a>
+        </section>
+        */}
+
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-[#ECEAE3]">¿Para quién es mejor cada una?</h2>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2">
+            <div class={card}>
+              <p class="text-sm font-bold text-[#2DD4BF]">Te conviene el PVPC si...</p>
+              <ul class="mt-2 space-y-1.5 text-sm text-[#8A8F9C]">
+                <li>· Puedes programar la lavadora, el lavavajillas o la carga del coche de madrugada.</li>
+                <li>· No tienes horario fijo de consumo (teletrabajo flexible, casa vacía de día).</li>
+                <li>· Prefieres el precio medio más bajo a largo plazo, sin margen comercial añadido.</li>
+                <li>· No te importa que la factura varíe de un mes a otro.</li>
+              </ul>
+            </div>
+            <div class={card}>
+              <p class="text-sm font-bold" style="color:#F2545B;">Te conviene la tarifa fija si...</p>
+              <ul class="mt-2 space-y-1.5 text-sm text-[#8A8F9C]">
+                <li>· Consumes igual a cualquier hora (turnos, negocio con horario fijo).</li>
+                <li>· No puedes o no quieres estar pendiente de cuándo poner cada aparato.</li>
+                <li>· Prefieres saber de antemano cuánto vas a pagar cada mes por kWh.</li>
+                <li>· Ya tuviste una factura que te descuadró el presupuesto con el PVPC.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-[#ECEAE3]">Sigue mirando</h2>
+          <div class="mt-3 grid gap-2 sm:grid-cols-2">
+            <a href="/precio-medio-mensual/" class="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm text-[#ECEAE3] transition-colors hover:border-[#2DD4BF]/50" style="background-color:#14171F;border:1px solid #232733;">
+              Precio medio de la luz por meses
+            </a>
+            <a href="/" class="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm text-[#ECEAE3] transition-colors hover:border-[#2DD4BF]/50" style="background-color:#14171F;border:1px solid #232733;">
+              El precio de hoy, hora a hora
+            </a>
+          </div>
+        </section>
+
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-[#ECEAE3]">Preguntas frecuentes</h2>
+          <div class="mt-3 divide-y divide-[#232733]">
+            {faqs.map((f) => (
+              <details class="group py-3">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-[#ECEAE3]">
+                  <span>{f.q}</span>
+                  <span class="text-[#2DD4BF] transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <footer class="px-4 pt-10 pb-8">
+          <p class="text-xs leading-relaxed text-[#5A6070]">
+            Comparativa informativa a partir del PVPC publicado por Red Eléctrica para la
+            Península, sin impuestos. No es asesoramiento contractual: antes de cambiar de
+            tarifa o comercializadora, revisa las condiciones de permanencia de tu contrato
+            actual.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <a href="/" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Inicio</a>
+            <a href="/aviso-legal" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Aviso legal</a>
+            <a href="/privacidad" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Privacidad</a>
+            <a href="/cookies" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Cookies</a>
+          </div>
+          <p class="mt-3 text-xs text-[#5A6070]">© {new Date().getFullYear()} Vatio</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+</Layout>

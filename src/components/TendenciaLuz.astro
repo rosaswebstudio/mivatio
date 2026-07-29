@@ -1,7 +1,9 @@
 ---
 // Bloque "cómo evoluciona el precio de la luz": media diaria, tendencia y gráfica.
-// Se calcula en el build a partir de src/data/historico.json. Sin JavaScript.
-import { analizar, veredicto, puntosSparkline } from '../lib/tendencia.js';
+// Se calcula en el build a partir de src/data/historico.json. La única pieza de cliente
+// es el hover del propio GraficaLinea (ver ese componente).
+import { analizar, veredicto } from '../lib/tendencia.js';
+import GraficaLinea from './GraficaLinea.astro';
 
 interface Props {
   fechas: string[];
@@ -12,12 +14,13 @@ interface Props {
 
 const { fechas, media, min, max } = Astro.props;
 
-const ANCHO = 320;
-const ALTO = 70;
-
 const a = analizar(media);
 const v = veredicto(a);
-const puntos = puntosSparkline(media, ANCHO, ALTO);
+
+const fmtCorta = (f: string) => new Date(f + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+const serie = fechas
+  .map((fecha, i) => ({ fecha, valor: media[i], etiqueta: fmtCorta(fecha) }))
+  .filter((p): p is { fecha: string; valor: number; etiqueta: string } => typeof p.valor === 'number');
 
 const cent = (n: number) => (n * 100).toLocaleString('es-ES', { maximumFractionDigits: 1 });
 const eur = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
@@ -41,6 +44,7 @@ const diaCaro = validos.reduce((max, p) => (p.valor > max.valor ? p : max), vali
 {v && a && (
   <section class="px-4 pt-8">
     <h2 class="text-base font-bold text-[#ECEAE3]">Cómo evoluciona el precio de la luz</h2>
+    <p class="mt-1 text-xs text-[#5A6070]">Media diaria del PVPC · del {desde} al {hasta} · pasa el ratón o el dedo por la curva</p>
 
     <div class="mt-3 rounded-2xl border border-[#232733] bg-[#14171F] p-4">
       <div class="flex items-start gap-3">
@@ -51,22 +55,20 @@ const diaCaro = validos.reduce((max, p) => (p.valor > max.valor ? p : max), vali
         </div>
       </div>
 
-      <div class="mt-4 grid gap-4 sm:grid-cols-[1fr_auto]">
+      <div class="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-1">
         <div>
           <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Media de hoy</p>
           <p class="mt-1 font-mono text-2xl font-bold text-[#ECEAE3]">
-            {cent(a.actual)} <span class="text-sm font-semibold text-[#5A6070]">cent/kWh</span>
-          </p>
-          <p class="mt-1 text-xs text-[#8A8F9C]">
-            Media de los últimos {dias} días: <strong class="text-[#ECEAE3]">{cent(a.media)} cent/kWh</strong>
+            {cent(a.actual as number)} <span class="text-sm font-semibold text-[#5A6070]">cent/kWh</span>
           </p>
         </div>
+        <p class="text-xs text-[#8A8F9C]">
+          Media de los últimos {dias} días: <strong class="text-[#ECEAE3]">{cent(a.media)} cent/kWh</strong>
+        </p>
+      </div>
 
-        <svg viewBox={`0 0 ${ANCHO} ${ALTO}`} preserveAspectRatio="none" class="h-20 w-full sm:w-64" role="img"
-          aria-label={`Evolución del precio medio de la luz en los últimos ${dias} días`}>
-          <polyline points={puntos} fill="none" stroke={colorV} stroke-width="2"
-            stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />
-        </svg>
+      <div class="mt-4">
+        <GraficaLinea id="tendencia-diaria" serie={serie} unidad="cent/kWh" colorMinEsBueno={true} />
       </div>
 
       <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-[#232733] pt-3 text-xs text-[#8A8F9C]">
@@ -74,6 +76,25 @@ const diaCaro = validos.reduce((max, p) => (p.valor > max.valor ? p : max), vali
         <span>Día más caro: <strong class="text-[#F2545B]">{cent(diaCaro.valor)} cent</strong> ({fmtFecha(diaCaro.fecha)})</span>
         <a href="/precio-medio-mensual/" class="ml-auto font-semibold text-[#2DD4BF] hover:underline">Ver medias por mes →</a>
       </div>
+
+      <details class="mt-3 border-t border-[#232733] pt-3">
+        <summary class="cursor-pointer text-xs font-semibold text-[#8A8F9C] hover:text-[#2DD4BF]">Ver los datos en una tabla</summary>
+        <div class="mt-2 max-h-64 overflow-y-auto rounded-lg border border-[#232733]">
+          <table class="w-full text-left text-xs">
+            <thead class="sticky top-0 bg-[#14171F] text-[#5A6070]">
+              <tr><th class="px-3 py-1.5 font-medium">Día</th><th class="px-3 py-1.5 font-medium">Media (cent/kWh)</th></tr>
+            </thead>
+            <tbody class="divide-y divide-[#232733]">
+              {[...serie].reverse().map((p) => (
+                <tr>
+                  <td class="px-3 py-1.5 text-[#8A8F9C]">{p.etiqueta}</td>
+                  <td class="px-3 py-1.5 font-mono text-[#ECEAE3]">{cent(p.valor)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
 
       <p class="mt-3 text-[11px] leading-relaxed text-[#5A6070]">
         Media diaria del PVPC en la Península, del {desde} al {hasta}, sin impuestos. Es la evolución

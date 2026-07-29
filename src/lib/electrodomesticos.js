@@ -133,6 +133,86 @@ export const ELECTRODOMESTICOS = [
     consejo:
       'Programar la carga de madrugada es lo más rentable que puedes hacer con un coche eléctrico: es cuando la luz suele estar más barata.',
   },
+  {
+    slug: 'frigorifico',
+    nombre: 'Frigorífico',
+    accion: 'tener el frigorífico',
+    kwh: 0.8,
+    rango: [0.4, 1.6],
+    horas: 24,
+    usosSemana: 7,
+    unidad: 'día',
+    unidadPlural: 'días',
+    programable: false,
+    detalle:
+      'El frigorífico gasta poco de golpe pero no se apaga nunca, y eso lo convierte en el aparato que más electricidad consume al año en la mayoría de las casas. Un modelo antiguo puede gastar el triple que uno moderno de la misma capacidad.',
+    consejo:
+      'Al no poder apagarlo, aquí no sirve elegir la hora: lo que ahorra de verdad es separarlo de la pared para que ventile, no meter comida caliente y revisar las gomas de la puerta.',
+  },
+  {
+    slug: 'microondas',
+    nombre: 'Microondas',
+    accion: 'usar el microondas',
+    kwh: 0.15,
+    rango: [0.05, 0.4],
+    horas: 0.15,
+    usosSemana: 14,
+    unidad: 'uso',
+    unidadPlural: 'usos',
+    programable: false,
+    detalle:
+      'Un microondas de 1.000 W funcionando cinco minutos gasta poco más de 0,08 kWh. Aunque su potencia asusta, se usa tan poco rato que sale muy barato: para calentar un plato es bastante más eficiente que encender el horno.',
+    consejo:
+      'Para recalentar o descongelar, el microondas gasta mucho menos que el horno o la vitrocerámica, que tienen que calentar también el recipiente y el aire.',
+  },
+  {
+    slug: 'plancha',
+    nombre: 'Plancha',
+    accion: 'planchar',
+    kwh: 1.1,
+    rango: [0.6, 2.2],
+    horas: 1,
+    usosSemana: 1,
+    unidad: 'sesión',
+    unidadPlural: 'sesiones',
+    programable: true,
+    detalle:
+      'Una plancha de unos 1.200 W durante una hora ronda los 1,1 kWh, aunque no consume de forma continua: el termostato la enciende y la apaga para mantener la temperatura.',
+    consejo:
+      'Planchar todo de una vez sale mucho más barato que en varias tandas: buena parte del gasto está en el calentamiento inicial. Y como es una tarea que se puede mover de hora, elegir una franja barata sí compensa.',
+  },
+  {
+    slug: 'calefaccion-electrica',
+    nombre: 'Calefacción eléctrica',
+    accion: 'poner la calefacción eléctrica',
+    kwh: 1.5,
+    rango: [0.8, 2.5],
+    horas: 1,
+    usosSemana: 35,
+    unidad: 'hora',
+    unidadPlural: 'horas',
+    programable: true,
+    detalle:
+      'Un radiador o convector eléctrico de 1.500 W gasta 1,5 kWh por cada hora encendido a plena potencia. Es de los consumos más altos y sostenidos de la casa: en invierno puede ser la mitad de la factura.',
+    consejo:
+      'Los radiadores eléctricos convierten en calor toda la electricidad que reciben, ni más ni menos, así que ninguno es más eficiente que otro por mucho que lo anuncien. Lo que sí ahorra es bajar un grado el termostato y aislar bien ventanas y puertas.',
+  },
+  {
+    slug: 'bomba-de-calor',
+    nombre: 'Bomba de calor',
+    accion: 'poner la bomba de calor',
+    kwh: 0.5,
+    rango: [0.3, 1.0],
+    horas: 1,
+    usosSemana: 35,
+    unidad: 'hora',
+    unidadPlural: 'horas',
+    programable: true,
+    detalle:
+      'Una bomba de calor (el aire acondicionado en modo calor) no genera calor: lo mueve de fuera hacia dentro. Por eso da unas tres o cuatro veces más calor que la electricidad que consume, y calienta la misma habitación por bastante menos que un radiador eléctrico.',
+    consejo:
+      'Es la forma más barata de calentar con electricidad. Rinde menos cuanto más frío hace fuera, así que en zonas muy frías conviene combinarla con otro sistema.',
+  },
 ];
 
 export const porSlug = (slug) => ELECTRODOMESTICOS.find((e) => e.slug === slug) || null;
