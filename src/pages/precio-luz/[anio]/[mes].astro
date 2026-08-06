@@ -1,0 +1,379 @@
+---
+// Precio de la luz en un mes concreto: /precio-luz/2026/julio/
+//
+// Todo lo que se ve sale del archivo mensual, que es dato oficial de Red Eléctrica. No hay
+// texto de relleno: el resumen de arriba se compone con las cifras del propio mes (subida
+// o bajada, comparación con el año anterior, a qué hora salía barata), así que dos meses
+// distintos no se leen igual aunque compartan plantilla.
+import Layout from '../../../layouts/Layout.astro';
+import GraficaLinea from '../../../components/GraficaLinea.astro';
+import PerfilHorario from '../../../components/PerfilHorario.astro';
+import archivo from '../../../data/mensual.json';
+import { ELECTRODOMESTICOS } from '../../../lib/electrodomesticos.js';
+import {
+  listaMeses, serieDiaria, cent, eur, hh, franjaHoraria, extremosHorarios,
+} from '../../../lib/mensual.js';
+
+export function getStaticPaths() {
+  return listaMeses(archivo).map((m) => ({
+    params: { anio: String(m.anio), mes: m.nombreMes },
+    props: { clave: m.clave },
+  }));
+}
+
+const { clave } = Astro.props;
+const meses = listaMeses(archivo);
+const m = meses.find((x) => x.clave === clave)!;
+
+const diasMes = new Date(Date.UTC(m.anio, m.mes, 0)).getUTCDate();
+const enCurso = !m.completo;
+
+const fechaDe = (d: number) =>
+  new Date(Date.UTC(m.anio, m.mes - 1, d)).toLocaleDateString('es-ES', {
+    weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC',
+  });
+
+// Día más barato y más caro por MEDIA diaria: no es lo mismo que la hora más barata suelta,
+// y a la gente le sirven las dos cosas.
+let diaBarato = { d: 0, v: Infinity };
+let diaCaro = { d: 0, v: -Infinity };
+m.diaMedia.forEach((v: number | null, i: number) => {
+  if (typeof v !== 'number') return;
+  if (v < diaBarato.v) diaBarato = { d: i + 1, v };
+  if (v > diaCaro.v) diaCaro = { d: i + 1, v };
+});
+
+const { barata, cara } = extremosHorarios(m.horas);
+const { mejor: franjaBarata, peor: franjaCara } = franjaHoraria(m.horas, 3);
+const brecha = m.horas[cara]! / m.horas[barata]!;
+
+// El perfil horario cambia de cara según la época del año, y ese es el gancho de cada mes.
+const baratoDeDia = barata >= 10 && barata <= 17;
+const caroDeNoche = cara >= 18 || cara <= 7;
+
+const subio = m.variacion != null && m.variacion > 0;
+const cambioFuerte = m.variacion != null && Math.abs(m.variacion) >= 10;
+
+// Coste de un uso típico con la media del mes. Ancla el precio a algo tangible y de paso
+// enlaza con las fichas de electrodomésticos.
+const APARATOS = ['lavadora', 'lavavajillas', 'secadora', 'coche-electrico'];
+const costes = APARATOS.map((slug) => {
+  const a = ELECTRODOMESTICOS.find((e) => e.slug === slug)!;
+  return { ...a, coste: a.kwh * m.media };
+});
+
+const serie = serieDiaria(m);
+
+// Meses del mismo año, para saltar entre ellos sin volver al índice.
+const hermanos = meses.filter((x) => x.anio === m.anio);
+
+const eurDia = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const title = `Precio de la luz en ${m.nombre}: media de ${cent(m.media)} céntimos el kWh`;
+const description = enCurso
+  ? `Precio de la luz en ${m.nombre} según el PVPC: media de ${cent(m.media)} céntimos por kWh en los ${m.n} días que lleva el mes, con el precio de cada día y la hora más barata. Datos oficiales de Red Eléctrica.`
+  : `Precio de la luz en ${m.nombre} según el PVPC: media de ${cent(m.media)} céntimos por kWh, mínimo de ${cent(m.min.v)} y máximo de ${cent(m.max.v)}. Precio de cada día del mes y hora a hora. Datos oficiales de Red Eléctrica.`;
+const rutaCanonica = m.ruta;
+const siteUrl = (Astro.site ?? new URL('https://mivatio.es')).href.replace(/\/$/, '');
+
+const faqs = [
+  {
+    q: `¿Cuál fue el precio medio de la luz en ${m.nombre}?`,
+    a: `La media del PVPC en ${m.nombre} fue de ${eur(m.media)} €/kWh, es decir ${cent(m.media)} céntimos, calculada sobre ${m.n} ${m.n === 1 ? 'día' : 'días'}${enCurso ? ' (el mes todavía no ha terminado)' : ''}. Es el precio base sin impuestos.`,
+  },
+  {
+    q: `¿Qué día fue el más barato de ${m.nombreMes} de ${m.anio}?`,
+    a: `El día más barato fue el ${fechaDe(diaBarato.d)}, con una media de ${cent(diaBarato.v)} céntimos por kWh. El más caro fue el ${fechaDe(diaCaro.d)}, con ${cent(diaCaro.v)} céntimos. La hora más barata de todo el mes se dio el día ${m.min.d} a las ${hh(m.min.h)}, a ${eur(m.min.v)} €/kWh.`,
+  },
+  {
+    q: `¿A qué hora salía más barata la luz en ${m.nombre}?`,
+    a: `De media, la hora más barata del mes fue las ${hh(barata)}, a ${cent(m.horas[barata]!)} céntimos, y la más cara las ${hh(cara)}, a ${cent(m.horas[cara]!)}. La diferencia entre una y otra fue de ${brecha.toLocaleString('es-ES', { maximumFractionDigits: 1 })} veces.`,
+  },
+  ...(m.variacion != null && m.anterior
+    ? [{
+        q: `¿Subió o bajó la luz respecto a ${m.anterior.nombre}?`,
+        a: `${subio ? 'Subió' : 'Bajó'} un ${Math.abs(m.variacion).toLocaleString('es-ES', { maximumFractionDigits: 1 })} %: se pasó de ${cent(m.anterior.media)} céntimos de media en ${m.anterior.nombre} a ${cent(m.media)} en ${m.nombre}.`,
+      }]
+    : []),
+  ...(m.variacionInteranual != null && m.interanual
+    ? [{
+        q: `¿Y comparado con ${m.interanual.nombre}?`,
+        a: `Respecto al mismo mes del año anterior, la luz salió un ${Math.abs(m.variacionInteranual).toLocaleString('es-ES', { maximumFractionDigits: 1 })} % ${m.variacionInteranual > 0 ? 'más cara' : 'más barata'}: ${cent(m.interanual.media)} céntimos de media en ${m.interanual.nombre} frente a ${cent(m.media)} en ${m.nombre}.`,
+      }]
+    : []),
+  {
+    q: '¿Estos precios incluyen impuestos?',
+    a: 'No. Son el precio base del PVPC que publica Red Eléctrica, sin impuesto eléctrico ni IVA. La factura final añade esos impuestos y el término fijo de la potencia contratada.',
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${siteUrl}/` },
+        { '@type': 'ListItem', position: 2, name: 'Histórico del precio de la luz', item: `${siteUrl}/precio-luz/` },
+        { '@type': 'ListItem', position: 3, name: String(m.anio), item: `${siteUrl}/precio-luz/${m.anio}/` },
+        { '@type': 'ListItem', position: 4, name: m.nombreMes, item: siteUrl + rutaCanonica },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+    },
+  ],
+};
+---
+<Layout title={title} description={description} canonicalPath={rutaCanonica}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  <div class="min-h-screen w-full" style="background-color:var(--color-fondo);">
+    <div class="mx-auto flex max-w-5xl justify-center gap-8">
+      <main class="w-full max-w-2xl">
+        <nav aria-label="Migas de pan" class="px-4 pt-6 text-xs text-tenue">
+          <a href="/" class="hover:text-acento">Inicio</a>
+          <span class="mx-1.5">/</span>
+          <a href="/precio-luz/" class="hover:text-acento">Histórico</a>
+          <span class="mx-1.5">/</span>
+          <a href={`/precio-luz/${m.anio}/`} class="hover:text-acento">{m.anio}</a>
+          <span class="mx-1.5">/</span>
+          <span class="text-suave capitalize">{m.nombreMes}</span>
+        </nav>
+
+        <header class="px-4 pt-4">
+          <h1 class="text-2xl font-bold tracking-tight text-tinta sm:text-3xl">
+            Precio de la luz en <span class="text-acento capitalize">{m.nombreMes} de {m.anio}</span>
+          </h1>
+          <p class="mt-3 text-sm leading-relaxed text-suave">
+            La luz costó de media <strong class="font-semibold text-tinta">{cent(m.media)} céntimos el kilovatio hora</strong>
+            en {m.nombre}
+            {enCurso
+              ? `, contando los ${m.n} días que lleva el mes.`
+              : `, según el PVPC que publica Red Eléctrica.`}
+            {m.variacion != null && m.anterior && (
+              <> {cambioFuerte ? 'Cambió bastante respecto a' : 'Respecto a'} {m.anterior.nombre}, cuando estaba en {cent(m.anterior.media)}: {subio ? 'subió' : 'bajó'} un {Math.abs(m.variacion).toLocaleString('es-ES', { maximumFractionDigits: 1 })} %.</>
+            )}
+          </p>
+          <p class="mt-2 text-xs text-tenue">
+            Península, Canarias y Baleares. Precio base sin impuestos.
+            {enCurso && ' Mes en curso: se actualiza a diario.'}
+          </p>
+        </header>
+
+        <section class="grid grid-cols-3 gap-2 px-4 pt-5 sm:gap-3">
+          <div class="rounded-2xl border border-borde bg-superficie p-3 sm:p-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-tenue sm:text-xs">Media</p>
+            <p class="mt-1 text-lg font-bold text-tinta sm:text-xl">{cent(m.media)}</p>
+            <p class="text-[11px] text-tenue">cent/kWh</p>
+          </div>
+          <div class="rounded-2xl border border-borde bg-superficie p-3 sm:p-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-tenue sm:text-xs">Hora más barata</p>
+            <p class="mt-1 text-lg font-bold text-barato sm:text-xl">{cent(m.min.v)}</p>
+            <p class="text-[11px] text-tenue">día {m.min.d}, {hh(m.min.h)}</p>
+          </div>
+          <div class="rounded-2xl border border-borde bg-superficie p-3 sm:p-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-tenue sm:text-xs">Hora más cara</p>
+            <p class="mt-1 text-lg font-bold text-caro sm:text-xl">{cent(m.max.v)}</p>
+            <p class="text-[11px] text-tenue">día {m.max.d}, {hh(m.max.h)}</p>
+          </div>
+        </section>
+
+        {m.variacionInteranual != null && m.interanual && (
+          <section class="px-4 pt-3">
+            <div class="rounded-2xl border border-borde bg-superficie px-4 py-3">
+              <p class="text-sm text-suave">
+                Frente a {m.interanual.nombre}, que cerró en {cent(m.interanual.media)} céntimos, este mes salió
+                <strong class={m.variacionInteranual > 0 ? 'font-semibold text-caro' : 'font-semibold text-barato'}>
+                  {' '}un {Math.abs(m.variacionInteranual).toLocaleString('es-ES', { maximumFractionDigits: 1 })} %
+                  {m.variacionInteranual > 0 ? ' más caro' : ' más barato'}
+                </strong>.
+              </p>
+            </div>
+          </section>
+        )}
+
+        <section class="px-4 pt-6">
+          <h2 class="text-base font-bold text-tinta">Cómo fue día a día</h2>
+          <p class="mt-1.5 text-sm leading-relaxed text-suave">
+            El día más barato fue el {fechaDe(diaBarato.d)}, con {cent(diaBarato.v)} céntimos de media,
+            y el más caro el {fechaDe(diaCaro.d)}, con {cent(diaCaro.v)}.
+          </p>
+          {/* El día 1 de cada mes solo hay un punto y la gráfica no se puede trazar: sin
+              esta guarda quedaría un recuadro vacío con borde. */}
+          {serie.length > 1 && (
+            <div class="mt-3 rounded-2xl border border-borde bg-superficie p-4">
+              <GraficaLinea id={`dias-${m.clave}`} serie={serie} unidad="cent/kWh" colorMinEsBueno={true} />
+            </div>
+          )}
+        </section>
+
+        <section class="px-4 pt-6">
+          <h2 class="text-base font-bold text-tinta">A qué hora salía más barata</h2>
+          <p class="mt-1.5 text-sm leading-relaxed text-suave">
+            De media a lo largo del mes, la hora más barata fue las <strong class="font-semibold text-barato">{hh(barata)}</strong>
+            ({cent(m.horas[barata]!)} céntimos) y la más cara las <strong class="font-semibold text-caro">{hh(cara)}</strong>
+            ({cent(m.horas[cara]!)}): {brecha.toLocaleString('es-ES', { maximumFractionDigits: 1 })} veces más.
+            {baratoDeDia
+              ? ' El hueco barato cayó en pleno día, que es lo que pasa cuando la solar cubre buena parte de la demanda.'
+              : ' El hueco barato cayó de madrugada, con la demanda en su punto más bajo.'}
+            {caroDeNoche && ' El pico de precio llegó fuera de las horas de sol, cuando hay que tirar de gas.'}
+          </p>
+          {franjaBarata && franjaCara && (
+            <p class="mt-2 text-sm leading-relaxed text-suave">
+              En bloques de tres horas seguidas, el más barato fue de {hh(franjaBarata.inicio)} a {hh(franjaBarata.fin)}
+              ({cent(franjaBarata.media)} céntimos de media) y el más caro de {hh(franjaCara.inicio)} a {hh(franjaCara.fin)}
+              ({cent(franjaCara.media)}).
+            </p>
+          )}
+          <div class="mt-3">
+            <PerfilHorario horas={m.horas} periodo={m.nombre} />
+          </div>
+        </section>
+
+        <section class="px-4 pt-6">
+          <h2 class="text-base font-bold text-tinta">Precio de cada día de {m.nombreMes}</h2>
+          <div class="mt-3 overflow-hidden rounded-2xl border border-borde bg-superficie">
+            <table class="w-full text-sm">
+              <caption class="sr-only">Precio medio, mínimo y máximo de cada día de {m.nombre}, en céntimos por kilovatio hora</caption>
+              <thead>
+                <tr class="border-b border-borde text-left text-xs uppercase tracking-wide text-tenue">
+                  <th scope="col" class="px-3 py-2.5 font-semibold sm:px-4">Día</th>
+                  <th scope="col" class="px-3 py-2.5 text-right font-semibold sm:px-4">Media</th>
+                  <th scope="col" class="px-3 py-2.5 text-right font-semibold sm:px-4">Mín</th>
+                  <th scope="col" class="px-3 py-2.5 text-right font-semibold sm:px-4">Máx</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: diasMes }, (_, i) => i).map((i) => {
+                  const v = m.diaMedia[i];
+                  if (typeof v !== 'number') return null;
+                  const d = i + 1;
+                  const esBarato = d === diaBarato.d;
+                  const esCaro = d === diaCaro.d;
+                  const color = esBarato ? 'text-barato' : esCaro ? 'text-caro' : 'text-tinta';
+                  return (
+                    <tr class="border-b border-borde last:border-0">
+                      <td class="whitespace-nowrap px-3 py-2 text-suave sm:px-4">
+                        {d} de {m.nombreMes}
+                      </td>
+                      <td class={`px-3 py-2 text-right sm:px-4 mono font-semibold ${color}`}>{cent(v)}</td>
+                      <td class="px-3 py-2 text-right text-tenue sm:px-4 mono">{cent(m.diaMin[i]!)}</td>
+                      <td class="px-3 py-2 text-right text-tenue sm:px-4 mono">{cent(m.diaMax[i]!)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-2 text-xs text-tenue">Céntimos por kWh. La media diaria es el promedio de las 24 horas de ese día.</p>
+        </section>
+
+        <section class="px-4 pt-6">
+          <h2 class="text-base font-bold text-tinta">Qué costaba usar cada aparato en {m.nombre}</h2>
+          <p class="mt-1.5 text-sm leading-relaxed text-suave">
+            Con la media del mes, un uso típico salía por:
+          </p>
+          <div class="mt-3 overflow-hidden rounded-2xl border border-borde bg-superficie">
+            {costes.map((c) => (
+              <a href={`/cuanto-cuesta/${c.slug}/`}
+                class="flex items-center justify-between gap-3 border-b border-borde px-4 py-3 transition-colors last:border-0 hover:bg-elevado">
+                <div>
+                  <p class="text-sm font-semibold text-tinta">{c.nombre}</p>
+                  <p class="text-xs text-tenue">{c.kwh.toLocaleString('es-ES')} kWh por {c.unidad}</p>
+                </div>
+                <span class="shrink-0 mono text-base font-bold text-acento">{eurDia(c.coste)} €</span>
+              </a>
+            ))}
+          </div>
+          <p class="mt-2 text-xs text-tenue">
+            Precio base del PVPC, sin impuestos. Consumos típicos: cada modelo varía.
+          </p>
+        </section>
+
+        <section class="px-4 pt-6">
+          <div class="rounded-2xl border border-borde bg-superficie px-4 py-3.5">
+            <p class="text-sm leading-relaxed text-suave">
+              De los {m.total} meses con datos desde que existe la tarifa actual, {m.nombre} fue el
+              <strong class="font-semibold text-tinta"> número {m.puesto} más caro</strong>.
+              <a href={`/precio-luz/${m.anio}/`} class="ml-1 text-acento hover:underline">Ver el año {m.anio} completo</a>.
+            </p>
+          </div>
+        </section>
+
+        <nav aria-label="Otros meses" class="px-4 pt-6">
+          <div class="flex gap-2">
+            {m.anterior ? (
+              <a href={m.anterior.ruta} class="flex-1 rounded-2xl border border-borde bg-superficie px-4 py-3 transition-colors hover:border-acento/50">
+                <p class="text-xs text-tenue">Mes anterior</p>
+                <p class="text-sm font-semibold capitalize text-tinta">{m.anterior.nombreMes} {m.anterior.anio}</p>
+                <p class="text-xs text-suave">{cent(m.anterior.media)} cent</p>
+              </a>
+            ) : <div class="flex-1"></div>}
+            {m.siguiente ? (
+              <a href={m.siguiente.ruta} class="flex-1 rounded-2xl border border-borde bg-superficie px-4 py-3 text-right transition-colors hover:border-acento/50">
+                <p class="text-xs text-tenue">Mes siguiente</p>
+                <p class="text-sm font-semibold capitalize text-tinta">{m.siguiente.nombreMes} {m.siguiente.anio}</p>
+                <p class="text-xs text-suave">{cent(m.siguiente.media)} cent</p>
+              </a>
+            ) : <div class="flex-1"></div>}
+          </div>
+
+          <p class="mt-4 text-xs font-semibold uppercase tracking-wide text-tenue">Meses de {m.anio}</p>
+          <div class="mt-2 flex flex-wrap gap-1.5">
+            {hermanos.map((x) => (
+              <a href={x.ruta}
+                aria-current={x.clave === m.clave ? 'page' : undefined}
+                class={x.clave === m.clave
+                  ? 'rounded-full bg-acento px-2.5 py-1 text-xs font-semibold capitalize text-sobre-acento'
+                  : 'rounded-full border border-borde px-2.5 py-1 text-xs font-medium capitalize text-suave transition-colors hover:border-acento/50 hover:text-acento'}>
+                {x.nombreMes}
+              </a>
+            ))}
+          </div>
+        </nav>
+
+        <section class="px-4 pt-6">
+          <a href="/" class="flex items-center justify-between gap-3 rounded-2xl border border-borde bg-superficie px-4 py-3.5 transition-colors hover:border-acento/50">
+            <div>
+              <p class="text-sm font-semibold text-tinta">El precio de la luz de hoy, hora a hora</p>
+              <p class="text-xs text-suave">En directo, con la hora más barata de lo que queda de día</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-acento px-3 py-1.5 text-xs font-semibold text-sobre-acento">Abrir</span>
+          </a>
+        </section>
+
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-tinta">Preguntas frecuentes</h2>
+          <div class="mt-3 divide-y divide-borde">
+            {faqs.map((f) => (
+              <details class="group py-3">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-tinta">
+                  <span>{f.q}</span>
+                  <span class="text-acento transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <p class="mt-2 text-sm leading-relaxed text-suave">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <footer class="px-4 pt-10 pb-8">
+          <p class="text-xs leading-relaxed text-tenue">
+            Datos del PVPC horario publicado por Red Eléctrica de España para Península, Canarias y
+            Baleares, sin impuestos. Página informativa, sin valor contractual.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <a href="/" class="text-suave hover:text-acento">Inicio</a>
+            <a href="/precio-luz/" class="text-suave hover:text-acento">Histórico</a>
+            <a href="/precio-medio-mensual/" class="text-suave hover:text-acento">Medias mensuales</a>
+            <a href="/aviso-legal" class="text-suave hover:text-acento">Aviso legal</a>
+            <a href="/privacidad" class="text-suave hover:text-acento">Privacidad</a>
+          </div>
+          <p class="mt-3 text-xs text-tenue">© {new Date().getFullYear()} Vatio</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+</Layout>

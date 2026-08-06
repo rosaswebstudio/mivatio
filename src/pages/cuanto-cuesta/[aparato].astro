@@ -5,6 +5,8 @@
 import Layout from '../../layouts/Layout.astro';
 import { ELECTRODOMESTICOS } from '../../lib/electrodomesticos.js';
 import { cargarPrecios, franjas, resumenDia } from '../../lib/datos-build.js';
+import mensual from '../../data/mensual.json';
+import { listaMeses } from '../../lib/mensual.js';
 
 export async function getStaticPaths() {
   const { fecha, horas } = await cargarPrecios();
@@ -50,6 +52,17 @@ const fechaLarga = new Date(fecha + 'T12:00:00').toLocaleDateString('es-ES', {
 });
 
 const otros = ELECTRODOMESTICOS.filter((e) => e.slug !== ap.slug);
+
+// Lo mismo, pero con la media del mes en curso y con la del mes más caro y el más barato
+// que se recuerdan. Da la escala real de lo que está en juego: el margen entre horas de un
+// día es pequeño al lado del margen entre un mes bueno y uno malo.
+const mesesArchivo = listaMeses(mensual);
+const mesActual = mesesArchivo[mesesArchivo.length - 1];
+const mesBarato = mesesArchivo.reduce((x, m) => (m.media < x.media ? m : x), mesesArchivo[0]);
+const mesCaro = mesesArchivo.reduce((x, m) => (m.media > x.media ? m : x), mesesArchivo[0]);
+const costeMesActual = ap.kwh * mesActual.media;
+const costeMesBarato = ap.kwh * mesBarato.media;
+const costeMesCaro = ap.kwh * mesCaro.media;
 
 const title = `¿Cuánto cuesta ${ap.accion}? Precio real de hoy`;
 const description = `Con el precio de la luz de hoy, ${ap.accion} cuesta ${eur(costeBarato)} en la franja más barata y ${eur(costeCaro)} en la más cara. Calcula el coste con el consumo de tu aparato.`;
@@ -253,6 +266,42 @@ const card = 'rounded-2xl border border-borde bg-superficie p-4';
               </a>
             ))}
           </div>
+        </section>
+
+        <!-- Escala mensual: el margen entre horas es pequeño al lado del margen entre meses -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-tinta">Y a lo largo del año, ¿cuánto cambia?</h2>
+          <p class="mt-2 text-sm leading-relaxed text-suave">
+            Elegir la hora está bien, pero el año manda más. Con la media de cada mes,
+            {' '}{ap.accion} ha costado esto:
+          </p>
+          <div class="mt-3 overflow-hidden rounded-2xl border border-borde bg-superficie">
+            <a href={mesActual.ruta} class="flex items-center justify-between gap-3 border-b border-borde px-4 py-3 transition-colors hover:bg-elevado">
+              <div>
+                <p class="text-sm font-semibold capitalize text-tinta">{mesActual.nombre}</p>
+                <p class="text-xs text-tenue">el mes en curso</p>
+              </div>
+              <span class="shrink-0 mono text-base font-bold text-tinta">{eur(costeMesActual)}</span>
+            </a>
+            <a href={mesBarato.ruta} class="flex items-center justify-between gap-3 border-b border-borde px-4 py-3 transition-colors hover:bg-elevado">
+              <div>
+                <p class="text-sm font-semibold capitalize text-tinta">{mesBarato.nombre}</p>
+                <p class="text-xs text-tenue">el mes más barato desde 2021</p>
+              </div>
+              <span class="shrink-0 mono text-base font-bold text-barato">{eur(costeMesBarato)}</span>
+            </a>
+            <a href={mesCaro.ruta} class="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-elevado">
+              <div>
+                <p class="text-sm font-semibold capitalize text-tinta">{mesCaro.nombre}</p>
+                <p class="text-xs text-tenue">el mes más caro desde 2021</p>
+              </div>
+              <span class="shrink-0 mono text-base font-bold text-caro">{eur(costeMesCaro)}</span>
+            </a>
+          </div>
+          <p class="mt-2 text-xs text-tenue">
+            Precio base del PVPC sin impuestos, aplicado al consumo típico de {kwh(ap.kwh)} kWh.
+            {' '}<a href="/precio-luz/" class="text-acento hover:underline">Ver el histórico completo</a>.
+          </p>
         </section>
 
         <!-- FAQ -->

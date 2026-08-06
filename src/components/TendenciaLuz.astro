@@ -1,6 +1,6 @@
 ---
 // Bloque "cómo evoluciona el precio de la luz": media diaria, tendencia y gráfica.
-// Se calcula en el build a partir de src/data/historico.json. La única pieza de cliente
+// Se calcula en el build a partir de src/data/mensual.json. La única pieza de cliente
 // es el hover del propio GraficaLinea (ver ese componente).
 import { analizar, veredicto } from '../lib/tendencia.js';
 import GraficaLinea from './GraficaLinea.astro';
@@ -74,7 +74,7 @@ const diaCaro = validos.reduce((max, p) => (p.valor > max.valor ? p : max), vali
       <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-borde pt-3 text-xs text-suave">
         <span>Día más barato: <strong class="text-acento">{cent(diaBarato.valor)} cent</strong> ({fmtFecha(diaBarato.fecha)})</span>
         <span>Día más caro: <strong class="text-caro">{cent(diaCaro.valor)} cent</strong> ({fmtFecha(diaCaro.fecha)})</span>
-        <a href="/precio-medio-mensual/" class="ml-auto font-semibold text-acento hover:underline">Ver medias por mes →</a>
+        <a href="/precio-luz/" class="ml-auto font-semibold text-acento hover:underline">Ver el histórico mes a mes →</a>
       </div>
 
       <details class="mt-3 border-t border-borde pt-3">

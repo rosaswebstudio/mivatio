@@ -4,7 +4,8 @@ import Vatio from '../components/Vatio.jsx';
 import TablaHoras from '../components/TablaHoras.astro';
 import { ELECTRODOMESTICOS } from '../lib/electrodomesticos.js';
 import TendenciaLuz from '../components/TendenciaLuz.astro';
-import historico from '../data/historico.json';
+import mensual from '../data/mensual.json';
+import { listaMeses, ultimosDias, cent as centH } from '../lib/mensual.js';
 import { cargarPrecios, fechaMadrid, fechaLarga, resumenDia, franjas } from '../lib/datos-build.js';
 
 // Los precios de hoy se traen EN EL BUILD y se escriben en el HTML.
@@ -26,6 +27,20 @@ const brechaPct = ((res.max / res.min - 1) * 100).toLocaleString('es-ES', { maxi
 
 // Coma decimal: "1,2 kWh", no "1.2 kWh".
 const kwhTxt = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 2 });
+
+// El precio de hoy, puesto en contexto contra los cinco años de archivo. La media global va
+// ponderada por días para que un mes a medio terminar no cuente igual que uno entero.
+const archivoMensual = listaMeses(mensual);
+const historico = ultimosDias(mensual, 90);
+const mesActual = archivoMensual[archivoMensual.length - 1];
+const mediaHistorica =
+  archivoMensual.reduce((s, m) => s + m.media * m.n, 0) / archivoMensual.reduce((s, m) => s + m.n, 0);
+const difHistorica = (res.media / mediaHistorica - 1) * 100;
+const hoyCaro = difHistorica > 0;
+
+// De mayor a menor consumo. Con veinte fichas en la lista, el orden del catálogo deja de
+// servir: lo que busca quien llega aquí es dónde está el gasto de verdad.
+const aparatosPorGasto = [...ELECTRODOMESTICOS].sort((a, b) => b.kwh - a.kwh);
 
 const title = 'Precio de la luz hoy y mañana, hora a hora | Vatio';
 // La descripción lleva el dato del día: en Google se ve un precio concreto en vez de una
@@ -170,6 +185,44 @@ const jsonLd = {
 
         <TendenciaLuz fechas={historico.fechas} media={historico.media} min={historico.min} max={historico.max} />
 
+        <!-- Sitúa el precio de hoy en los cinco años de archivo. Sin esto, la cifra del día
+             no dice si es cara o barata: solo dice cuánto vale. -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-tinta">¿Hoy está cara o barata?</h2>
+          <p class="mt-2 text-sm leading-relaxed text-suave">
+            La media de hoy es de <strong class="font-semibold text-tinta">{p4(res.media)} €/kWh</strong>.
+            La media de los {archivoMensual.length} meses que llevamos registrados desde junio de 2021
+            es de {centH(mediaHistorica)} céntimos, así que hoy sale
+            <strong class={hoyCaro ? 'font-semibold text-caro' : 'font-semibold text-barato'}>
+              {' '}un {Math.abs(difHistorica).toLocaleString('es-ES', { maximumFractionDigits: 0 })} %
+              {hoyCaro ? ' por encima' : ' por debajo'}
+            </strong> de esa referencia.
+            {' '}En {mesActual.nombre} la media va por {centH(mesActual.media)} céntimos.
+          </p>
+          <div class="mt-3 grid gap-2 sm:grid-cols-2">
+            <a href={mesActual.ruta}
+              class="flex items-center justify-between gap-3 rounded-2xl border border-borde bg-superficie px-4 py-3.5 transition-colors hover:border-acento/50">
+              <div>
+                <p class="text-sm font-semibold capitalize text-tinta">Precio de la luz en {mesActual.nombre}</p>
+                <p class="text-xs text-suave">Día a día y hora a hora del mes en curso</p>
+              </div>
+              <span class="shrink-0 mono text-sm font-bold text-acento">{centH(mesActual.media)}</span>
+            </a>
+            <a href="/precio-luz/"
+              class="flex items-center justify-between gap-3 rounded-2xl border border-borde bg-superficie px-4 py-3.5 transition-colors hover:border-acento/50">
+              <div>
+                <p class="text-sm font-semibold text-tinta">Histórico desde 2021</p>
+                <p class="text-xs text-suave">Los {archivoMensual.length} meses, con récords y medias</p>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                class="h-4 w-4 shrink-0 text-acento" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </a>
+          </div>
+        </section>
+
         <!-- Coste por electrodoméstico (enlazado interno hacia las páginas generadas) -->
         <section class="px-4 pt-8">
           <h2 class="text-base font-bold text-tinta">¿Cuánto cuesta poner cada electrodoméstico?</h2>
@@ -178,7 +231,7 @@ const jsonLd = {
             eligiendo la hora buena.
           </p>
           <div class="mt-3 grid gap-2 sm:grid-cols-2">
-            {ELECTRODOMESTICOS.map((e) => (
+            {aparatosPorGasto.map((e) => (
               <a href={`/cuanto-cuesta/${e.slug}/`}
                 class="group flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition-colors"
                 style="background-color:var(--color-superficie);border:1px solid var(--color-borde);">
@@ -285,6 +338,7 @@ const jsonLd = {
           </p>
           <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
             <a href="/precio-luz-manana/" class="text-suave hover:text-acento">Precio mañana</a>
+            <a href="/precio-luz/" class="text-suave hover:text-acento">Histórico</a>
             <a href="/quienes-somos" class="text-suave hover:text-acento">Quiénes somos</a>
             <a href="/contacto" class="text-suave hover:text-acento">Contacto</a>
             <a href="/aviso-legal" class="text-suave hover:text-acento">Aviso legal</a>

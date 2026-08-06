@@ -213,6 +213,118 @@ export const ELECTRODOMESTICOS = [
     consejo:
       'Es la forma más barata de calentar con electricidad. Rinde menos cuanto más frío hace fuera, así que en zonas muy frías conviene combinarla con otro sistema.',
   },
+  {
+    slug: 'depuradora-piscina',
+    nombre: 'Depuradora de piscina',
+    accion: 'filtrar el agua de la piscina',
+    kwh: 5.5,
+    rango: [2.5, 12],
+    horas: 8,
+    usosSemana: 7,
+    unidad: 'día',
+    unidadPlural: 'días',
+    programable: true,
+    detalle:
+      'Una bomba de filtración de 3/4 de caballo ronda los 700 W y en verano tiene que estar funcionando entre seis y diez horas al día. Sumado, es el aparato que más dispara la factura de julio y agosto en una casa con piscina, por encima del aire acondicionado.',
+    consejo:
+      'Es el caso donde más se nota elegir la hora, porque son muchas horas seguidas y se programan con un reloj de toda la vida. En verano el tramo barato cae a mediodía por la producción solar, justo cuando además interesa filtrar por el calor y el uso del vaso.',
+  },
+  {
+    slug: 'freidora-de-aire',
+    nombre: 'Freidora de aire',
+    accion: 'usar la freidora de aire',
+    kwh: 0.5,
+    rango: [0.25, 0.9],
+    horas: 1,
+    usosSemana: 4,
+    unidad: 'uso',
+    unidadPlural: 'usos',
+    programable: false,
+    detalle:
+      'Tira de unos 1.500 W, parecido a un horno pequeño, pero cocina en un espacio mínimo y en la cuarta parte de tiempo: unos veinte minutos frente a la hora larga del horno contando el precalentado. Ahí está el ahorro, no en la potencia.',
+    consejo:
+      'Para raciones de una o dos personas sale bastante más barata que encender el horno. Cuando la bandeja se llena de verdad, el horno vuelve a compensar porque cocina mucha más cantidad de una vez.',
+  },
+  {
+    slug: 'television',
+    nombre: 'Televisión',
+    accion: 'tener la televisión encendida',
+    kwh: 0.4,
+    rango: [0.15, 1.2],
+    horas: 4,
+    usosSemana: 7,
+    unidad: 'día',
+    unidadPlural: 'días',
+    programable: false,
+    detalle:
+      'Una televisión de 55 pulgadas ronda los 100 W, así que cuatro horas diarias salen por unos 0,4 kWh. Lo que marca la diferencia es el tamaño y la tecnología: una OLED grande con el brillo al máximo puede triplicar el consumo de una LED mediana.',
+    consejo:
+      'Bajar el brillo y desactivar el modo tienda o dinámico recorta el consumo de forma apreciable sin que se note en el sofá. El gasto en reposo, en cambio, es hoy de menos de 0,5 W: desenchufarla cada noche ya no compensa la molestia.',
+  },
+  {
+    slug: 'ordenador',
+    nombre: 'Ordenador',
+    accion: 'usar el ordenador',
+    kwh: 0.6,
+    rango: [0.15, 2.5],
+    horas: 4,
+    usosSemana: 7,
+    unidad: 'día',
+    unidadPlural: 'días',
+    programable: false,
+    detalle:
+      'Aquí el rango es enorme y por eso la media engaña: un portátil se mueve en 30 o 50 W y un sobremesa para juegos puede pasar de 500 W con la tarjeta gráfica a tope. Entre uno y otro hay diez veces de diferencia haciendo lo mismo durante las mismas horas.',
+    consejo:
+      'Si trabajas muchas horas, el portátil frente al sobremesa es de los cambios que más se notan al cabo del año. Y suspender en vez de dejarlo encendido durante las pausas largas ahorra más que cualquier ajuste de pantalla.',
+  },
+  {
+    slug: 'deshumidificador',
+    nombre: 'Deshumidificador',
+    accion: 'tener el deshumidificador',
+    kwh: 2.4,
+    rango: [1, 5],
+    horas: 8,
+    usosSemana: 7,
+    unidad: 'día',
+    unidadPlural: 'días',
+    programable: true,
+    detalle:
+      'Los de compresor consumen entre 250 y 400 W, pero funcionan muchas horas seguidas, y ahí está el gasto. En la costa, donde se usan casi todo el invierno, acaban pesando en la factura más que aparatos de mucha más potencia que solo se encienden un rato.',
+    consejo:
+      'Con el higrostato puesto en el 50 o 55 % arranca y para solo, en vez de trabajar sin parar. Y como no importa a qué hora seque el aire, es un candidato claro para programarlo en la franja barata.',
+  },
+  {
+    slug: 'secador-de-pelo',
+    nombre: 'Secador de pelo',
+    accion: 'secarte el pelo',
+    kwh: 0.17,
+    rango: [0.08, 0.35],
+    horas: 1,
+    usosSemana: 7,
+    unidad: 'uso',
+    unidadPlural: 'usos',
+    programable: false,
+    detalle:
+      'Es el ejemplo perfecto de que potencia y gasto no son lo mismo. Un secador de 2.000 W es de los aparatos más potentes de la casa, más que la lavadora, pero como se usa cinco minutos gasta unos 0,17 kWh: céntimos.',
+    consejo:
+      'No merece la pena organizarse por esto. Si quieres bajar la factura del baño, el termo del agua caliente está en otra liga: una ducha larga cuesta bastante más que secarse el pelo entero.',
+  },
+  {
+    slug: 'router-wifi',
+    nombre: 'Router wifi',
+    accion: 'tener el router encendido',
+    kwh: 0.24,
+    rango: [0.1, 0.5],
+    horas: 24,
+    usosSemana: 7,
+    unidad: 'día',
+    unidadPlural: 'días',
+    programable: false,
+    detalle:
+      'Consume unos 10 W, una miseria por hora, pero no se apaga nunca: son 24 horas al día los 365 días del año, unos 87 kWh anuales. Es el mismo caso que el frigorífico, poca potencia sostenida en el tiempo.',
+    consejo:
+      'Apagarlo por la noche ahorra poco y deja sin conexión a la tele, la cámara o el teléfono fijo. Si te preocupa el consumo que no se ve, sale más a cuenta buscar los aparatos que están en reposo todo el día: entre todos suelen sumar bastante más que el router.',
+  },
 ];
 
 export const porSlug = (slug) => ELECTRODOMESTICOS.find((e) => e.slug === slug) || null;

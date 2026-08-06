@@ -4,9 +4,11 @@
 // aquí es donde tiene sentido el CTA de comparador de tarifas cuando haya un enlace real
 // de Awin (ver el bloque comentado más abajo).
 import Layout from '../layouts/Layout.astro';
-import historico from '../data/historico.json';
+import mensual from '../data/mensual.json';
+import { ultimosDias } from '../lib/mensual.js';
 
-const { fechas, media, min, max } = historico as {
+// El archivo mensual es ya el único origen de datos diarios del sitio.
+const { fechas, media, min, max } = ultimosDias(mensual, 90) as {
   fechas: string[]; media: (number | null)[]; min: (number | null)[]; max: (number | null)[];
 };
 

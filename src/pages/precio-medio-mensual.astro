@@ -1,84 +1,82 @@
 ---
-// Precio medio de la luz por meses, a partir del histórico diario.
-// SEO perenne ("precio de la luz en junio de 2026"). Se genera en el build.
+// ¿En qué mes del año sale más cara la luz? Compara CADA MES DEL CALENDARIO consigo mismo
+// a lo largo de los años (todos los eneros, todos los febreros...).
+//
+// Es a propósito lo contrario de /precio-luz/, que recorre la serie en orden cronológico:
+// aquella responde "cuánto costó en enero de 2024" y esta "si suele ser caro enero". Se
+// separaron justamente para que no compitieran por la misma búsqueda.
 import Layout from '../layouts/Layout.astro';
-import GraficaLinea from '../components/GraficaLinea.astro';
-import historico from '../data/historico.json';
+import archivo from '../data/mensual.json';
+import { listaMeses, cent, hh, MESES } from '../lib/mensual.js';
 
-const { fechas, media, min, max } = historico as {
-  fechas: string[]; media: (number | null)[]; min: (number | null)[]; max: (number | null)[];
-};
+const meses = listaMeses(archivo);
 
-const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+// Un grupo por mes del calendario, con la media de todos los años que tengan ese mes.
+const grupos = MESES.map((nombre, i) => {
+  const num = i + 1;
+  const ocurrencias = meses.filter((m) => m.mes === num);
+  const dias = ocurrencias.reduce((a, m) => a + m.n, 0);
+  const media = ocurrencias.reduce((a, m) => a + m.media * m.n, 0) / dias;
+  const masBarato = ocurrencias.reduce((a, m) => (m.media < a.media ? m : a), ocurrencias[0]);
+  const masCaro = ocurrencias.reduce((a, m) => (m.media > a.media ? m : a), ocurrencias[0]);
+  // Perfil horario típico del mes del calendario, ponderado por días.
+  const horas = Array.from({ length: 24 }, (_, h) => {
+    let s = 0;
+    let n = 0;
+    for (const m of ocurrencias) {
+      if (typeof m.horas[h] === 'number') {
+        s += m.horas[h] * m.n;
+        n += m.n;
+      }
+    }
+    return n ? s / n : null;
+  });
+  let horaBarata = 0;
+  horas.forEach((v, h) => {
+    if (typeof v === 'number' && (horas[horaBarata] == null || v < horas[horaBarata]!)) horaBarata = h;
+  });
+  return { num, nombre, ocurrencias, anios: ocurrencias.length, dias, media, masBarato, masCaro, horaBarata };
+}).filter((g) => g.anios > 0);
 
-// Agrupa los días por mes natural.
-const grupos = new Map<string, { medias: number[]; mins: number[]; maxs: number[] }>();
-fechas.forEach((f, i) => {
-  const v = media[i];
-  if (typeof v !== 'number') return;
-  const clave = f.slice(0, 7); // AAAA-MM
-  if (!grupos.has(clave)) grupos.set(clave, { medias: [], mins: [], maxs: [] });
-  const g = grupos.get(clave)!;
-  g.medias.push(v);
-  if (typeof min[i] === 'number') g.mins.push(min[i] as number);
-  if (typeof max[i] === 'number') g.maxs.push(max[i] as number);
-});
+const ordenados = [...grupos].sort((a, b) => b.media - a.media);
+const caro = ordenados[0];
+const barato = ordenados[ordenados.length - 1];
+const maxMedia = caro.media;
 
-const prom = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
-const meses = [...grupos.entries()]
-  .map(([clave, g]) => {
-    const [y, m] = clave.split('-');
-    return {
-      clave,
-      nombre: `${MESES[Number(m) - 1]} de ${y}`,
-      dias: g.medias.length,
-      media: prom(g.medias),
-      minMedia: Math.min(...g.medias),
-      maxMedia: Math.max(...g.medias),
-      minAbs: g.mins.length ? Math.min(...g.mins) : null,
-      maxAbs: g.maxs.length ? Math.max(...g.maxs) : null,
-    };
-  })
-  .sort((a, b) => b.clave.localeCompare(a.clave)); // más reciente primero
+// Media global, para decir de un vistazo qué meses están por encima y cuáles por debajo.
+const diasTotales = grupos.reduce((a, g) => a + g.dias, 0);
+const mediaGlobal = grupos.reduce((a, g) => a + g.media * g.dias, 0) / diasTotales;
 
-const cent = (n: number) => (n * 100).toLocaleString('es-ES', { maximumFractionDigits: 1 });
-const eur = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+const anios = [...new Set(meses.map((m) => m.anio))].sort();
+const rango = `${meses[0].nombre} a ${meses[meses.length - 1].nombre}`;
 
-const masBarato = meses.length ? meses.reduce((min, m) => (m.media < min.media ? m : min), meses[0]) : null;
-const masCaro = meses.length ? meses.reduce((max, m) => (m.media > max.media ? m : max), meses[0]) : null;
-const maxMediaMes = meses.length ? Math.max(...meses.map((m) => m.media)) : 1;
+// Cuántos meses del calendario tienen su hora barata de día: es la señal de que la solar
+// ha cambiado la forma del día, y se puede contar con número en vez de por intuición.
+const conSolar = grupos.filter((g) => g.horaBarata >= 10 && g.horaBarata <= 17);
 
-// Para la gráfica hace falta orden cronológico (el listado de abajo va del más reciente
-// al más antiguo, al revés de lo que se lee en un eje de tiempo).
-const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const serieMensual = [...meses].reverse().map((m) => {
-  const [y, mm] = m.clave.split('-');
-  return { fecha: m.clave, valor: m.media, etiqueta: `${MESES_CORTOS[Number(mm) - 1]} '${y.slice(2)}` };
-});
-
-const fechaLarga = fechas.length
-  ? new Date(fechas[fechas.length - 1] + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
-  : '';
-
-const title = 'Precio medio de la luz por meses (histórico del PVPC)';
-const description = 'Precio medio de la luz mes a mes según el PVPC de Red Eléctrica: media, mínimo y máximo de cada mes, con el histórico de los últimos meses. Datos oficiales, sin impuestos.';
+const title = '¿En qué mes sale más cara la luz? Media de cada mes desde 2021';
+const description = `Qué mes del año sale más caro y cuál más barato, comparando el mismo mes entre ${anios.length} años de PVPC. ${caro.nombre} es el más caro de media (${cent(caro.media)} céntimos) y ${barato.nombre} el más barato (${cent(barato.media)}). Datos de Red Eléctrica.`;
 const rutaCanonica = '/precio-medio-mensual/';
 const siteUrl = (Astro.site ?? new URL('https://mivatio.es')).href.replace(/\/$/, '');
 
-const faqs = masBarato && masCaro ? [
+const faqs = [
   {
-    q: '¿Cuál ha sido el mes más barato y el más caro?',
-    a: `De los meses con datos, el más barato fue ${masBarato.nombre}, con una media de ${cent(masBarato.media)} céntimos por kWh, y el más caro ${masCaro.nombre}, con ${cent(masCaro.media)} céntimos. Son medias del precio base del PVPC, sin impuestos.`,
+    q: '¿Qué mes del año es el más caro para la luz?',
+    a: `Promediando ${anios.length} años de PVPC, el mes más caro es ${caro.nombre}, con ${cent(caro.media)} céntimos por kWh de media, y el más barato ${barato.nombre}, con ${cent(barato.media)}. Aun así conviene mirar el año concreto: la diferencia entre un ${caro.nombre.toLowerCase()} y otro llega a ser mucho mayor que la que hay entre meses.`,
+  },
+  {
+    q: '¿Es fiable esta media para predecir el mes que viene?',
+    a: `Sirve para orientarse, no para acertar. El precio del PVPC lo marca el mercado mayorista cada día, y depende del gas, del viento, del sol y de la demanda. Como muestra: el ${caro.nombre.toLowerCase()} más caro de la serie fue el de ${caro.masCaro.anio}, con ${cent(caro.masCaro.media)} céntimos, y el más barato el de ${caro.masBarato.anio}, con ${cent(caro.masBarato.media)}.`,
+  },
+  {
+    q: '¿Por qué en verano hay horas tan baratas?',
+    a: `Por la solar. En ${conSolar.length} de los doce meses del calendario, la hora más barata del día cae ya entre las 10:00 y las 18:00, justo cuando más produce el sol. En los meses de menos luz, el hueco barato vuelve a la madrugada.`,
   },
   {
     q: '¿Estos precios incluyen impuestos?',
-    a: 'No. Son el precio base del PVPC publicado por Red Eléctrica, sin el impuesto eléctrico ni el IVA. Tu factura final añade esos impuestos y el término de potencia contratada.',
+    a: 'No. Son el precio base del PVPC publicado por Red Eléctrica, sin impuesto eléctrico, sin IVA y sin el término fijo de la potencia contratada.',
   },
-  {
-    q: '¿Con qué frecuencia se actualiza?',
-    a: `Esta página se recalcula a diario con los precios de Red Eléctrica. La última actualización es del ${fechaLarga}.`,
-  },
-] : [];
+];
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -87,13 +85,14 @@ const jsonLd = {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${siteUrl}/` },
-        { '@type': 'ListItem', position: 2, name: 'Precio medio por meses', item: siteUrl + rutaCanonica },
+        { '@type': 'ListItem', position: 2, name: 'Histórico del precio de la luz', item: `${siteUrl}/precio-luz/` },
+        { '@type': 'ListItem', position: 3, name: 'Mes más caro del año', item: siteUrl + rutaCanonica },
       ],
     },
-    ...(faqs.length ? [{
+    {
       '@type': 'FAQPage',
       mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
-    }] : []),
+    },
   ],
 };
 ---
@@ -106,117 +105,147 @@ const jsonLd = {
         <nav aria-label="Migas de pan" class="px-4 pt-6 text-xs text-tenue">
           <a href="/" class="hover:text-acento">Inicio</a>
           <span class="mx-1.5">/</span>
-          <span class="text-suave">Precio medio por meses</span>
+          <a href="/precio-luz/" class="hover:text-acento">Histórico</a>
+          <span class="mx-1.5">/</span>
+          <span class="text-suave">Mes más caro del año</span>
         </nav>
 
         <header class="px-4 pt-4">
           <h1 class="text-2xl font-bold tracking-tight text-tinta sm:text-3xl">
-            Precio medio de la luz <span class="text-acento">por meses</span>
+            ¿En qué mes sale <span class="text-acento">más cara la luz</span>?
           </h1>
           <p class="mt-3 text-sm leading-relaxed text-suave">
-            La media mensual del PVPC según los datos de Red Eléctrica. Sirve para ver la tendencia
-            de fondo, más allá del sube y baja de cada día.
+            Aquí no se mira la serie en orden, sino cada mes del calendario comparado consigo mismo a
+            lo largo de {anios.length} años, de {rango}. Con esos datos, el mes más caro de media es
+            <strong class="font-semibold text-caro"> {caro.nombre}</strong> ({cent(caro.media)} céntimos el kWh)
+            y el más barato <strong class="font-semibold text-barato">{barato.nombre}</strong> ({cent(barato.media)}).
           </p>
-          <p class="mt-2 text-xs text-tenue">Península, sin impuestos. Actualizado el {fechaLarga}.</p>
+          <p class="mt-2 text-xs text-tenue">Península, Canarias y Baleares. Precio base sin impuestos.</p>
         </header>
 
-        {masBarato && masCaro && (
-          <section class="grid grid-cols-2 gap-3 px-4 pt-5">
-            <div class="rounded-2xl border border-borde bg-superficie p-4">
-              <p class="text-xs font-semibold uppercase tracking-wide text-tenue">Mes más barato</p>
-              <p class="mt-1 text-xl font-bold text-acento">{cent(masBarato.media)} <span class="text-sm font-semibold text-tenue">cent</span></p>
-              <p class="text-xs text-tenue">{masBarato.nombre}</p>
-            </div>
-            <div class="rounded-2xl border border-borde bg-superficie p-4">
-              <p class="text-xs font-semibold uppercase tracking-wide text-tenue">Mes más caro</p>
-              <p class="mt-1 text-xl font-bold text-caro">{cent(masCaro.media)} <span class="text-sm font-semibold text-tenue">cent</span></p>
-              <p class="text-xs text-tenue">{masCaro.nombre}</p>
-            </div>
-          </section>
-        )}
+        <section class="px-4 pt-5">
+          <div class="rounded-2xl border border-aviso-borde bg-aviso px-4 py-3">
+            <p class="text-sm leading-relaxed text-suave">
+              <strong class="font-semibold text-tinta">Aviso antes de fiarse de la media:</strong> el año pesa
+              mucho más que el mes. El {caro.nombre.toLowerCase()} de {caro.masCaro.anio} salió a
+              {' '}{cent(caro.masCaro.media)} céntimos y el de {caro.masBarato.anio} a {cent(caro.masBarato.media)}.
+              Entre dos {caro.nombre.toLowerCase()}s hay más distancia que entre el mes más caro y el más
+              barato del calendario.
+            </p>
+          </div>
+        </section>
 
-        {masBarato && masCaro && (
-          <section class="px-4 pt-6">
-            <div class="rounded-2xl border border-borde bg-superficie p-4">
-              <p class="text-xs font-semibold uppercase tracking-wide text-tenue">Evolución mes a mes</p>
-              <div class="mt-3">
-                <GraficaLinea id="medias-mensuales" serie={serieMensual} unidad="cent/kWh" colorMinEsBueno={true} />
-              </div>
-            </div>
-          </section>
-        )}
-
-        <!-- Tabla de meses con barra proporcional: sirve también de tabla de datos accesible para la gráfica de arriba -->
         <section class="px-4 pt-6">
-          <div class="overflow-hidden rounded-2xl border border-borde bg-superficie">
-            {meses.map((m) => (
-              <div class="border-b border-borde px-4 py-3 last:border-0">
-                <div class="flex items-baseline justify-between gap-3">
-                  <p class="text-sm font-semibold capitalize text-tinta">{m.nombre}</p>
-                  <p class="font-mono text-base font-bold text-tinta">{cent(m.media)} <span class="text-xs font-semibold text-tenue">cent/kWh</span></p>
+          <h2 class="text-base font-bold text-tinta">Los doce meses, de más caro a más barato</h2>
+          <div class="mt-3 overflow-hidden rounded-2xl border border-borde bg-superficie">
+            {ordenados.map((g) => {
+              const encima = g.media > mediaGlobal;
+              return (
+                <div class="border-b border-borde px-4 py-3 last:border-0">
+                  <div class="flex items-baseline justify-between gap-3">
+                    <p class="text-sm font-semibold capitalize text-tinta">{g.nombre}</p>
+                    <p class={`mono text-base font-bold ${encima ? 'text-caro' : 'text-barato'}`}>
+                      {cent(g.media)} <span class="text-xs font-semibold text-tenue">cent/kWh</span>
+                    </p>
+                  </div>
+                  <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-fondo">
+                    <div class={`h-full rounded-full ${encima ? 'bg-caro' : 'bg-barato'}`} style={`width:${Math.round((g.media / maxMedia) * 100)}%`}></div>
+                  </div>
+                  <p class="mt-1.5 text-xs text-tenue">
+                    Media de {g.anios} {g.anios === 1 ? 'año' : 'años'} · hora más barata, las {hh(g.horaBarata)}
+                  </p>
+                  <div class="mt-2 flex flex-wrap gap-1.5">
+                    {g.ocurrencias.map((m) => (
+                      <a href={m.ruta}
+                        class="rounded-full border border-borde px-2 py-0.5 text-xs text-suave transition-colors hover:border-acento/50 hover:text-acento">
+                        {m.anio} <span class="mono text-tenue">{cent(m.media, 1)}</span>
+                      </a>
+                    ))}
+                  </div>
                 </div>
-                <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-fondo">
-                  <div class="h-full rounded-full bg-acento" style={`width:${Math.round((m.media / maxMediaMes) * 100)}%`}></div>
-                </div>
-                <p class="mt-1.5 text-xs text-tenue">
-                  {m.dias} días · media diaria de {cent(m.minMedia)} a {cent(m.maxMedia)} cent
-                  {m.minAbs != null && m.maxAbs != null && ` · horas sueltas desde ${cent(m.minAbs)} hasta ${cent(m.maxAbs)} cent`}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <p class="mt-2 text-xs text-tenue">
-            La media mensual es el promedio de las medias diarias. El primer y el último mes pueden
-            tener pocos días si el histórico no los cubre enteros.
+            Cada media pondera los días de cada año, para que un mes incompleto no desvirtúe el
+            promedio. La media de todo el periodo es de {cent(mediaGlobal)} céntimos.
           </p>
         </section>
 
-        <!-- CTA a la app -->
         <section class="px-4 pt-6">
-          <a href="/" class="flex items-center justify-between gap-3 rounded-2xl border border-borde bg-superficie px-4 py-3.5 transition-colors hover:border-acento/50">
-            <div>
-              <p class="text-sm font-semibold text-tinta">El precio de la luz de hoy, hora a hora</p>
-              <p class="text-xs text-suave">En directo y por comunidad</p>
-            </div>
-            <span class="shrink-0 rounded-full bg-acento px-3 py-1.5 text-xs font-semibold text-sobre-acento">Abrir</span>
-          </a>
+          <h2 class="text-base font-bold text-tinta">Lo que sí se repite: la hora barata</h2>
+          <p class="mt-1.5 text-sm leading-relaxed text-suave">
+            La media del mes cambia mucho de un año a otro, pero la forma del día es bastante más
+            estable. En {conSolar.length} de los doce meses la hora más barata cae ya en pleno día,
+            entre las 10:00 y las 18:00, empujada por la solar; en el resto se queda de madrugada.
+          </p>
+          <div class="mt-3 overflow-hidden rounded-2xl border border-borde bg-superficie">
+            <table class="w-full text-sm">
+              <caption class="sr-only">Hora más barata típica de cada mes del calendario</caption>
+              <thead>
+                <tr class="border-b border-borde text-left text-xs uppercase tracking-wide text-tenue">
+                  <th scope="col" class="px-4 py-2.5 font-semibold">Mes</th>
+                  <th scope="col" class="px-4 py-2.5 text-right font-semibold">Hora más barata</th>
+                  <th scope="col" class="px-4 py-2.5 text-right font-semibold">Media</th>
+                </tr>
+              </thead>
+              <tbody>
+                {grupos.map((g) => (
+                  <tr class="border-b border-borde last:border-0">
+                    <td class="px-4 py-2 capitalize text-suave">{g.nombre}</td>
+                    <td class="px-4 py-2 text-right mono font-semibold text-acento">{hh(g.horaBarata)}</td>
+                    <td class="px-4 py-2 text-right mono text-tenue">{cent(g.media)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
 
-        <!-- Con esta misma variación mensual a la vista, es el momento de plantear la pregunta -->
-        <section class="px-4 pt-3">
-          <a href="/pvpc-o-tarifa-fija/" class="flex items-center justify-between gap-3 rounded-2xl border border-borde bg-superficie px-4 py-3.5 transition-colors hover:border-acento/50">
+        <section class="px-4 pt-6">
+          <a href="/precio-luz/" class="flex items-center justify-between gap-3 rounded-2xl border border-borde bg-superficie px-4 py-3.5 transition-colors hover:border-acento/50">
             <div>
-              <p class="text-sm font-semibold text-tinta">¿Te conviene más una tarifa fija?</p>
-              <p class="text-xs text-suave">Compara la variación del PVPC con el precio único de la fija</p>
+              <p class="text-sm font-semibold text-tinta">El histórico completo, mes a mes</p>
+              <p class="text-xs text-suave">{meses.length} meses desde junio de 2021, con el detalle de cada día</p>
             </div>
             <span class="shrink-0 rounded-full bg-acento px-3 py-1.5 text-xs font-semibold text-sobre-acento">Ver</span>
           </a>
         </section>
 
-        {faqs.length > 0 && (
-          <section class="px-4 pt-8">
-            <h2 class="text-base font-bold text-tinta">Preguntas frecuentes</h2>
-            <div class="mt-3 divide-y divide-borde">
-              {faqs.map((f) => (
-                <details class="group py-3">
-                  <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-tinta">
-                    <span>{f.q}</span>
-                    <span class="text-acento transition-transform group-open:rotate-45">+</span>
-                  </summary>
-                  <p class="mt-2 text-sm leading-relaxed text-suave">{f.a}</p>
-                </details>
-              ))}
+        <section class="px-4 pt-3">
+          <a href="/pvpc-o-tarifa-fija/" class="flex items-center justify-between gap-3 rounded-2xl border border-borde bg-superficie px-4 py-3.5 transition-colors hover:border-acento/50">
+            <div>
+              <p class="text-sm font-semibold text-tinta">¿Te conviene más una tarifa fija?</p>
+              <p class="text-xs text-suave">Con esta variación delante, la pregunta cae sola</p>
             </div>
-          </section>
-        )}
+            <span class="shrink-0 rounded-full bg-acento px-3 py-1.5 text-xs font-semibold text-sobre-acento">Ver</span>
+          </a>
+        </section>
+
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-tinta">Preguntas frecuentes</h2>
+          <div class="mt-3 divide-y divide-borde">
+            {faqs.map((f) => (
+              <details class="group py-3">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-tinta">
+                  <span>{f.q}</span>
+                  <span class="text-acento transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <p class="mt-2 text-sm leading-relaxed text-suave">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
 
         <footer class="px-4 pt-10 pb-8">
           <p class="text-xs leading-relaxed text-tenue">
-            Medias calculadas a partir del PVPC horario publicado por Red Eléctrica para la Península,
-            sin impuestos. Los precios cambian cada día. Página informativa.
+            Medias calculadas a partir del PVPC horario publicado por Red Eléctrica para Península,
+            Canarias y Baleares, sin impuestos. Los precios cambian cada día: esta página describe lo
+            que ha pasado, no lo que va a pasar. Página informativa.
           </p>
           <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
             <a href="/" class="text-suave hover:text-acento">Inicio</a>
+            <a href="/precio-luz/" class="text-suave hover:text-acento">Histórico</a>
             <a href="/aviso-legal" class="text-suave hover:text-acento">Aviso legal</a>
             <a href="/privacidad" class="text-suave hover:text-acento">Privacidad</a>
             <a href="/cookies" class="text-suave hover:text-acento">Cookies</a>

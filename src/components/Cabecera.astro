@@ -8,7 +8,10 @@ const enlaces = [
   { href: '/', texto: 'Precio hoy' },
   { href: '/horas-baratas-hoy/', texto: 'Horas baratas' },
   { href: '/calculadora-potencia/', texto: 'Potencia' },
-  { href: '/precio-medio-mensual/', texto: 'Histórico' },
+  // Apunta al índice del archivo, no a la página de estacionalidad: desde el índice se
+  // llega a los 63 meses, y la barra del "Histórico" se queda marcada en todos ellos
+  // porque la ruta de cada mes cuelga de aquí.
+  { href: '/precio-luz/', texto: 'Histórico' },
   { href: '/bono-social/', texto: 'Bono social' },
 ];
 

@@ -1,0 +1,72 @@
+---
+// Precio medio de cada hora del día a lo largo de un mes o de un año.
+//
+// Es el dato que de verdad distingue una página de otra: en verano la hora barata cae al
+// mediodía (sobra solar) y la cara a las nueve de la noche; en invierno se da la vuelta.
+// Contarlo con el número delante evita que las páginas de meses distintos parezcan la
+// misma plantilla rellenada.
+import { hh, cent } from '../lib/mensual.js';
+
+interface Props {
+  horas: (number | null)[];
+  /** "julio de 2026" o "2025": entra en el texto alternativo. */
+  periodo: string;
+}
+
+const { horas, periodo } = Astro.props;
+
+const validos = horas.filter((v): v is number => typeof v === 'number');
+const min = Math.min(...validos);
+const max = Math.max(...validos);
+const rango = max - min || 1;
+
+// Mismos cortes que la tabla de horas del día, para que el color signifique lo mismo en
+// toda la web.
+function clase(v: number) {
+  const t = (v - min) / rango;
+  if (t < 0.33) return 'bg-barato';
+  if (t < 0.66) return 'bg-medio';
+  return 'bg-caro';
+}
+const alto = (v: number) => 12 + ((v - min) / rango) * 88;
+---
+<div class="rounded-2xl border border-borde bg-superficie p-4">
+  <div class="flex items-end gap-[2px]" role="img"
+    aria-label={`Precio medio por hora del día en ${periodo}: el más bajo, ${cent(min)} céntimos, y el más alto, ${cent(max)} céntimos por kilovatio hora.`}>
+    {horas.map((v, h) => (
+      <div class="group relative flex flex-1 flex-col items-center">
+        <div class="flex h-28 w-full items-end">
+          {typeof v === 'number' ? (
+            <div class={`w-full rounded-t ${clase(v)}`} style={`height:${alto(v)}%`}></div>
+          ) : (
+            <div class="h-px w-full bg-borde"></div>
+          )}
+        </div>
+        {/* Solo cada tres horas: 24 etiquetas no caben en un móvil */}
+        <span class="mt-1 h-3 text-[9px] leading-3 text-tenue">{h % 3 === 0 ? String(h).padStart(2, '0') : ''}</span>
+      </div>
+    ))}
+  </div>
+
+  <!-- Tabla equivalente para lectores de pantalla y para que el dato esté en el HTML -->
+  <details class="mt-3">
+    <summary class="cursor-pointer list-none text-xs font-medium text-acento">Ver los 24 valores</summary>
+    <table class="mt-2 w-full text-xs">
+      <caption class="sr-only">Precio medio de cada hora del día en {periodo}, en céntimos por kilovatio hora</caption>
+      <thead>
+        <tr class="text-left text-tenue">
+          <th scope="col" class="py-1 font-semibold">Hora</th>
+          <th scope="col" class="py-1 text-right font-semibold">cent/kWh</th>
+        </tr>
+      </thead>
+      <tbody>
+        {horas.map((v, h) => (
+          <tr class="border-t border-borde">
+            <td class="py-1 mono text-suave">{hh(h)}</td>
+            <td class="py-1 text-right mono font-semibold text-tinta">{typeof v === 'number' ? cent(v) : '—'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </details>
+</div>

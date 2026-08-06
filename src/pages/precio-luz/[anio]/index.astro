@@ -1,0 +1,278 @@
+---
+// Precio de la luz en un año: /precio-luz/2025/
+//
+// Un escalón por encima de las páginas de mes. Responde a "cuánto costó la luz en 2025"
+// con la media anual, los doce meses ordenados y el perfil horario del año entero, que
+// cambia bastante de un año a otro según cuánta solar haya entrado en el sistema.
+import Layout from '../../../layouts/Layout.astro';
+import GraficaLinea from '../../../components/GraficaLinea.astro';
+import PerfilHorario from '../../../components/PerfilHorario.astro';
+import archivo from '../../../data/mensual.json';
+import {
+  listaMeses, listaAnios, serieMensual, cent, eur, hh, pct, extremosHorarios, franjaHoraria, MESES,
+} from '../../../lib/mensual.js';
+
+export function getStaticPaths() {
+  return listaAnios(listaMeses(archivo)).map((a) => ({
+    params: { anio: String(a.anio) },
+    props: { anio: a.anio },
+  }));
+}
+
+const { anio } = Astro.props;
+const meses = listaMeses(archivo);
+const anios = listaAnios(meses);
+const a = anios.find((x) => x.anio === anio)!;
+
+const { barata, cara } = extremosHorarios(a.horas);
+const { mejor: franjaBarata, peor: franjaCara } = franjaHoraria(a.horas, 3);
+const brecha = a.horas[cara]! / a.horas[barata]!;
+
+const parcial = !a.completo;
+const primerAnio = a.anio === anios[0].anio;
+const esteAnio = a.anio === anios[anios.length - 1].anio;
+
+const maxMedia = Math.max(...a.meses.map((m) => m.media));
+const serie = serieMensual(a.meses);
+
+// Récords del año frente a los del archivo entero: sitúan el año sin obligar a ir al índice.
+const todosMin = meses.reduce((x, m) => (m.min.v < x.min.v ? m : x), meses[0]);
+const todosMax = meses.reduce((x, m) => (m.max.v > x.max.v ? m : x), meses[0]);
+const tieneMinAbsoluto = todosMin.anio === a.anio;
+const tieneMaxAbsoluto = todosMax.anio === a.anio;
+
+const rankingAnios = [...anios].sort((x, y) => y.media - x.media);
+const puesto = rankingAnios.findIndex((x) => x.anio === a.anio) + 1;
+
+const cobertura = parcial
+  ? `${a.meses.length} ${a.meses.length === 1 ? 'mes' : 'meses'} con datos (${a.dias} días)`
+  : 'los doce meses';
+
+const title = `Precio de la luz en ${a.anio}: media de ${cent(a.media)} céntimos el kWh`;
+const description = `Precio de la luz en ${a.anio} según el PVPC: media anual de ${cent(a.media)} céntimos por kWh, mes a mes, con el mes más caro (${a.masCaro.nombreMes}) y el más barato (${a.masBarato.nombreMes}). Datos oficiales de Red Eléctrica.`;
+const rutaCanonica = `/precio-luz/${a.anio}/`;
+const siteUrl = (Astro.site ?? new URL('https://mivatio.es')).href.replace(/\/$/, '');
+
+const faqs = [
+  {
+    q: `¿Cuánto costó la luz de media en ${a.anio}?`,
+    a: `La media del PVPC en ${a.anio} fue de ${eur(a.media)} €/kWh, o sea ${cent(a.media)} céntimos, sobre ${cobertura}. Es el precio base sin impuestos ni término de potencia.`,
+  },
+  {
+    q: `¿Cuál fue el mes más caro y el más barato de ${a.anio}?`,
+    a: `El mes más caro fue ${a.masCaro.nombre}, con ${cent(a.masCaro.media)} céntimos de media, y el más barato ${a.masBarato.nombre}, con ${cent(a.masBarato.media)}. Entre uno y otro hay una diferencia de ${((a.masCaro.media / a.masBarato.media - 1) * 100).toLocaleString('es-ES', { maximumFractionDigits: 0 })} %.`,
+  },
+  {
+    q: `¿A qué hora salía más barata la luz en ${a.anio}?`,
+    a: `De media a lo largo del año, la hora más barata fue las ${hh(barata)}, a ${cent(a.horas[barata]!)} céntimos, y la más cara las ${hh(cara)}, a ${cent(a.horas[cara]!)}. Conviene mirar mes a mes: el patrón cambia mucho entre invierno y verano.`,
+  },
+  ...(a.variacion != null && a.anterior
+    ? [{
+        q: `¿Subió o bajó respecto a ${a.anterior.anio}?`,
+        a: `${a.variacion > 0 ? 'Subió' : 'Bajó'} un ${Math.abs(a.variacion).toLocaleString('es-ES', { maximumFractionDigits: 1 })} %: de ${cent(a.anterior.media)} céntimos de media en ${a.anterior.anio} a ${cent(a.media)} en ${a.anio}.`,
+      }]
+    : []),
+  {
+    q: '¿Por qué los datos empiezan en junio de 2021?',
+    a: 'Porque el 1 de junio de 2021 entró en vigor la tarifa 2.0TD, la actual, con sus tramos valle, llano y punta. Antes de esa fecha el PVPC se publicaba con otros peajes (general, nocturno y coche eléctrico) y los precios no son comparables.',
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${siteUrl}/` },
+        { '@type': 'ListItem', position: 2, name: 'Histórico del precio de la luz', item: `${siteUrl}/precio-luz/` },
+        { '@type': 'ListItem', position: 3, name: String(a.anio), item: siteUrl + rutaCanonica },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+    },
+  ],
+};
+---
+<Layout title={title} description={description} canonicalPath={rutaCanonica}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  <div class="min-h-screen w-full" style="background-color:var(--color-fondo);">
+    <div class="mx-auto flex max-w-5xl justify-center gap-8">
+      <main class="w-full max-w-2xl">
+        <nav aria-label="Migas de pan" class="px-4 pt-6 text-xs text-tenue">
+          <a href="/" class="hover:text-acento">Inicio</a>
+          <span class="mx-1.5">/</span>
+          <a href="/precio-luz/" class="hover:text-acento">Histórico</a>
+          <span class="mx-1.5">/</span>
+          <span class="text-suave">{a.anio}</span>
+        </nav>
+
+        <header class="px-4 pt-4">
+          <h1 class="text-2xl font-bold tracking-tight text-tinta sm:text-3xl">
+            Precio de la luz en <span class="text-acento">{a.anio}</span>
+          </h1>
+          <p class="mt-3 text-sm leading-relaxed text-suave">
+            La media del PVPC en {a.anio} fue de <strong class="font-semibold text-tinta">{cent(a.media)} céntimos el kilovatio hora</strong>,
+            calculada sobre {cobertura}.
+            {a.variacion != null && a.anterior && (
+              <> Respecto a {a.anterior.anio}, cuando la media anual quedó en {cent(a.anterior.media)}, {a.variacion > 0 ? 'subió' : 'bajó'} un {Math.abs(a.variacion).toLocaleString('es-ES', { maximumFractionDigits: 1 })} %.</>
+            )}
+            {primerAnio && ' El archivo arranca en junio, cuando entró en vigor la tarifa 2.0TD.'}
+            {esteAnio && parcial && ' El año sigue en curso, así que la media se mueve cada día.'}
+          </p>
+          <p class="mt-2 text-xs text-tenue">Península, Canarias y Baleares. Precio base sin impuestos.</p>
+        </header>
+
+        <section class="grid grid-cols-3 gap-2 px-4 pt-5 sm:gap-3">
+          <div class="rounded-2xl border border-borde bg-superficie p-3 sm:p-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-tenue sm:text-xs">Media del año</p>
+            <p class="mt-1 text-lg font-bold text-tinta sm:text-xl">{cent(a.media)}</p>
+            <p class="text-[11px] text-tenue">cent/kWh</p>
+          </div>
+          <div class="rounded-2xl border border-borde bg-superficie p-3 sm:p-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-tenue sm:text-xs">Mes más barato</p>
+            <p class="mt-1 text-lg font-bold text-barato sm:text-xl">{cent(a.masBarato.media)}</p>
+            <p class="text-[11px] capitalize text-tenue">{a.masBarato.nombreMes}</p>
+          </div>
+          <div class="rounded-2xl border border-borde bg-superficie p-3 sm:p-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-tenue sm:text-xs">Mes más caro</p>
+            <p class="mt-1 text-lg font-bold text-caro sm:text-xl">{cent(a.masCaro.media)}</p>
+            <p class="text-[11px] capitalize text-tenue">{a.masCaro.nombreMes}</p>
+          </div>
+        </section>
+
+        <section class="px-4 pt-6">
+          <h2 class="text-base font-bold text-tinta">Mes a mes</h2>
+          <div class="mt-3 rounded-2xl border border-borde bg-superficie p-4">
+            <GraficaLinea id={`meses-${a.anio}`} serie={serie} unidad="cent/kWh" colorMinEsBueno={true} />
+          </div>
+
+          <div class="mt-3 overflow-hidden rounded-2xl border border-borde bg-superficie">
+            {a.meses.map((m) => (
+              <a href={m.ruta} class="block border-b border-borde px-4 py-3 transition-colors last:border-0 hover:bg-elevado">
+                <div class="flex items-baseline justify-between gap-3">
+                  <p class="text-sm font-semibold capitalize text-tinta">{m.nombreMes}</p>
+                  <p class="mono text-base font-bold text-tinta">
+                    {cent(m.media)} <span class="text-xs font-semibold text-tenue">cent/kWh</span>
+                  </p>
+                </div>
+                <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-fondo">
+                  <div class="h-full rounded-full bg-acento" style={`width:${Math.round((m.media / maxMedia) * 100)}%`}></div>
+                </div>
+                <p class="mt-1.5 text-xs text-tenue">
+                  {m.n} días · de {cent(m.min.v)} a {cent(m.max.v)} cent según la hora
+                  {m.variacion != null && ` · ${pct(m.variacion)} sobre el mes anterior`}
+                </p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section class="px-4 pt-6">
+          <h2 class="text-base font-bold text-tinta">Las horas baratas de {a.anio}</h2>
+          <p class="mt-1.5 text-sm leading-relaxed text-suave">
+            Promediando el año entero, la hora más barata fue las <strong class="font-semibold text-barato">{hh(barata)}</strong>
+            ({cent(a.horas[barata]!)} céntimos) y la más cara las <strong class="font-semibold text-caro">{hh(cara)}</strong>
+            ({cent(a.horas[cara]!)}), {brecha.toLocaleString('es-ES', { maximumFractionDigits: 1 })} veces más.
+            {franjaBarata && franjaCara && (
+              <> En bloques de tres horas, el más barato fue de {hh(franjaBarata.inicio)} a {hh(franjaBarata.fin)} y el más caro de {hh(franjaCara.inicio)} a {hh(franjaCara.fin)}.</>
+            )}
+          </p>
+          <p class="mt-2 text-sm leading-relaxed text-suave">
+            Es una media de todo el año y aplana las diferencias: en los meses de sol el hueco barato
+            se va al mediodía y en invierno se queda de madrugada. Para afinar, mejor mirar el mes que
+            interese.
+          </p>
+          <div class="mt-3">
+            <PerfilHorario horas={a.horas} periodo={String(a.anio)} />
+          </div>
+        </section>
+
+        <section class="px-4 pt-6">
+          <div class="rounded-2xl border border-borde bg-superficie px-4 py-3.5">
+            <p class="text-sm leading-relaxed text-suave">
+              De los {anios.length} años del archivo, {a.anio} es el <strong class="font-semibold text-tinta">número {puesto} más caro</strong>.
+              La hora más barata del año se dio en {MESES[a.min.mes - 1]}, a {eur(a.min.v)} €/kWh
+              {tieneMinAbsoluto && ', que es además el precio más bajo de todo el archivo'};
+              la más cara, en {MESES[a.max.mes - 1]}, a {eur(a.max.v)} €/kWh
+              {tieneMaxAbsoluto && ', el máximo de toda la serie'}.
+            </p>
+          </div>
+        </section>
+
+        <nav aria-label="Otros años" class="px-4 pt-6">
+          <div class="flex gap-2">
+            {a.anterior ? (
+              <a href={a.anterior.ruta} class="flex-1 rounded-2xl border border-borde bg-superficie px-4 py-3 transition-colors hover:border-acento/50">
+                <p class="text-xs text-tenue">Año anterior</p>
+                <p class="text-sm font-semibold text-tinta">{a.anterior.anio}</p>
+                <p class="text-xs text-suave">{cent(a.anterior.media)} cent</p>
+              </a>
+            ) : <div class="flex-1"></div>}
+            {a.siguiente ? (
+              <a href={a.siguiente.ruta} class="flex-1 rounded-2xl border border-borde bg-superficie px-4 py-3 text-right transition-colors hover:border-acento/50">
+                <p class="text-xs text-tenue">Año siguiente</p>
+                <p class="text-sm font-semibold text-tinta">{a.siguiente.anio}</p>
+                <p class="text-xs text-suave">{cent(a.siguiente.media)} cent</p>
+              </a>
+            ) : <div class="flex-1"></div>}
+          </div>
+          <div class="mt-3 flex flex-wrap gap-1.5">
+            {anios.map((x) => (
+              <a href={x.ruta}
+                aria-current={x.anio === a.anio ? 'page' : undefined}
+                class={x.anio === a.anio
+                  ? 'rounded-full bg-acento px-2.5 py-1 text-xs font-semibold text-sobre-acento'
+                  : 'rounded-full border border-borde px-2.5 py-1 text-xs font-medium text-suave transition-colors hover:border-acento/50 hover:text-acento'}>
+                {x.anio}
+              </a>
+            ))}
+          </div>
+        </nav>
+
+        <section class="px-4 pt-6">
+          <a href="/" class="flex items-center justify-between gap-3 rounded-2xl border border-borde bg-superficie px-4 py-3.5 transition-colors hover:border-acento/50">
+            <div>
+              <p class="text-sm font-semibold text-tinta">El precio de la luz de hoy, hora a hora</p>
+              <p class="text-xs text-suave">En directo, con la hora más barata de lo que queda de día</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-acento px-3 py-1.5 text-xs font-semibold text-sobre-acento">Abrir</span>
+          </a>
+        </section>
+
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-tinta">Preguntas frecuentes</h2>
+          <div class="mt-3 divide-y divide-borde">
+            {faqs.map((f) => (
+              <details class="group py-3">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-tinta">
+                  <span>{f.q}</span>
+                  <span class="text-acento transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <p class="mt-2 text-sm leading-relaxed text-suave">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <footer class="px-4 pt-10 pb-8">
+          <p class="text-xs leading-relaxed text-tenue">
+            Datos del PVPC horario publicado por Red Eléctrica de España para Península, Canarias y
+            Baleares, sin impuestos. Página informativa, sin valor contractual.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <a href="/" class="text-suave hover:text-acento">Inicio</a>
+            <a href="/precio-luz/" class="text-suave hover:text-acento">Histórico</a>
+            <a href="/precio-medio-mensual/" class="text-suave hover:text-acento">Medias mensuales</a>
+            <a href="/aviso-legal" class="text-suave hover:text-acento">Aviso legal</a>
+            <a href="/privacidad" class="text-suave hover:text-acento">Privacidad</a>
+          </div>
+          <p class="mt-3 text-xs text-tenue">© {new Date().getFullYear()} Vatio</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+</Layout>
