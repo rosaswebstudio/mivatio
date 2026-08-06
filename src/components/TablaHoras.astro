@@ -1,0 +1,74 @@
+---
+// Tabla de las 24 horas del día con su precio, coloreada de barato a caro.
+//
+// Se genera EN EL BUILD, no en el navegador: es el contenido que tiene que estar escrito
+// en el HTML para que Google pueda leerlo. La app en directo de la portada hace lo mismo
+// para el visitante, pero un buscador no puede fiarse de eso.
+interface Hora {
+  hora: number;
+  precio: number;
+}
+
+interface Props {
+  horas: Hora[];
+  /** Marca la hora actual. Solo tiene sentido en las páginas de hoy. */
+  destacarHora?: number | null;
+}
+
+const { horas, destacarHora = null } = Astro.props;
+
+const precios = horas.map((h) => h.precio);
+const min = Math.min(...precios);
+const max = Math.max(...precios);
+const rango = max - min || 1;
+
+// Mismos cortes que usa la app: tercio bajo barata, tercio alto cara.
+function nivel(precio: number) {
+  const t = (precio - min) / rango;
+  if (t < 0.33) return { etiqueta: 'Barata', color: 'text-barato', barra: 'bg-barato' };
+  if (t < 0.66) return { etiqueta: 'Media', color: 'text-medio', barra: 'bg-medio' };
+  return { etiqueta: 'Cara', color: 'text-caro', barra: 'bg-caro' };
+}
+
+const p5 = (v: number) => v.toLocaleString('es-ES', { minimumFractionDigits: 5, maximumFractionDigits: 5 });
+const hh = (h: number) => `${String(h).padStart(2, '0')}:00`;
+const ancho = (precio: number) => 8 + ((precio - min) / rango) * 92;
+---
+<div class="overflow-hidden rounded-2xl border border-borde bg-superficie">
+  <table class="w-full text-sm">
+    <caption class="sr-only">Precio de la luz por horas, en euros por kilovatio hora</caption>
+    <thead>
+      <tr class="border-b border-borde text-left text-xs uppercase tracking-wide text-tenue">
+        <th scope="col" class="px-3 py-2.5 font-semibold sm:px-4">Hora</th>
+        <th scope="col" class="px-3 py-2.5 text-right font-semibold sm:px-4">€/kWh</th>
+        <th scope="col" class="hidden px-4 py-2.5 font-semibold sm:table-cell">Nivel</th>
+      </tr>
+    </thead>
+    <tbody>
+      {horas.map((h) => {
+        const n = nivel(h.precio);
+        const ahora = destacarHora === h.hora;
+        return (
+          <tr class={`border-b border-borde last:border-0 ${ahora ? 'bg-elevado' : ''}`}>
+            <td class="whitespace-nowrap px-3 py-2 sm:px-4">
+              <span class="mono text-tinta">{hh(h.hora)}</span>
+              <span class="text-tenue"> - {hh((h.hora + 1) % 24)}</span>
+              {ahora && <span class="ml-2 rounded-full bg-acento px-1.5 py-0.5 text-[10px] font-bold text-sobre-acento">ahora</span>}
+            </td>
+            <td class={`whitespace-nowrap px-3 py-2 text-right sm:px-4 mono font-semibold ${n.color}`}>
+              {p5(h.precio)}
+            </td>
+            <td class="hidden px-4 py-2 sm:table-cell">
+              <div class="flex items-center gap-2">
+                <div class="h-1.5 w-24 overflow-hidden rounded-full bg-fondo">
+                  <div class={`h-full rounded-full ${n.barra}`} style={`width:${ancho(h.precio)}%`}></div>
+                </div>
+                <span class={`text-xs font-medium ${n.color}`}>{n.etiqueta}</span>
+              </div>
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,258 @@
+---
+// "¿A qué hora es más barata la luz hoy?" con la respuesta escrita en el HTML.
+//
+// La portada ya enseña el precio hora a hora, pero responde a "cuánto cuesta". Esta
+// responde a "cuándo lo pongo", que es otra búsqueda y con más volumen. La diferencia
+// real está en las franjas: la mejor hora suelta no sirve para una lavadora de dos horas
+// ni para cargar un coche cuatro, y ahí es donde ninguna web da una respuesta concreta.
+import Layout from '../layouts/Layout.astro';
+import TablaHoras from '../components/TablaHoras.astro';
+import { ELECTRODOMESTICOS } from '../lib/electrodomesticos.js';
+import {
+  cargarPrecios,
+  fechaMadrid,
+  fechaLarga,
+  resumenDia,
+  franjas,
+  horasMasBaratas,
+} from '../lib/datos-build.js';
+
+const hoy = fechaMadrid();
+const { horas } = await cargarPrecios(hoy);
+const res = resumenDia(horas);
+const baratas = horasMasBaratas(horas, 5);
+const caras = [...horas].sort((a, b) => b.precio - a.precio).slice(0, 3);
+
+// Solo los aparatos que se pueden programar: decirle a alguien que encienda el horno a
+// las 4 de la mañana no es un consejo, es un chiste.
+const programables = ELECTRODOMESTICOS.filter((a: any) => a.programable).map((a: any) => {
+  const { mejor, peor } = franjas(horas, a.horas);
+  return {
+    nombre: a.nombre,
+    slug: a.slug,
+    duracion: a.horas,
+    kwh: a.kwh,
+    mejor,
+    peor,
+    ahorro: (peor.media - mejor.media) * a.kwh,
+  };
+});
+
+const p5 = (v: number) => v.toLocaleString('es-ES', { minimumFractionDigits: 5, maximumFractionDigits: 5 });
+const p4 = (v: number) => v.toLocaleString('es-ES', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+const eur = (v: number) => v.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const hh = (h: number) => `${String(h).padStart(2, '0')}:00`;
+const tramo = (a: number, b: number) => `${hh(a)} a ${hh((b + 1) % 24)}`;
+
+const brechaPct = ((res.max / res.min - 1) * 100).toLocaleString('es-ES', { maximumFractionDigits: 0 });
+
+const title = `¿A qué hora es más barata la luz hoy? ${hh(res.horaMin)} | Vatio`;
+const description = `Hoy la luz es más barata de ${tramo(res.horaMin, res.horaMin)}, a ${p5(res.min)} €/kWh, y más cara de ${tramo(res.horaMax, res.horaMax)}. Mira las mejores franjas para la lavadora, el lavavajillas o el coche eléctrico.`;
+const rutaCanonica = '/horas-baratas-hoy/';
+const siteUrl = (Astro.site ?? new URL('https://mivatio.es')).href.replace(/\/$/, '');
+
+const faqs = [
+  {
+    q: '¿A qué hora es más barata la luz hoy?',
+    a: `Hoy ${fechaLarga(hoy)} la hora más barata es de ${tramo(res.horaMin, res.horaMin)}, a ${p5(res.min)} €/kWh. La más cara es de ${tramo(res.horaMax, res.horaMax)}, a ${p5(res.max)} €/kWh: un ${brechaPct}% más. Cambia todos los días, así que conviene mirarlo antes de programar los aparatos.`,
+  },
+  {
+    q: '¿La hora más barata sirve para la lavadora?',
+    a: 'No del todo. Una lavadora tarda unas dos horas, así que lo que interesa no es la hora suelta más barata sino el bloque de dos horas seguidas más barato, que casi nunca coincide. Por eso en esta página calculamos la franja de cada aparato según lo que dura su ciclo.',
+  },
+  {
+    q: '¿De madrugada siempre es más barato?',
+    a: 'Ya no. Durante años la madrugada era siempre lo más barato, pero con la entrada masiva de solar hay muchos días en que las horas centrales del mediodía bajan igual o más. Depende del viento y del sol de cada día, y por eso el dato hay que mirarlo, no suponerlo.',
+  },
+  {
+    q: '¿Qué son los tramos punta, llano y valle?',
+    a: 'Son los periodos de los peajes de acceso de la tarifa 2.0TD, que es la de la mayoría de los hogares. En días laborables, el valle va de 00:00 a 08:00, el llano de 08:00 a 10:00, de 14:00 a 18:00 y de 22:00 a 00:00, y la punta de 10:00 a 14:00 y de 18:00 a 22:00. Los fines de semana y festivos nacionales son valle las 24 horas. Ojo: eso afecta a los peajes, mientras que el precio de la energía del PVPC cambia hora a hora, que es lo que ves en la tabla.',
+  },
+  {
+    q: '¿Estos precios llevan impuestos?',
+    a: 'No, es el precio base del PVPC tal y como lo publica Red Eléctrica. El impuesto eléctrico y el IVA se suman después y afectan igual a todas las horas, así que no cambian cuál es la más barata.',
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${siteUrl}/` },
+        { '@type': 'ListItem', position: 2, name: 'Horas más baratas de la luz hoy', item: siteUrl + rutaCanonica },
+      ],
+    },
+    {
+      '@type': 'ItemList',
+      name: 'Horas más baratas de la luz hoy',
+      itemListOrder: 'https://schema.org/ItemListOrderAscending',
+      numberOfItems: baratas.length,
+      itemListElement: baratas.map((h, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: `${tramo(h.hora, h.hora)}: ${p5(h.precio)} €/kWh`,
+      })),
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+    },
+  ],
+};
+
+const card = 'rounded-2xl border border-borde bg-superficie p-4';
+---
+<Layout title={title} description={description} canonicalPath={rutaCanonica}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  <div class="min-h-screen w-full bg-fondo">
+    <div class="mx-auto flex max-w-5xl justify-center gap-8">
+      <main class="w-full max-w-2xl">
+        <nav aria-label="Migas de pan" class="px-4 pt-6 text-xs text-tenue">
+          <a href="/" class="hover:text-acento">Inicio</a>
+          <span class="mx-1.5">/</span>
+          <span class="text-suave">Horas baratas de hoy</span>
+        </nav>
+
+        <header class="px-4 pt-4">
+          <h1 class="text-2xl font-bold tracking-tight text-tinta sm:text-3xl">
+            ¿A qué hora es <span class="text-acento">más barata la luz</span> hoy?
+          </h1>
+          <p class="mt-3 text-sm leading-relaxed text-suave">
+            Hoy {fechaLarga(hoy)} la luz está más barata de
+            {' '}<strong class="text-barato">{tramo(res.horaMin, res.horaMin)}</strong>, a
+            {' '}{p5(res.min)} €/kWh, y más cara de
+            {' '}<strong class="text-caro">{tramo(res.horaMax, res.horaMax)}</strong>. Entre las dos
+            hay un <strong class="text-tinta">{brechaPct}%</strong> de diferencia por el mismo
+            kilovatio hora.
+          </p>
+          <p class="mt-2 text-xs text-tenue">PVPC sin impuestos · datos oficiales de Red Eléctrica (REE)</p>
+        </header>
+
+        <!-- Las cinco más baratas -->
+        <section class="px-4 pt-6">
+          <h2 class="text-base font-bold text-tinta">Las cinco horas más baratas de hoy</h2>
+          <div class="mt-3 overflow-hidden rounded-2xl border border-borde bg-superficie">
+            {baratas.map((h, i) => (
+              <div class="flex items-center justify-between gap-3 border-b border-borde px-4 py-3 last:border-0">
+                <div class="flex items-center gap-3">
+                  <span class="mono w-5 text-sm font-bold text-tenue">{i + 1}</span>
+                  <span class="mono text-sm font-semibold text-tinta">{tramo(h.hora, h.hora)}</span>
+                </div>
+                <span class="mono text-sm font-bold text-barato">{p5(h.precio)} €/kWh</span>
+              </div>
+            ))}
+          </div>
+          <p class="mt-2 text-xs leading-relaxed text-tenue">
+            Y las que conviene evitar: {caras.map((h) => tramo(h.hora, h.hora)).join(', ')}.
+          </p>
+        </section>
+
+        <!-- Lo que de verdad aporta: franja por aparato -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-tinta">La mejor franja para cada aparato</h2>
+          <p class="mt-2 text-sm leading-relaxed text-suave">
+            La hora suelta más barata no sirve para un aparato que tarda dos o tres horas: lo que
+            hace falta es el bloque seguido más barato del día, y no es el mismo según lo que dure
+            el ciclo. Esto es lo que sale hoy.
+          </p>
+          <div class="mt-3 overflow-x-auto rounded-2xl border border-borde bg-superficie">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-borde text-left text-xs uppercase tracking-wide text-tenue">
+                  <th scope="col" class="px-4 py-2.5 font-semibold">Aparato</th>
+                  <th scope="col" class="px-4 py-2.5 font-semibold">Mejor franja</th>
+                  <th scope="col" class="px-4 py-2.5 text-right font-semibold">Ahorro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {programables.map((a) => (
+                  <tr class="border-b border-borde last:border-0">
+                    <td class="px-4 py-2.5">
+                      <a href={`/cuanto-cuesta/${a.slug}/`} class="font-medium text-tinta hover:text-acento">{a.nombre}</a>
+                      <span class="block text-xs text-tenue">{a.duracion} h · {a.kwh.toLocaleString('es-ES')} kWh</span>
+                    </td>
+                    <td class="mono whitespace-nowrap px-4 py-2.5 font-semibold text-barato">
+                      {tramo(a.mejor.inicio, a.mejor.fin)}
+                    </td>
+                    <td class="mono whitespace-nowrap px-4 py-2.5 text-right text-suave">{eur(a.ahorro)} €</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-2 text-xs leading-relaxed text-tenue">
+            El ahorro compara poner el aparato en su mejor franja en vez de en la peor del día, con
+            un consumo típico y sin impuestos. Parece poco por uso, pero repetido varias veces por
+            semana durante un año suma.
+          </p>
+        </section>
+
+        <!-- Tabla completa -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-tinta">Precio hora a hora de hoy</h2>
+          <p class="mt-1 text-xs text-tenue">
+            {fechaLarga(hoy)} · media del día {p4(res.media)} €/kWh
+          </p>
+          <div class="mt-3">
+            <TablaHoras horas={horas} />
+          </div>
+        </section>
+
+        <!-- A la app y a mañana -->
+        <section class="px-4 pt-8">
+          <div class="grid gap-2">
+            <a href="/precio-luz-manana/"
+              class="flex items-center justify-between gap-3 rounded-2xl border border-borde bg-superficie px-4 py-3.5 transition-colors hover:border-acento">
+              <div>
+                <p class="text-sm font-semibold text-tinta">¿Y mañana?</p>
+                <p class="text-xs text-suave">Los precios del día siguiente, desde las 20:15h</p>
+              </div>
+              <span class="shrink-0 rounded-full bg-acento px-3 py-1.5 text-xs font-semibold text-sobre-acento">Ver</span>
+            </a>
+            <a href="/"
+              class="flex items-center justify-between gap-3 rounded-2xl border border-borde bg-superficie px-4 py-3.5 transition-colors hover:border-acento">
+              <div>
+                <p class="text-sm font-semibold text-tinta">Míralo en directo</p>
+                <p class="text-xs text-suave">Con la hora actual marcada, impuestos y por comunidad</p>
+              </div>
+              <span class="shrink-0 text-acento" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-tinta">Preguntas frecuentes</h2>
+          <div class="mt-3 divide-y divide-borde">
+            {faqs.map((f) => (
+              <details class="group py-3">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-tinta">
+                  <span>{f.q}</span>
+                  <span class="text-acento transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <p class="mt-2 text-sm leading-relaxed text-suave">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <footer class="px-4 pt-10 pb-8">
+          <p class="text-xs leading-relaxed text-tenue">
+            Precios del PVPC publicados por Red Eléctrica de España, sin impuestos y para la
+            Península. Los consumos de cada aparato son valores típicos de referencia: el tuyo
+            depende del modelo y del programa. Esta web es independiente: no es Red Eléctrica ni
+            una comercializadora.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <a href="/" class="text-suave hover:text-acento">Inicio</a>
+            <a href="/precio-luz-manana/" class="text-suave hover:text-acento">Precio mañana</a>
+            <a href="/aviso-legal" class="text-suave hover:text-acento">Aviso legal</a>
+            <a href="/privacidad" class="text-suave hover:text-acento">Privacidad</a>
+          </div>
+        </footer>
+      </main>
+    </div>
+  </div>
+</Layout>

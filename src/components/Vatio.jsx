@@ -1,11 +1,15 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'preact/hooks';
 
+// Las DOS zonas del PVPC, que son las que trae el fichero oficial de ESIOS.
+//
+// Antes había cinco (Península, Canarias, Baleares, Ceuta, Melilla) y las cinco enseñaban
+// EXACTAMENTE los mismos precios, porque la API que se usaba ignora el parámetro de zona.
+// El fichero oficial agrupa Península, Canarias y Baleares en una sola serie y deja Ceuta
+// y Melilla aparte, y esa sí se separa: hay días en que a la misma hora una paga el doble
+// que la otra.
 const GEOS = [
-  { id: '8741', label: 'Península' },
-  { id: '8742', label: 'Canarias' },
-  { id: '8743', label: 'Baleares' },
-  { id: '8744', label: 'Ceuta' },
-  { id: '8745', label: 'Melilla' },
+  { id: 'PCB', label: 'Península, Canarias y Baleares' },
+  { id: 'CYM', label: 'Ceuta y Melilla' },
 ];
 
 const APPLIANCES = [
@@ -15,15 +19,23 @@ const APPLIANCES = [
   { id: 'termo', label: 'Termo / ducha', duration: 1, abbr: 'ACS' },
 ];
 
-const CHEAP = '#2DD4BF';
-const MID = '#F5B83D';
-const EXPENSIVE = '#F2545B';
-const INK = '#0B0D12';
-const SURFACE = '#14171F';
-const SURFACE_HI = '#1A1F2A';
-const BORDER = '#232733';
-const TEXT = '#ECEAE3';
-const MUTED = '#8A8F9C';
+// Colores del tema. Son variables CSS, no valores fijos, para que la app siga el modo
+// claro u oscuro sin repintar nada desde JavaScript: el navegador las resuelve solo.
+const CHEAP = 'var(--color-barato)';
+const MID = 'var(--color-medio)';
+const EXPENSIVE = 'var(--color-caro)';
+const INK = 'var(--color-fondo)';
+// Texto que va ENCIMA de un fondo del color TEXT (botones invertidos). En oscuro es casi
+// negro y en claro casi blanco, al reves que INK, con el que se confundia antes.
+const ON_TEXT = 'var(--color-sobre-tinta)';
+const SURFACE = 'var(--color-superficie)';
+const SURFACE_HI = 'var(--color-elevado)';
+const SURFACE_HI_SOFT = 'var(--color-elevado-suave)';
+const CHEAP_SOFT = 'var(--color-acento-suave)';
+const BORDER = 'var(--color-borde)';
+const TEXT = 'var(--color-tinta)';
+const MUTED = 'var(--color-suave)';
+const MUTED_DIM = 'var(--color-tenue)';
 const IE_RATE = 0.0511269632;
 
 function hexToRgb(hex) {
@@ -39,9 +51,24 @@ function lerpColor(a, b, t) {
   const [r2, g2, b2] = hexToRgb(b);
   return rgbToHex(r1 + (r2 - r1) * t, g1 + (g2 - g1) * t, b1 + (b2 - b1) * t);
 }
+// Degradado del precio (barato -> medio -> caro). Este SI necesita valores reales,
+// porque se interpolan numero a numero. Se leen del tema y se releen al cambiarlo.
+const ESCALA_POR_DEFECTO = ['#2DD4BF', '#F5B83D', '#F2545B'];
+let escala = ESCALA_POR_DEFECTO;
+
+function leerEscala() {
+  if (typeof window === 'undefined') return;
+  const cs = getComputedStyle(document.documentElement);
+  const leidos = ['--color-barato', '--color-medio', '--color-caro']
+    .map((n) => cs.getPropertyValue(n).trim());
+  if (leidos.every((v) => /^#[0-9a-fA-F]{6}$/.test(v))) escala = leidos;
+}
+
 function colorForRatio(t) {
   const c = Math.max(0, Math.min(1, t));
-  return c < 0.5 ? lerpColor(CHEAP, MID, c / 0.5) : lerpColor(MID, EXPENSIVE, (c - 0.5) / 0.5);
+  return c < 0.5
+    ? lerpColor(escala[0], escala[1], c / 0.5)
+    : lerpColor(escala[1], escala[2], (c - 0.5) / 0.5);
 }
 function statusForRatio(t) {
   if (t < 0.33) return { label: 'Barata', color: CHEAP };
@@ -68,23 +95,28 @@ function addDaysToDateStr(dateStr, days) {
   dt.setUTCDate(dt.getUTCDate() + days);
   return dt.toISOString().slice(0, 10);
 }
-async function fetchDay(dateStr, geoId) {
+// "190,37" (EUR/MWh) -> 0.19037 (€/kWh)
+function precioKwh(txt) {
+  const n = parseFloat(String(txt).replace(/\./g, '').replace(',', '.'));
+  return Number.isFinite(n) ? n / 1000 : null;
+}
+
+// Fichero oficial del PVPC de ESIOS: público, sin token y con CORS abierto. Es el único
+// que distingue de verdad entre las dos zonas del PVPC (ver el comentario de GEOS).
+async function fetchDay(dateStr, zona) {
   const bust = Date.now();
-  const url = `https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=${dateStr}T00:00&end_date=${dateStr}T23:59&time_trunc=hour&geo_ids=${geoId}&_=${bust}`;
+  const url = `https://api.esios.ree.es/archives/70/download_json?date=${dateStr}&_=${bust}`;
   const res = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' });
   if (!res.ok) throw new Error('http_' + res.status);
   const json = await res.json();
-  const candidates = (json.included || []).filter(s => s && s.attributes && Array.isArray(s.attributes.values));
-  const pvpc = candidates.find(s => ((s.attributes.title || s.type || '') + '').toUpperCase().includes('PVPC'));
-  const series = pvpc || candidates[0];
-  const values = (series && series.attributes && series.attributes.values) || [];
-  if (!values.length) throw new Error('no_data');
-  const firstDate = values[0].datetime.slice(0, 10);
-  if (firstDate !== dateStr) throw new Error('no_data');
-  return values.map(v => ({
-    hour: parseInt(v.datetime.slice(11, 13), 10),
-    priceRaw: v.value / 1000,
-  }));
+  const filas = (json && json.PVPC) || [];
+  // Si el día aún no está publicado, responde 200 con la lista vacía.
+  if (!filas.length) throw new Error('no_data');
+  const horas = filas
+    .map(f => ({ hour: parseInt(String(f.Hora).slice(0, 2), 10), priceRaw: precioKwh(f[zona]) }))
+    .filter(h => Number.isFinite(h.hour) && h.priceRaw != null);
+  if (!horas.length) throw new Error('no_data');
+  return horas;
 }
 function fmt4(p) { return p.toLocaleString('es-ES', { minimumFractionDigits: 4, maximumFractionDigits: 4 }); }
 function fmt3(p) { return p.toLocaleString('es-ES', { minimumFractionDigits: 3, maximumFractionDigits: 3 }); }
@@ -124,7 +156,7 @@ function SegButton({ active, onClick, children, disabled }) {
       className="flex-1 px-3 py-2 text-sm font-medium rounded-full transition-colors focus:outline focus:outline-2 focus:outline-offset-2"
       style={{
         backgroundColor: active ? TEXT : 'transparent',
-        color: active ? INK : disabled ? `${MUTED}66` : MUTED,
+        color: active ? ON_TEXT : disabled ? MUTED_DIM : MUTED,
         cursor: disabled ? 'default' : 'pointer',
       }}
     >
@@ -161,7 +193,7 @@ function ApplianceCard({ appliance, best, dayAvg, noteLabel }) {
       <div className="flex items-center justify-between mt-1">
         <span className="text-xs" style={{ color: MUTED }}>{fmt3(best.avg)} €/kWh · {noteLabel}</span>
         {pct > 0 && (
-          <span className="text-xs font-semibold rounded-full px-2 py-0.5" style={{ color: CHEAP, backgroundColor: '#2DD4BF22' }}>
+          <span className="text-xs font-semibold rounded-full px-2 py-0.5" style={{ color: CHEAP, backgroundColor: CHEAP_SOFT }}>
             -{pct}%
           </span>
         )}
@@ -236,7 +268,7 @@ function ListView({ prices, stats, currentIdx, selectedIdx, setSelectedIdx, view
               onClick={() => setSelectedIdx(s => (s === idx ? null : idx))}
               className="w-full flex items-center gap-3 px-2 py-1.5 rounded-lg transition-colors focus:outline-none"
               style={{
-                backgroundColor: isSelected ? SURFACE_HI : isNow ? '#1A1F2A99' : 'transparent',
+                backgroundColor: isSelected ? SURFACE_HI : isNow ? SURFACE_HI_SOFT : 'transparent',
                 outline: isSelected ? `1px solid ${BORDER}` : 'none',
               }}
             >
@@ -276,7 +308,17 @@ function useCountdownTo2015(now) {
 
 /* ---------- App ---------- */
 export default function Vatio() {
-  const [region, setRegion] = useState('8741');
+  // Repinta cuando cambia el tema. El resto de colores son variables CSS y se resuelven
+  // solos, pero el degradado del precio se calcula aquí y hay que releerlo a mano.
+  const [, setTema] = useState(0);
+  useEffect(() => {
+    const refrescar = () => { leerEscala(); setTema((n) => n + 1); };
+    refrescar();
+    window.addEventListener('vatio:tema', refrescar);
+    return () => window.removeEventListener('vatio:tema', refrescar);
+  }, []);
+
+  const [region, setRegion] = useState('PCB');
   const [viewDay, setViewDay] = useState('today');
   const [chartView, setChartView] = useState('chart');
   const [taxesOn, setTaxesOn] = useState(false);
@@ -350,15 +392,18 @@ export default function Vatio() {
   }, [region, todayStr]);
 
   /* re-check tomorrow availability every 5 min after 19:45 */
+  // `now` NO va en las dependencias a propósito: cambia cada 30 segundos, así que el
+  // efecto se rehacía entero antes de que el intervalo de 5 minutos llegara a dispararse
+  // ni una sola vez. La cuenta atrás decía que lo comprobaría solo y nunca lo hacía.
+  // La hora se lee dentro del intervalo, que es donde importa.
   useEffect(() => {
-    const mp = madridParts(now);
-    const h = parseInt(mp.hour, 10);
-    if (h < 19 || tomorrowAvailable === true) return;
+    if (tomorrowAvailable === true) return;
     const t = setInterval(() => {
-      checkTomorrow(region, tomorrowStr, tomorrowCacheKey);
+      const h = parseInt(madridParts(new Date()).hour, 10);
+      if (h >= 19) checkTomorrow(region, tomorrowStr, tomorrowCacheKey);
     }, 5 * 60 * 1000);
     return () => clearInterval(t);
-  }, [now, region, tomorrowStr, tomorrowCacheKey, tomorrowAvailable, checkTomorrow]);
+  }, [region, tomorrowStr, tomorrowCacheKey, tomorrowAvailable, checkTomorrow]);
 
   /* when switching tabs */
   useEffect(() => {
@@ -368,14 +413,25 @@ export default function Vatio() {
       setError(null);
       return;
     }
-    if (viewDay === 'tomorrow' && tomorrowAvailable === false) {
-      setLoading(false);
-      setError('no_data');
-      return;
+    if (viewDay === 'tomorrow') {
+      if (tomorrowAvailable === false) {
+        setLoading(false);
+        setError('no_data');
+        return;
+      }
+      // Al arrancar ya se lanzó una petición de mañana para saber si hay datos. Si sigue
+      // en marcha, esperarla en vez de pedir lo mismo otra vez: antes se hacían dos
+      // peticiones idénticas y la pestaña tardaba el doble. Al resolverse cambia
+      // `tomorrowAvailable` y este efecto vuelve a entrar.
+      if (tomorrowAvailable === null) {
+        setLoading(true);
+        setError(null);
+        return;
+      }
     }
     load(cacheKey, dateStr, region);
     // eslint-disable-next-line
-  }, [cacheKey]);
+  }, [cacheKey, tomorrowAvailable]);
 
   /* auto-refresh current view every 10 min */
   useEffect(() => {
@@ -520,7 +576,7 @@ export default function Vatio() {
                       load(cacheKey, dateStr, region);
                     }}
                     className="text-sm font-medium rounded-full px-5 py-2 focus:outline focus:outline-2 mt-1"
-                    style={{ backgroundColor: TEXT, color: INK }}
+                    style={{ backgroundColor: TEXT, color: ON_TEXT }}
                   >
                     Comprobar ahora
                   </button>
@@ -532,7 +588,7 @@ export default function Vatio() {
                   <button
                     onClick={() => load(cacheKey, dateStr, region)}
                     className="text-sm font-medium rounded-full px-4 py-1.5 focus:outline focus:outline-2"
-                    style={{ backgroundColor: TEXT, color: INK }}
+                    style={{ backgroundColor: TEXT, color: ON_TEXT }}
                   >
                     Reintentar
                   </button>
@@ -544,7 +600,7 @@ export default function Vatio() {
                   <button
                     onClick={() => load(cacheKey, dateStr, region)}
                     className="text-sm font-medium rounded-full px-4 py-1.5 focus:outline focus:outline-2"
-                    style={{ backgroundColor: TEXT, color: INK }}
+                    style={{ backgroundColor: TEXT, color: ON_TEXT }}
                   >
                     Reintentar
                   </button>
@@ -652,14 +708,14 @@ export default function Vatio() {
                 <button
                   onClick={() => setChartView('chart')}
                   className="text-xs font-medium px-2.5 py-1 rounded-full focus:outline focus:outline-2"
-                  style={{ backgroundColor: chartView === 'chart' ? TEXT : 'transparent', color: chartView === 'chart' ? INK : MUTED }}
+                  style={{ backgroundColor: chartView === 'chart' ? TEXT : 'transparent', color: chartView === 'chart' ? ON_TEXT : MUTED }}
                 >
                   Gráfico
                 </button>
                 <button
                   onClick={() => setChartView('list')}
                   className="text-xs font-medium px-2.5 py-1 rounded-full focus:outline focus:outline-2"
-                  style={{ backgroundColor: chartView === 'list' ? TEXT : 'transparent', color: chartView === 'list' ? INK : MUTED }}
+                  style={{ backgroundColor: chartView === 'list' ? TEXT : 'transparent', color: chartView === 'list' ? ON_TEXT : MUTED }}
                 >
                   Lista
                 </button>

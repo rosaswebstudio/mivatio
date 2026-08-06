@@ -1,25 +1,45 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Vatio from '../components/Vatio.jsx';
+import TablaHoras from '../components/TablaHoras.astro';
 import { ELECTRODOMESTICOS } from '../lib/electrodomesticos.js';
 import TendenciaLuz from '../components/TendenciaLuz.astro';
 import historico from '../data/historico.json';
+import { cargarPrecios, fechaMadrid, fechaLarga, resumenDia, franjas } from '../lib/datos-build.js';
+
+// Los precios de hoy se traen EN EL BUILD y se escriben en el HTML.
+//
+// Antes la portada no contenía ni una sola cifra: todo vivía dentro del componente de
+// JavaScript, así que un buscador veía un título y un hueco vacío. Era la página más
+// importante del sitio y la más pobre para Google. La app sigue estando, encima, para lo
+// que solo ella puede hacer: hora actual, impuestos y gráfico interactivo.
+const hoy = fechaMadrid();
+const { horas } = await cargarPrecios(hoy);
+const res = resumenDia(horas);
+const lavadora = franjas(horas, 2).mejor;
+
+const p5 = (v: number) => v.toLocaleString('es-ES', { minimumFractionDigits: 5, maximumFractionDigits: 5 });
+const p4 = (v: number) => v.toLocaleString('es-ES', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+const hh = (h: number) => `${String(h).padStart(2, '0')}:00`;
+const tramo = (a: number, b: number) => `${hh(a)} a ${hh((b + 1) % 24)}`;
+const brechaPct = ((res.max / res.min - 1) * 100).toLocaleString('es-ES', { maximumFractionDigits: 0 });
 
 // Coma decimal: "1,2 kWh", no "1.2 kWh".
 const kwhTxt = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 2 });
 
 const title = 'Precio de la luz hoy y mañana, hora a hora | Vatio';
-const description =
-  'Consulta el precio de la luz (PVPC) hoy y mañana, hora a hora y en directo, por comunidad. Descubre a qué hora es más barata la luz. Datos oficiales de Red Eléctrica.';
+// La descripción lleva el dato del día: en Google se ve un precio concreto en vez de una
+// promesa genérica, y cambia sola en cada rebuild.
+const description = `Precio de la luz hoy hora a hora: la hora más barata es de ${tramo(res.horaMin, res.horaMin)} a ${p5(res.min)} €/kWh y la media del día es de ${p4(res.media)} €/kWh. PVPC en directo con datos oficiales de Red Eléctrica.`;
 
 const faqs = [
   {
     q: '¿A qué hora es más barata la luz hoy?',
-    a: 'Suele ser de madrugada (entre las 00:00 y las 07:00) y, algunos días, al mediodía cuando hay mucha producción solar. Varía cada día: en Vatio las horas más baratas aparecen en verde y las más caras en rojo, actualizado en directo para hoy.',
+    a: `Hoy ${fechaLarga(hoy)} la hora más barata es de ${tramo(res.horaMin, res.horaMin)}, a ${p5(res.min)} €/kWh. Cambia todos los días: suele salir de madrugada o al mediodía, cuando hay mucha producción solar, pero depende del viento y del sol de cada jornada, así que conviene mirarlo antes de programar los aparatos.`,
   },
   {
     q: '¿A qué hora es más cara la luz?',
-    a: 'Normalmente en las horas punta de la tarde-noche (entre las 19:00 y las 22:00), cuando más se consume. Puedes ver el máximo del día y su hora exacta en el panel de arriba.',
+    a: `Hoy la hora más cara es de ${tramo(res.horaMax, res.horaMax)}, a ${p5(res.max)} €/kWh, un ${brechaPct}% más que la más barata. Lo normal es que el máximo caiga en las horas punta de la tarde-noche, entre las 19:00 y las 22:00, cuando más se consume y hay que encender centrales de gas.`,
   },
   {
     q: '¿Cuándo se publica el precio de la luz de mañana?',
@@ -59,7 +79,7 @@ const jsonLd = {
       featureList: [
         'Precio de la luz hoy y mañana hora a hora',
         'Horas más baratas y más caras del día',
-        'Precio por comunidad (Península, Canarias, Baleares, Ceuta, Melilla)',
+        'Tabla horaria completa del día con las horas baratas y caras marcadas',
         'Mejor momento para poner electrodomésticos',
       ],
     },
@@ -78,23 +98,30 @@ const jsonLd = {
 <Layout title={title} description={description} canonicalPath="/">
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
 
-  <div class="min-h-screen w-full" style="background-color:#0B0D12;">
+  <div class="min-h-screen w-full" style="background-color:var(--color-fondo);">
     <div class="mx-auto flex max-w-5xl justify-center gap-8">
       <!-- Columna principal -->
       <main class="w-full max-w-2xl">
         <!-- Cabecera SEO -->
         <header class="px-4 pt-7 pb-1">
-          <h1 class="text-xl font-bold tracking-tight text-[#ECEAE3] sm:text-2xl">
-            Precio de la luz hoy y mañana, <span class="text-[#2DD4BF]">hora a hora</span>
+          <h1 class="text-xl font-bold tracking-tight text-tinta sm:text-2xl">
+            Precio de la luz hoy y mañana, <span class="text-acento">hora a hora</span>
           </h1>
-          <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">
-            El precio del PVPC en directo. Mira a qué hora es más barata la luz hoy, consulta
-            los precios de mañana y planifica tus electrodomésticos.
+          <p class="mt-2 text-sm leading-relaxed text-suave">
+            Hoy {fechaLarga(hoy)} la luz está más barata de
+            {' '}<strong class="text-barato">{tramo(res.horaMin, res.horaMin)}</strong>, a
+            {' '}{p5(res.min)} €/kWh, y más cara de
+            {' '}<strong class="text-caro">{tramo(res.horaMax, res.horaMax)}</strong>, a
+            {' '}{p5(res.max)} €/kWh. La media del día es de
+            {' '}<strong class="text-tinta">{p4(res.media)} €/kWh</strong>, y entre la hora más
+            barata y la más cara hay un {brechaPct}% de diferencia.
           </p>
         </header>
 
-        <!-- App (island Preact, se hidrata en el cliente) -->
-        <Vatio client:load />
+        <!-- App en directo. Se hidrata cuando el navegador está libre, no de inmediato: el
+             visitante ya tiene los precios del día escritos arriba y en la tabla de abajo,
+             así que no hay nada que esperar para poder leer la página. -->
+        <Vatio client:idle />
 
         {/* CTA de afiliado y hueco de AdSense: OCULTOS hasta tener el enlace real de
             Awin y la cuenta de AdSense aprobada. Para reactivarlos, quitar este comentario
@@ -102,28 +129,51 @@ const jsonLd = {
         <div class="px-4">
           <a href="#" rel="sponsored nofollow noopener"
             class="mt-2 flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-colors"
-            style="background-color:#14171F;border:1px solid #232733;">
+            style="background-color:var(--color-superficie);border:1px solid var(--color-borde);">
             <div>
-              <p class="text-sm font-semibold text-[#ECEAE3]">¿Pagas de más en tu factura?</p>
-              <p class="text-xs text-[#8A8F9C]">Compara tarifas de luz y ahorra</p>
+              <p class="text-sm font-semibold text-tinta">¿Pagas de más en tu factura?</p>
+              <p class="text-xs text-suave">Compara tarifas de luz y ahorra</p>
             </div>
-            <span class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold" style="background-color:#2DD4BF;color:#0B0D12;">Comparar</span>
+            <span class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold" style="background-color:var(--color-acento);color:var(--color-sobre-acento);">Comparar</span>
           </a>
 
           <div class="mt-4 flex min-h-[100px] w-full flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-3 text-center"
-            style="border-color:#232733;background-color:#14171F80;">
-            <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#5A6070]">Publicidad</span>
-            <span class="mt-1 text-xs text-[#5A6070]">Banner responsive (AdSense)</span>
+            style="border-color:var(--color-borde);background-color:var(--color-superficie);">
+            <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-tenue">Publicidad</span>
+            <span class="mt-1 text-xs text-tenue">Banner responsive (AdSense)</span>
           </div>
         </div>
         */}
+
+        <!-- Tabla horaria escrita en el HTML: es el contenido que Google puede leer y el
+             que ve el visitante antes de que se hidrate nada. -->
+        <section class="px-4 pt-8">
+          <h2 class="text-base font-bold text-tinta">Precio de la luz hoy hora a hora</h2>
+          <p class="mt-1 text-xs text-tenue">{fechaLarga(hoy)} · PVPC sin impuestos · datos de Red Eléctrica</p>
+          <div class="mt-3">
+            <TablaHoras horas={horas} />
+          </div>
+          {lavadora && (
+            <p class="mt-2 text-xs leading-relaxed text-tenue">
+              El bloque de dos horas seguidas más barato de hoy va de
+              {' '}<strong class="text-barato">{tramo(lavadora.inicio, lavadora.fin)}</strong>, a
+              {' '}{p5(lavadora.media)} €/kWh de media: es el mejor momento para la lavadora o el
+              lavavajillas. Lo tienes desglosado por aparato en
+              {' '}<a href="/horas-baratas-hoy/" class="text-acento hover:underline">horas baratas de hoy</a>.
+            </p>
+          )}
+          <p class="mt-2 text-xs leading-relaxed text-tenue">
+            Red Eléctrica publica los precios del día siguiente cada tarde a partir de las 20:15h:
+            {' '}<a href="/precio-luz-manana/" class="text-acento hover:underline">precio de la luz mañana, hora a hora</a>.
+          </p>
+        </section>
 
         <TendenciaLuz fechas={historico.fechas} media={historico.media} min={historico.min} max={historico.max} />
 
         <!-- Coste por electrodoméstico (enlazado interno hacia las páginas generadas) -->
         <section class="px-4 pt-8">
-          <h2 class="text-base font-bold text-[#ECEAE3]">¿Cuánto cuesta poner cada electrodoméstico?</h2>
-          <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">
+          <h2 class="text-base font-bold text-tinta">¿Cuánto cuesta poner cada electrodoméstico?</h2>
+          <p class="mt-2 text-sm leading-relaxed text-suave">
             El precio de hoy aplicado a lo que gasta cada aparato, y cuánto ahorras al año
             eligiendo la hora buena.
           </p>
@@ -131,12 +181,12 @@ const jsonLd = {
             {ELECTRODOMESTICOS.map((e) => (
               <a href={`/cuanto-cuesta/${e.slug}/`}
                 class="group flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition-colors"
-                style="background-color:#14171F;border:1px solid #232733;">
-                <span class="min-w-0 flex-1 truncate text-[#ECEAE3]">Cuánto cuesta {e.accion}</span>
-                <span class="shrink-0 text-xs text-[#5A6070]">{kwhTxt(e.kwh)} kWh</span>
+                style="background-color:var(--color-superficie);border:1px solid var(--color-borde);">
+                <span class="min-w-0 flex-1 truncate text-tinta">Cuánto cuesta {e.accion}</span>
+                <span class="shrink-0 text-xs text-tenue">{kwhTxt(e.kwh)} kWh</span>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                  class="h-4 w-4 shrink-0 text-[#2DD4BF] transition-transform group-hover:translate-x-0.5" aria-hidden="true">
+                  class="h-4 w-4 shrink-0 text-acento transition-transform group-hover:translate-x-0.5" aria-hidden="true">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </a>
@@ -146,47 +196,47 @@ const jsonLd = {
 
         <!-- Herramientas: las dos páginas con más intención de la web -->
         <section class="px-4 pt-8">
-          <h2 class="text-base font-bold text-[#ECEAE3]">Ahorra en las dos partes de la factura</h2>
-          <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">
+          <h2 class="text-base font-bold text-tinta">Ahorra en las dos partes de la factura</h2>
+          <p class="mt-2 text-sm leading-relaxed text-suave">
             La luz que gastas depende de la hora. La potencia contratada la pagas siempre, la uses o no.
           </p>
           <div class="mt-3 grid gap-2 sm:grid-cols-2">
             <a href="/bono-social/"
-              class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-colors hover:border-[#2DD4BF]/50"
-              style="background-color:#14171F;border:1px solid #232733;">
+              class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-colors hover:border-acento/50"
+              style="background-color:var(--color-superficie);border:1px solid var(--color-borde);">
               <div>
-                <p class="text-sm font-semibold text-[#ECEAE3]">¿Te toca el bono social?</p>
-                <p class="text-xs text-[#8A8F9C]">Hasta un 57,5% de descuento en la factura</p>
+                <p class="text-sm font-semibold text-tinta">¿Te toca el bono social?</p>
+                <p class="text-xs text-suave">Hasta un 57,5% de descuento en la factura</p>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                class="h-4 w-4 shrink-0 text-[#2DD4BF]" aria-hidden="true">
+                class="h-4 w-4 shrink-0 text-acento" aria-hidden="true">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </a>
             <a href="/calculadora-potencia/"
-              class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-colors hover:border-[#2DD4BF]/50"
-              style="background-color:#14171F;border:1px solid #232733;">
+              class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-colors hover:border-acento/50"
+              style="background-color:var(--color-superficie);border:1px solid var(--color-borde);">
               <div>
-                <p class="text-sm font-semibold text-[#ECEAE3]">¿Qué potencia necesito?</p>
-                <p class="text-xs text-[#8A8F9C]">Cuánto te sobra pagar cada año</p>
+                <p class="text-sm font-semibold text-tinta">¿Qué potencia necesito?</p>
+                <p class="text-xs text-suave">Cuánto te sobra pagar cada año</p>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                class="h-4 w-4 shrink-0 text-[#2DD4BF]" aria-hidden="true">
+                class="h-4 w-4 shrink-0 text-acento" aria-hidden="true">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </a>
             <a href="/pvpc-o-tarifa-fija/"
-              class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-colors hover:border-[#2DD4BF]/50"
-              style="background-color:#14171F;border:1px solid #232733;">
+              class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-colors hover:border-acento/50"
+              style="background-color:var(--color-superficie);border:1px solid var(--color-borde);">
               <div>
-                <p class="text-sm font-semibold text-[#ECEAE3]">¿PVPC o tarifa fija?</p>
-                <p class="text-xs text-[#8A8F9C]">Cuál te conviene, con datos reales</p>
+                <p class="text-sm font-semibold text-tinta">¿PVPC o tarifa fija?</p>
+                <p class="text-xs text-suave">Cuál te conviene, con datos reales</p>
               </div>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                class="h-4 w-4 shrink-0 text-[#2DD4BF]" aria-hidden="true">
+                class="h-4 w-4 shrink-0 text-acento" aria-hidden="true">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </a>
@@ -195,15 +245,15 @@ const jsonLd = {
 
         <!-- FAQ (SEO) -->
         <section class="px-4 pt-8">
-          <h2 class="text-base font-bold text-[#ECEAE3]">Preguntas frecuentes</h2>
-          <div class="mt-3 divide-y" style="border-color:#232733;">
+          <h2 class="text-base font-bold text-tinta">Preguntas frecuentes</h2>
+          <div class="mt-3 divide-y" style="border-color:var(--color-borde);">
             {faqs.map((f) => (
-              <details class="group py-3" style="border-color:#232733;">
-                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-[#ECEAE3]">
+              <details class="group py-3" style="border-color:var(--color-borde);">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-tinta">
                   <span>{f.q}</span>
-                  <span class="text-[#2DD4BF] transition-transform group-open:rotate-45">+</span>
+                  <span class="text-acento transition-transform group-open:rotate-45">+</span>
                 </summary>
-                <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">{f.a}</p>
+                <p class="mt-2 text-sm leading-relaxed text-suave">{f.a}</p>
               </details>
             ))}
           </div>
@@ -211,37 +261,37 @@ const jsonLd = {
 
         <!-- Texto SEO -->
         <section class="px-4 pt-8">
-          <h2 class="text-base font-bold text-[#ECEAE3]">Sobre el precio de la luz en España</h2>
-          <div class="mt-2 space-y-3 text-sm leading-relaxed text-[#8A8F9C]">
+          <h2 class="text-base font-bold text-tinta">Sobre el precio de la luz en España</h2>
+          <div class="mt-2 space-y-3 text-sm leading-relaxed text-suave">
             <p>
               El precio de la luz cambia cada hora según la oferta y la demanda del mercado
               eléctrico. Conocer las horas más baratas te permite mover consumos como la lavadora,
               el lavavajillas o la carga del coche eléctrico a los tramos donde el kWh cuesta menos.
             </p>
             <p>
-              Vatio muestra el PVPC oficial hora a hora para Península, Canarias, Baleares, Ceuta y
-              Melilla, resaltando en verde las horas baratas y en rojo las caras, y calcula la mejor
-              franja para cada electrodoméstico. Los precios de mañana se publican cada tarde sobre
-              las 20:15h.
+              Vatio muestra el PVPC oficial hora a hora, resaltando en verde las horas baratas y en
+              rojo las caras, y calcula la mejor franja para cada electrodoméstico. Los precios de
+              mañana se publican cada tarde sobre las 20:15h.
             </p>
           </div>
         </section>
 
         <!-- Footer -->
         <footer class="px-4 pt-8 pb-8">
-          <p class="text-xs leading-relaxed text-[#5A6070]">
+          <p class="text-xs leading-relaxed text-tenue">
             Vatio es una herramienta informativa. Los precios provienen de la API pública de Red
             Eléctrica de España (REData/ESIOS) y son orientativos; tu factura puede variar según tu
             comercializadora, peajes e impuestos aplicables. No es asesoramiento contractual.
           </p>
           <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-            <a href="/quienes-somos" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Quiénes somos</a>
-            <a href="/contacto" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Contacto</a>
-            <a href="/aviso-legal" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Aviso legal</a>
-            <a href="/privacidad" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Privacidad</a>
-            <a href="/cookies" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Cookies</a>
+            <a href="/precio-luz-manana/" class="text-suave hover:text-acento">Precio mañana</a>
+            <a href="/quienes-somos" class="text-suave hover:text-acento">Quiénes somos</a>
+            <a href="/contacto" class="text-suave hover:text-acento">Contacto</a>
+            <a href="/aviso-legal" class="text-suave hover:text-acento">Aviso legal</a>
+            <a href="/privacidad" class="text-suave hover:text-acento">Privacidad</a>
+            <a href="/cookies" class="text-suave hover:text-acento">Cookies</a>
           </div>
-          <p class="mt-3 text-xs text-[#5A6070]">© {new Date().getFullYear()} Vatio</p>
+          <p class="mt-3 text-xs text-tenue">© {new Date().getFullYear()} Vatio</p>
         </footer>
       </main>
 
@@ -249,9 +299,9 @@ const jsonLd = {
           Al reactivarlo, sustituir el marcador por la unidad real <ins class="adsbygoogle">.
       <aside class="hidden shrink-0 pt-7 pr-4 lg:block" style="width:300px;">
         <div class="sticky top-6 flex min-h-[600px] w-[300px] flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-3 text-center"
-          style="border-color:#232733;background-color:#14171F80;">
-          <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#5A6070]">Publicidad</span>
-          <span class="mt-1 text-xs text-[#5A6070]">Rascacielos 300x600 (fijo)</span>
+          style="border-color:var(--color-borde);background-color:var(--color-superficie);">
+          <span class="text-[10px] font-semibold uppercase tracking-[0.2em] text-tenue">Publicidad</span>
+          <span class="mt-1 text-xs text-tenue">Rascacielos 300x600 (fijo)</span>
         </div>
       </aside>
       */}

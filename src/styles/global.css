@@ -1,14 +1,78 @@
 @import "tailwindcss";
 
+@theme {
+  /* Paleta semántica. Lo que hay aquí es el tema OSCURO, que es el de partida; el claro
+     solo redefine estas mismas variables más abajo. Las utilidades de Tailwind v4
+     compilan a var(--color-*), así que cambiar la variable cambia toda la web sin tocar
+     una sola clase. No usar hex sueltos en las páginas.
+
+     Mismos nombres que en Ahorro al Volante, para que las dos webs se mantengan igual. */
+  --color-fondo: #0b0d12;
+  --color-superficie: #14171f;
+  --color-elevado: #1a1f2a;
+  --color-borde: #232733;
+  --color-tinta: #eceae3;
+  --color-suave: #8a8f9c;
+  --color-tenue: #7b8294;
+  --color-acento: #2dd4bf;
+  --color-acento-fuerte: #26b8a5;
+  --color-barato: #2dd4bf;
+  --color-medio: #f5b83d;
+  --color-caro: #f2545b;
+  --color-aviso: #14171f;
+  --color-aviso-borde: #3a3320;
+  /* Tinta que va encima del turquesa de marca (botones y pastillas rellenas). En oscuro
+     el turquesa es claro y pide letra oscura; en claro es al revés. */
+  --color-sobre-acento: #06231f;
+}
+
 :root {
   color-scheme: dark;
+  --scrollbar: #232733;
+  /* Tinta que va encima de un fondo del color --color-tinta (botones invertidos de la
+     app). Es el opuesto de la tinta, no el fondo de la página. */
+  --color-sobre-tinta: #0b0d12;
+  /* Versiones translúcidas que usa la tabla de horas. Van aquí y no como color-mix()
+     para no depender de soporte reciente del navegador. */
+  --color-acento-suave: rgba(45, 212, 191, 0.13);
+  --color-elevado-suave: rgba(26, 31, 42, 0.6);
+}
+
+/* Tema claro. Un único bloque: el script de Layout.astro fija siempre data-tema antes de
+   pintar, así que no hace falta duplicar la paleta dentro de un @media y arriesgarse a
+   que las dos copias se desincronicen.
+
+   Los tonos no son el oscuro invertido. El turquesa #2DD4BF sobre blanco se queda en
+   1,7:1 de contraste, ilegible, así que en claro baja a un verde azulado oscuro; y el
+   fondo es un blanco frío de papel, a juego con el carácter del sitio. */
+:root[data-tema="claro"] {
+  color-scheme: light;
+  --color-fondo: #f3f5f6;
+  --color-superficie: #ffffff;
+  --color-elevado: #e9edef;
+  --color-borde: #dde2e5;
+  --color-tinta: #14181d;
+  --color-suave: #454c55;
+  --color-tenue: #656d78;
+  --color-acento: #0f766e;
+  --color-acento-fuerte: #0b5f59;
+  --color-barato: #0f766e;
+  --color-medio: #b45309;
+  --color-caro: #be123c;
+  --color-aviso: #fef6e7;
+  --color-aviso-borde: #f0dfb8;
+  --color-sobre-acento: #ffffff;
+  --color-sobre-tinta: #ffffff;
+  --color-acento-suave: rgba(15, 118, 110, 0.1);
+  --color-elevado-suave: rgba(233, 237, 239, 0.75);
+  --scrollbar: #c3cacf;
 }
 
 html,
 body {
   margin: 0;
   padding: 0;
-  background: #0b0d12;
+  background: var(--color-fondo);
 }
 
 .mono {
@@ -54,10 +118,6 @@ select {
   }
 }
 
-select {
-  color-scheme: dark;
-}
-
 .list-scroll::-webkit-scrollbar {
   width: 6px;
 }
@@ -65,6 +125,34 @@ select {
   background: transparent;
 }
 .list-scroll::-webkit-scrollbar-thumb {
-  background: #232733;
+  background: var(--scrollbar);
   border-radius: 3px;
+}
+
+/* Fila de secciones de la cabecera: se desplaza a dedo en móvil, sin barra a la vista. */
+.sin-barra {
+  scrollbar-width: none;
+}
+.sin-barra::-webkit-scrollbar {
+  display: none;
+}
+
+/* Sin barra de desplazamiento a la vista, una sección cortada a media palabra parece un
+   fallo de maquetación en vez de algo que se puede arrastrar. Los anchos los pone el
+   script de la cabecera según haya contenido oculto a cada lado. */
+.desvanece {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--fade-izq, 0px),
+    #000 calc(100% - var(--fade-der, 0px)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--fade-izq, 0px),
+    #000 calc(100% - var(--fade-der, 0px)),
+    transparent 100%
+  );
 }

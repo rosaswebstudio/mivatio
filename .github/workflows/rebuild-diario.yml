@@ -1,15 +1,21 @@
-# Cada día: añade el precio medio de hoy al histórico y redespliega la web.
+# Dos veces al día: añade el precio medio al histórico y redespliega la web.
 #
-# Las páginas "cuánto cuesta poner..." y el bloque de tendencia se generan en el build
-# con el PVPC del día, así que sin esto mostrarían los precios de ayer. Si el histórico
-# cambia (lo normal), el propio commit dispara el despliegue de Vercel; si no, se llama
-# al deploy hook.
+# Las páginas "cuánto cuesta poner...", "horas baratas", "precio de mañana" y el bloque de
+# tendencia se generan EN EL BUILD con el PVPC, así que sin esto mostrarían los precios de
+# ayer. Si el histórico cambia, el propio commit dispara el despliegue de Vercel; si no,
+# se llama al deploy hook.
 name: Rebuild diario
 
 on:
   schedule:
-    # 23:15 UTC: poco después de medianoche peninsular (00:15 invierno / 01:15 verano),
-    # cuando Red Eléctrica ya ha publicado los precios del día.
+    # Pasada de la TARDE. Red Eléctrica publica los precios del día siguiente a partir de
+    # las 20:15 peninsulares, y /precio-luz-manana/ los necesita escritos en el HTML: sin
+    # este build, esa página se queda todo el día diciendo que aún no hay datos.
+    # 20:30 UTC son las 22:30 en verano y las 21:30 en invierno, con margen de sobra sobre
+    # la hora de publicación en los dos horarios y sobre los retrasos de la cola de GitHub.
+    - cron: '30 20 * * *'
+    # Pasada de MEDIANOCHE. 23:15 UTC es poco después de medianoche peninsular (00:15 en
+    # invierno, 01:15 en verano): arranca el día nuevo con sus precios ya en su sitio.
     - cron: '15 23 * * *'
   workflow_dispatch: # permite lanzarlo a mano desde la pestaña Actions
 

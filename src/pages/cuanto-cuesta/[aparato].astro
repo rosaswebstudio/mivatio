@@ -99,37 +99,37 @@ const jsonLd = {
 };
 
 // Colores de la app (Vatio.jsx)
-const CHEAP = '#2DD4BF', MIDC = '#F5B83D', EXP = '#F2545B';
+const CHEAP = 'var(--color-acento)', MIDC = 'var(--color-medio)', EXP = 'var(--color-caro)';
 const colorHora = (p: number) => {
   const t = dia.max > dia.min ? (p - dia.min) / (dia.max - dia.min) : 0.5;
   return t < 0.34 ? CHEAP : t > 0.67 ? EXP : MIDC;
 };
 const alturaMax = 90;
-const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
+const card = 'rounded-2xl border border-borde bg-superficie p-4';
 ---
 <Layout title={title} description={description} canonicalPath={rutaCanonica}>
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
 
-  <div class="min-h-screen w-full" style="background-color:#0B0D12;">
+  <div class="min-h-screen w-full" style="background-color:var(--color-fondo);">
     <div class="mx-auto flex max-w-5xl justify-center gap-8">
       <main class="w-full max-w-2xl">
-        <nav aria-label="Migas de pan" class="px-4 pt-6 text-xs text-[#5A6070]">
-          <a href="/" class="hover:text-[#2DD4BF]">Inicio</a>
+        <nav aria-label="Migas de pan" class="px-4 pt-6 text-xs text-tenue">
+          <a href="/" class="hover:text-acento">Inicio</a>
           <span class="mx-1.5">/</span>
-          <span class="text-[#8A8F9C]">Cuánto cuesta {ap.accion}</span>
+          <span class="text-suave">Cuánto cuesta {ap.accion}</span>
         </nav>
 
         <header class="px-4 pt-4">
-          <h1 class="text-2xl font-bold tracking-tight text-[#ECEAE3] sm:text-3xl">
-            ¿Cuánto cuesta <span class="text-[#2DD4BF]">{ap.accion}</span>?
+          <h1 class="text-2xl font-bold tracking-tight text-tinta sm:text-3xl">
+            ¿Cuánto cuesta <span class="text-acento">{ap.accion}</span>?
           </h1>
-          <p class="mt-3 text-sm leading-relaxed text-[#8A8F9C]">
+          <p class="mt-3 text-sm leading-relaxed text-suave">
             Con el precio real de la luz de hoy, {ap.accion} cuesta
-            <strong class="text-[#2DD4BF]"> {eur(costeBarato)}</strong> si lo haces en la franja más
-            barata y <strong class="text-[#F2545B]">{eur(costeCaro)}</strong> si lo haces en la más
+            <strong class="text-acento"> {eur(costeBarato)}</strong> si lo haces en la franja más
+            barata y <strong class="text-caro">{eur(costeCaro)}</strong> si lo haces en la más
             cara. La misma tarea, el mismo aparato: solo cambia la hora.
           </p>
-          <p class="mt-2 text-xs text-[#5A6070]">
+          <p class="mt-2 text-xs text-tenue">
             PVPC de {fechaLarga} en la Península, sin impuestos. Datos oficiales de Red Eléctrica.
           </p>
         </header>
@@ -137,48 +137,48 @@ const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
         <!-- Cifras -->
         <section class="grid grid-cols-2 gap-3 px-4 pt-5">
           <div class={card}>
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">En la franja barata</p>
-            <p class="mt-1 text-xl font-bold text-[#2DD4BF]" data-out="barato">{eur(costeBarato)}</p>
-            <p class="text-xs text-[#5A6070]">{tramo(franja.mejor)}</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-tenue">En la franja barata</p>
+            <p class="mt-1 text-xl font-bold text-acento" data-out="barato">{eur(costeBarato)}</p>
+            <p class="text-xs text-tenue">{tramo(franja.mejor)}</p>
           </div>
           <div class={card}>
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">En la franja cara</p>
-            <p class="mt-1 text-xl font-bold text-[#F2545B]" data-out="caro">{eur(costeCaro)}</p>
-            <p class="text-xs text-[#5A6070]">{tramo(franja.peor)}</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-tenue">En la franja cara</p>
+            <p class="mt-1 text-xl font-bold text-caro" data-out="caro">{eur(costeCaro)}</p>
+            <p class="text-xs text-tenue">{tramo(franja.peor)}</p>
           </div>
           <div class={card}>
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Coste medio del día</p>
-            <p class="mt-1 text-xl font-bold text-[#ECEAE3]" data-out="medio">{eur(costeMedio)}</p>
-            <p class="text-xs text-[#5A6070]">por {ap.unidad}</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-tenue">Coste medio del día</p>
+            <p class="mt-1 text-xl font-bold text-tinta" data-out="medio">{eur(costeMedio)}</p>
+            <p class="text-xs text-tenue">por {ap.unidad}</p>
           </div>
           <div class={card}>
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Ahorro al año</p>
-            <p class="mt-1 text-xl font-bold text-[#F5B83D]" data-out="anual">{eur(ahorroAnual)}</p>
-            <p class="text-xs text-[#5A6070]">{ap.usosSemana} {ap.usosSemana === 1 ? ap.unidad : ap.unidadPlural} por semana</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-tenue">Ahorro al año</p>
+            <p class="mt-1 text-xl font-bold text-medio" data-out="anual">{eur(ahorroAnual)}</p>
+            <p class="text-xs text-tenue">{ap.usosSemana} {ap.usosSemana === 1 ? ap.unidad : ap.unidadPlural} por semana</p>
           </div>
         </section>
 
         <!-- Ajuste del consumo: los valores son estimaciones -->
         <section class="px-4 pt-5">
-          <div class="rounded-2xl border border-[#2DD4BF]/25 bg-[#2DD4BF]/5 p-4">
-            <p class="text-sm font-semibold text-[#ECEAE3]">Ajusta el consumo a tu aparato</p>
-            <p class="mt-1 text-xs leading-relaxed text-[#8A8F9C]">
-              Partimos de <strong class="text-[#ECEAE3]">{kwh(ap.kwh)} kWh por {ap.unidad}</strong>, que
+          <div class="rounded-2xl border border-acento/25 bg-acento/5 p-4">
+            <p class="text-sm font-semibold text-tinta">Ajusta el consumo a tu aparato</p>
+            <p class="mt-1 text-xs leading-relaxed text-suave">
+              Partimos de <strong class="text-tinta">{kwh(ap.kwh)} kWh por {ap.unidad}</strong>, que
               es un valor típico. El consumo real de este tipo de aparato va de {kwh(ap.rango[0])} a {kwh(ap.rango[1])} kWh
               según el modelo, los años que tenga y el programa que uses, así que cambia el número
               si conoces el de tu casa y las cifras de arriba se recalculan.
             </p>
             <div class="mt-3 flex flex-wrap items-center gap-3">
-              <label class="flex items-center gap-2 text-sm text-[#8A8F9C]">
+              <label class="flex items-center gap-2 text-sm text-suave">
                 Consumo
                 <input id="kwh" type="number" min="0.1" max="200" step="0.1" value={ap.kwh}
-                  class="w-24 rounded-lg border border-[#232733] bg-[#0B0D12] px-2 py-1.5 text-sm text-[#ECEAE3] outline-none focus:border-[#2DD4BF]" />
+                  class="w-24 rounded-lg border border-borde bg-fondo px-2 py-1.5 text-sm text-tinta outline-none focus:border-acento" />
                 kWh
               </label>
-              <label class="flex items-center gap-2 text-sm text-[#8A8F9C]">
+              <label class="flex items-center gap-2 text-sm text-suave">
                 Usos por semana
                 <input id="usos" type="number" min="1" max="50" step="1" value={ap.usosSemana}
-                  class="w-20 rounded-lg border border-[#232733] bg-[#0B0D12] px-2 py-1.5 text-sm text-[#ECEAE3] outline-none focus:border-[#2DD4BF]" />
+                  class="w-20 rounded-lg border border-borde bg-fondo px-2 py-1.5 text-sm text-tinta outline-none focus:border-acento" />
               </label>
             </div>
           </div>
@@ -186,12 +186,12 @@ const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
 
         <!-- Precio hora a hora -->
         <section class="px-4 pt-8">
-          <h2 class="text-base font-bold text-[#ECEAE3]">El precio de la luz hoy, hora a hora</h2>
-          <p class="mt-1 text-sm text-[#8A8F9C]">
+          <h2 class="text-base font-bold text-tinta">El precio de la luz hoy, hora a hora</h2>
+          <p class="mt-1 text-sm text-suave">
             En verde las horas baratas y en rojo las caras. La franja marcada es el mejor bloque
             de {ap.horas} {ap.horas === 1 ? 'hora' : 'horas'} seguidas para {ap.accion}.
           </p>
-          <div class="mt-3 rounded-2xl border border-[#232733] bg-[#14171F] p-4">
+          <div class="mt-3 rounded-2xl border border-borde bg-superficie p-4">
             <div class="flex items-end justify-between gap-[2px]" style={`height:${alturaMax + 10}px`}>
               {horas.map((h) => {
                 const alto = 8 + ((h.precio - dia.min) / (dia.max - dia.min || 1)) * alturaMax;
@@ -200,54 +200,54 @@ const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
                   <div class="flex flex-1 flex-col items-center justify-end" style={`height:${alturaMax + 10}px`}
                     title={`${hh(h.hora)} · ${eur3(h.precio)} €/kWh`}>
                     <div class="w-full rounded-t-[3px]"
-                      style={`height:${alto}px;background-color:${colorHora(h.precio)};${dentro ? 'outline:1.5px solid #2DD4BF;outline-offset:1px;' : ''}`}></div>
+                      style={`height:${alto}px;background-color:${colorHora(h.precio)};${dentro ? 'outline:1.5px solid var(--color-acento);outline-offset:1px;' : ''}`}></div>
                   </div>
                 );
               })}
             </div>
-            <div class="mt-2 flex justify-between text-[10px] text-[#5A6070]">
+            <div class="mt-2 flex justify-between text-[10px] text-tenue">
               <span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span>
             </div>
-            <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#8A8F9C]">
-              <span>Mínimo <strong class="text-[#2DD4BF]">{eur3(dia.min)}</strong> a las {hh(dia.horaMin)}</span>
-              <span>Máximo <strong class="text-[#F2545B]">{eur3(dia.max)}</strong> a las {hh(dia.horaMax)}</span>
+            <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-suave">
+              <span>Mínimo <strong class="text-acento">{eur3(dia.min)}</strong> a las {hh(dia.horaMin)}</span>
+              <span>Máximo <strong class="text-caro">{eur3(dia.max)}</strong> a las {hh(dia.horaMax)}</span>
             </div>
           </div>
         </section>
 
         <!-- CTA a la app -->
         <section class="px-4 pt-6">
-          <a href="/" class="flex items-center justify-between gap-3 rounded-2xl border border-[#232733] bg-[#14171F] px-4 py-3.5 transition-colors hover:border-[#2DD4BF]/50">
+          <a href="/" class="flex items-center justify-between gap-3 rounded-2xl border border-borde bg-superficie px-4 py-3.5 transition-colors hover:border-acento/50">
             <div>
-              <p class="text-sm font-semibold text-[#ECEAE3]">Mira el precio de la luz en directo</p>
-              <p class="text-xs text-[#8A8F9C]">Hoy y mañana, hora a hora y por comunidad</p>
+              <p class="text-sm font-semibold text-tinta">Mira el precio de la luz en directo</p>
+              <p class="text-xs text-suave">Hoy y mañana, hora a hora y por comunidad</p>
             </div>
-            <span class="shrink-0 rounded-full bg-[#2DD4BF] px-3 py-1.5 text-xs font-semibold text-[#0B0D12]">Abrir</span>
+            <span class="shrink-0 rounded-full bg-acento px-3 py-1.5 text-xs font-semibold text-sobre-acento">Abrir</span>
           </a>
         </section>
 
         <!-- Detalle y consejo -->
         <section class="px-4 pt-8">
-          <h2 class="text-base font-bold text-[#ECEAE3]">Qué consume realmente</h2>
-          <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">{ap.detalle}</p>
-          <div class="mt-3 rounded-xl border border-[#232733] bg-[#14171F] px-4 py-3">
-            <p class="text-xs font-semibold uppercase tracking-wide text-[#F5B83D]">Cómo gastar menos</p>
-            <p class="mt-1 text-sm leading-relaxed text-[#8A8F9C]">{ap.consejo}</p>
+          <h2 class="text-base font-bold text-tinta">Qué consume realmente</h2>
+          <p class="mt-2 text-sm leading-relaxed text-suave">{ap.detalle}</p>
+          <div class="mt-3 rounded-xl border border-borde bg-superficie px-4 py-3">
+            <p class="text-xs font-semibold uppercase tracking-wide text-medio">Cómo gastar menos</p>
+            <p class="mt-1 text-sm leading-relaxed text-suave">{ap.consejo}</p>
           </div>
         </section>
 
         <!-- Otros aparatos -->
         <section class="px-4 pt-8">
-          <h2 class="text-base font-bold text-[#ECEAE3]">Cuánto cuesta usar otros aparatos</h2>
+          <h2 class="text-base font-bold text-tinta">Cuánto cuesta usar otros aparatos</h2>
           <div class="mt-3 grid gap-2 sm:grid-cols-2">
             {otros.map((o) => (
               <a href={`/cuanto-cuesta/${o.slug}/`}
-                class="group flex items-center gap-2 rounded-xl border border-[#232733] bg-[#14171F] px-3 py-2.5 text-sm transition-colors hover:border-[#2DD4BF]/50">
-                <span class="min-w-0 flex-1 truncate text-[#ECEAE3]">{o.nombre}</span>
-                <span class="shrink-0 text-xs text-[#5A6070]">{kwh(o.kwh)} kWh</span>
+                class="group flex items-center gap-2 rounded-xl border border-borde bg-superficie px-3 py-2.5 text-sm transition-colors hover:border-acento/50">
+                <span class="min-w-0 flex-1 truncate text-tinta">{o.nombre}</span>
+                <span class="shrink-0 text-xs text-tenue">{kwh(o.kwh)} kWh</span>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                  class="h-4 w-4 shrink-0 text-[#2DD4BF] transition-transform group-hover:translate-x-0.5" aria-hidden="true">
+                  class="h-4 w-4 shrink-0 text-acento transition-transform group-hover:translate-x-0.5" aria-hidden="true">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </a>
@@ -257,34 +257,34 @@ const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
 
         <!-- FAQ -->
         <section class="px-4 pt-8">
-          <h2 class="text-base font-bold text-[#ECEAE3]">Preguntas frecuentes</h2>
-          <div class="mt-3 divide-y divide-[#232733]">
+          <h2 class="text-base font-bold text-tinta">Preguntas frecuentes</h2>
+          <div class="mt-3 divide-y divide-borde">
             {faqs.map((f) => (
               <details class="group py-3">
-                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-[#ECEAE3]">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-tinta">
                   <span>{f.q}</span>
-                  <span class="text-[#2DD4BF] transition-transform group-open:rotate-45">+</span>
+                  <span class="text-acento transition-transform group-open:rotate-45">+</span>
                 </summary>
-                <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">{f.a}</p>
+                <p class="mt-2 text-sm leading-relaxed text-suave">{f.a}</p>
               </details>
             ))}
           </div>
         </section>
 
         <footer class="px-4 pt-10 pb-8">
-          <p class="text-xs leading-relaxed text-[#5A6070]">
+          <p class="text-xs leading-relaxed text-tenue">
             Los consumos son valores típicos y orientativos: varían según el modelo, su antigüedad y
             el uso que le des. Los precios son el PVPC publicado por Red Eléctrica para la Península
             el {fechaLarga}, sin impuestos, y cambian cada día. Esta página es informativa y no
             constituye asesoramiento.
           </p>
           <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-            <a href="/" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Inicio</a>
-            <a href="/aviso-legal" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Aviso legal</a>
-            <a href="/privacidad" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Privacidad</a>
-            <a href="/cookies" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Cookies</a>
+            <a href="/" class="text-suave hover:text-acento">Inicio</a>
+            <a href="/aviso-legal" class="text-suave hover:text-acento">Aviso legal</a>
+            <a href="/privacidad" class="text-suave hover:text-acento">Privacidad</a>
+            <a href="/cookies" class="text-suave hover:text-acento">Cookies</a>
           </div>
-          <p class="mt-3 text-xs text-[#5A6070]">© {new Date().getFullYear()} Vatio</p>
+          <p class="mt-3 text-xs text-tenue">© {new Date().getFullYear()} Vatio</p>
         </footer>
       </main>
     </div>

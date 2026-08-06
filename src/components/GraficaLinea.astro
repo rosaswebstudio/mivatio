@@ -22,11 +22,11 @@ const {
   id, serie, unidad, decimales = 1, ancho = 640, alto = 220, colorMinEsBueno = true,
 } = Astro.props;
 
-const TEAL = '#2DD4BF';
-const ROJO = '#F2545B';
-const GRID = '#1D212B';
-const MUTED = '#5A6070';
-const TEXT = '#ECEAE3';
+const TEAL = 'var(--color-acento)';
+const ROJO = 'var(--color-caro)';
+const GRID = 'var(--color-borde)';
+const MUTED = 'var(--color-tenue)';
+const TEXT = 'var(--color-tinta)';
 
 const fmt = (n: number) => (n * 100).toLocaleString('es-ES', { maximumFractionDigits: decimales });
 
@@ -67,12 +67,12 @@ const datosCliente = g
         {/* Etiqueta directa solo en el mínimo y el máximo: no un número en cada punto */}
         {iMin >= 0 && (
           <g>
-            <circle cx={g.puntos[iMin].x} cy={g.puntos[iMin].y} r="4" fill={colorExtremo(true)} stroke="#0B0D12" stroke-width="2" />
+            <circle cx={g.puntos[iMin].x} cy={g.puntos[iMin].y} r="4" fill={colorExtremo(true)} stroke="var(--color-fondo)" stroke-width="2" />
           </g>
         )}
         {iMax >= 0 && iMax !== iMin && (
           <g>
-            <circle cx={g.puntos[iMax].x} cy={g.puntos[iMax].y} r="4" fill={colorExtremo(false)} stroke="#0B0D12" stroke-width="2" />
+            <circle cx={g.puntos[iMax].x} cy={g.puntos[iMax].y} r="4" fill={colorExtremo(false)} stroke="var(--color-fondo)" stroke-width="2" />
           </g>
         )}
 
@@ -89,7 +89,7 @@ const datosCliente = g
         {/* Capa de hover: línea vertical + punto, ocultos hasta que el script los active */}
         <g class="js-crosshair" style="opacity:0;pointer-events:none;">
           <line class="js-crosshair-line" x1="0" y1={g.areaTop} x2="0" y2={g.baseY} stroke={MUTED} stroke-width="1" stroke-dasharray="2,3" />
-          <circle class="js-crosshair-dot" r="5" fill={TEAL} stroke="#0B0D12" stroke-width="2" />
+          <circle class="js-crosshair-dot" r="5" fill={TEAL} stroke="var(--color-fondo)" stroke-width="2" />
         </g>
 
         {/* Área transparente que captura el puntero en todo el ancho del gráfico */}
@@ -98,7 +98,7 @@ const datosCliente = g
       </svg>
 
       <div class="js-tooltip pointer-events-none absolute hidden rounded-lg px-2.5 py-1.5 text-xs shadow-lg"
-        style={`background-color:#1C202A;border:1px solid ${GRID};color:${TEXT};`}>
+        style={`background-color:var(--color-elevado);border:1px solid ${GRID};color:${TEXT};`}>
         <p class="js-tooltip-valor font-mono font-bold"></p>
         <p class="js-tooltip-fecha mt-0.5" style={`color:${MUTED};`}></p>
       </div>

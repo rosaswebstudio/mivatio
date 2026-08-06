@@ -88,49 +88,49 @@ const jsonLd = {
   ],
 };
 
-const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
+const card = 'rounded-2xl border border-borde bg-superficie p-4';
 ---
 <Layout title={title} description={description} canonicalPath={rutaCanonica}>
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
 
-  <div class="min-h-screen w-full" style="background-color:#0B0D12;">
+  <div class="min-h-screen w-full" style="background-color:var(--color-fondo);">
     <div class="mx-auto flex max-w-5xl justify-center gap-8">
       <main class="w-full max-w-2xl">
-        <nav aria-label="Migas de pan" class="px-4 pt-6 text-xs text-[#5A6070]">
-          <a href="/" class="hover:text-[#2DD4BF]">Inicio</a>
+        <nav aria-label="Migas de pan" class="px-4 pt-6 text-xs text-tenue">
+          <a href="/" class="hover:text-acento">Inicio</a>
           <span class="mx-1.5">/</span>
-          <span class="text-[#8A8F9C]">PVPC o tarifa fija</span>
+          <span class="text-suave">PVPC o tarifa fija</span>
         </nav>
 
         <header class="px-4 pt-4">
-          <h1 class="text-2xl font-bold tracking-tight text-[#ECEAE3] sm:text-3xl">
-            PVPC o <span class="text-[#2DD4BF]">tarifa fija</span>: cuál te conviene
+          <h1 class="text-2xl font-bold tracking-tight text-tinta sm:text-3xl">
+            PVPC o <span class="text-acento">tarifa fija</span>: cuál te conviene
           </h1>
-          <p class="mt-3 text-sm leading-relaxed text-[#8A8F9C]">
+          <p class="mt-3 text-sm leading-relaxed text-suave">
             No hay una respuesta única: depende de si puedes mover tu consumo a horas baratas o
             no. Aquí tienes los números reales de los últimos {N} días para decidir con datos, no
             con la opinión de turno.
           </p>
-          <p class="mt-2 text-xs text-[#5A6070]">Datos del PVPC de Red Eléctrica, Península. Actualizado el {fechaLarga}.</p>
+          <p class="mt-2 text-xs text-tenue">Datos del PVPC de Red Eléctrica, Península. Actualizado el {fechaLarga}.</p>
         </header>
 
         {mediaGeneral != null && (
           <section class="grid grid-cols-2 gap-3 px-4 pt-5">
             <div class={card}>
-              <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Media del PVPC</p>
-              <p class="mt-1 text-xl font-bold text-[#ECEAE3]">{cent(mediaGeneral)} <span class="text-sm font-semibold text-[#5A6070]">cent/kWh</span></p>
-              <p class="text-xs text-[#5A6070]">últimos {N} días</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-tenue">Media del PVPC</p>
+              <p class="mt-1 text-xl font-bold text-tinta">{cent(mediaGeneral)} <span class="text-sm font-semibold text-tenue">cent/kWh</span></p>
+              <p class="text-xs text-tenue">últimos {N} días</p>
             </div>
             <div class={card}>
-              <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Variación día a día</p>
-              <p class="mt-1 text-xl font-bold" style="color:#F2545B;">{volatilidadPct != null ? `${volatilidadPct}%` : '—'}</p>
-              <p class="text-xs text-[#5A6070]">entre el día más barato y el más caro</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-tenue">Variación día a día</p>
+              <p class="mt-1 text-xl font-bold" style="color:var(--color-caro);">{volatilidadPct != null ? `${volatilidadPct}%` : '—'}</p>
+              <p class="text-xs text-tenue">entre el día más barato y el más caro</p>
             </div>
             {ahorroDesplazandoPct != null && (
               <div class={`${card} col-span-2`}>
-                <p class="text-xs font-semibold uppercase tracking-wide text-[#5A6070]">Si mueves el consumo a la hora barata</p>
-                <p class="mt-1 text-xl font-bold text-[#2DD4BF]">Ahorras de media un {ahorroDesplazandoPct}%</p>
-                <p class="text-xs text-[#5A6070]">frente a consumir a la media del día, según la hora más barata de cada jornada</p>
+                <p class="text-xs font-semibold uppercase tracking-wide text-tenue">Si mueves el consumo a la hora barata</p>
+                <p class="mt-1 text-xl font-bold text-acento">Ahorras de media un {ahorroDesplazandoPct}%</p>
+                <p class="text-xs text-tenue">frente a consumir a la media del día, según la hora más barata de cada jornada</p>
               </div>
             )}
           </section>
@@ -144,22 +144,22 @@ const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
         <section class="px-4 pt-6">
           <a href="#" rel="sponsored nofollow noopener"
             class="flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-colors"
-            style="background-color:#14171F;border:1px solid #232733;">
+            style="background-color:var(--color-superficie);border:1px solid var(--color-borde);">
             <div>
-              <p class="text-sm font-semibold text-[#ECEAE3]">¿Quieres saber cuál te conviene de verdad?</p>
-              <p class="text-xs text-[#8A8F9C]">Compara tarifas con tu consumo real</p>
+              <p class="text-sm font-semibold text-tinta">¿Quieres saber cuál te conviene de verdad?</p>
+              <p class="text-xs text-suave">Compara tarifas con tu consumo real</p>
             </div>
-            <span class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold" style="background-color:#2DD4BF;color:#0B0D12;">Comparar</span>
+            <span class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold" style="background-color:var(--color-acento);color:var(--color-sobre-acento);">Comparar</span>
           </a>
         </section>
         */}
 
         <section class="px-4 pt-8">
-          <h2 class="text-base font-bold text-[#ECEAE3]">¿Para quién es mejor cada una?</h2>
+          <h2 class="text-base font-bold text-tinta">¿Para quién es mejor cada una?</h2>
           <div class="mt-3 grid gap-3 sm:grid-cols-2">
             <div class={card}>
-              <p class="text-sm font-bold text-[#2DD4BF]">Te conviene el PVPC si...</p>
-              <ul class="mt-2 space-y-1.5 text-sm text-[#8A8F9C]">
+              <p class="text-sm font-bold text-acento">Te conviene el PVPC si...</p>
+              <ul class="mt-2 space-y-1.5 text-sm text-suave">
                 <li>· Puedes programar la lavadora, el lavavajillas o la carga del coche de madrugada.</li>
                 <li>· No tienes horario fijo de consumo (teletrabajo flexible, casa vacía de día).</li>
                 <li>· Prefieres el precio medio más bajo a largo plazo, sin margen comercial añadido.</li>
@@ -167,8 +167,8 @@ const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
               </ul>
             </div>
             <div class={card}>
-              <p class="text-sm font-bold" style="color:#F2545B;">Te conviene la tarifa fija si...</p>
-              <ul class="mt-2 space-y-1.5 text-sm text-[#8A8F9C]">
+              <p class="text-sm font-bold" style="color:var(--color-caro);">Te conviene la tarifa fija si...</p>
+              <ul class="mt-2 space-y-1.5 text-sm text-suave">
                 <li>· Consumes igual a cualquier hora (turnos, negocio con horario fijo).</li>
                 <li>· No puedes o no quieres estar pendiente de cuándo poner cada aparato.</li>
                 <li>· Prefieres saber de antemano cuánto vas a pagar cada mes por kWh.</li>
@@ -179,46 +179,46 @@ const card = 'rounded-2xl border border-[#232733] bg-[#14171F] p-4';
         </section>
 
         <section class="px-4 pt-8">
-          <h2 class="text-base font-bold text-[#ECEAE3]">Sigue mirando</h2>
+          <h2 class="text-base font-bold text-tinta">Sigue mirando</h2>
           <div class="mt-3 grid gap-2 sm:grid-cols-2">
-            <a href="/precio-medio-mensual/" class="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm text-[#ECEAE3] transition-colors hover:border-[#2DD4BF]/50" style="background-color:#14171F;border:1px solid #232733;">
+            <a href="/precio-medio-mensual/" class="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm text-tinta transition-colors hover:border-acento/50" style="background-color:var(--color-superficie);border:1px solid var(--color-borde);">
               Precio medio de la luz por meses
             </a>
-            <a href="/" class="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm text-[#ECEAE3] transition-colors hover:border-[#2DD4BF]/50" style="background-color:#14171F;border:1px solid #232733;">
+            <a href="/" class="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm text-tinta transition-colors hover:border-acento/50" style="background-color:var(--color-superficie);border:1px solid var(--color-borde);">
               El precio de hoy, hora a hora
             </a>
           </div>
         </section>
 
         <section class="px-4 pt-8">
-          <h2 class="text-base font-bold text-[#ECEAE3]">Preguntas frecuentes</h2>
-          <div class="mt-3 divide-y divide-[#232733]">
+          <h2 class="text-base font-bold text-tinta">Preguntas frecuentes</h2>
+          <div class="mt-3 divide-y divide-borde">
             {faqs.map((f) => (
               <details class="group py-3">
-                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-[#ECEAE3]">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-tinta">
                   <span>{f.q}</span>
-                  <span class="text-[#2DD4BF] transition-transform group-open:rotate-45">+</span>
+                  <span class="text-acento transition-transform group-open:rotate-45">+</span>
                 </summary>
-                <p class="mt-2 text-sm leading-relaxed text-[#8A8F9C]">{f.a}</p>
+                <p class="mt-2 text-sm leading-relaxed text-suave">{f.a}</p>
               </details>
             ))}
           </div>
         </section>
 
         <footer class="px-4 pt-10 pb-8">
-          <p class="text-xs leading-relaxed text-[#5A6070]">
+          <p class="text-xs leading-relaxed text-tenue">
             Comparativa informativa a partir del PVPC publicado por Red Eléctrica para la
             Península, sin impuestos. No es asesoramiento contractual: antes de cambiar de
             tarifa o comercializadora, revisa las condiciones de permanencia de tu contrato
             actual.
           </p>
           <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-            <a href="/" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Inicio</a>
-            <a href="/aviso-legal" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Aviso legal</a>
-            <a href="/privacidad" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Privacidad</a>
-            <a href="/cookies" class="text-[#8A8F9C] hover:text-[#2DD4BF]">Cookies</a>
+            <a href="/" class="text-suave hover:text-acento">Inicio</a>
+            <a href="/aviso-legal" class="text-suave hover:text-acento">Aviso legal</a>
+            <a href="/privacidad" class="text-suave hover:text-acento">Privacidad</a>
+            <a href="/cookies" class="text-suave hover:text-acento">Cookies</a>
           </div>
-          <p class="mt-3 text-xs text-[#5A6070]">© {new Date().getFullYear()} Vatio</p>
+          <p class="mt-3 text-xs text-tenue">© {new Date().getFullYear()} Vatio</p>
         </footer>
       </main>
     </div>

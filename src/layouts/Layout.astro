@@ -1,12 +1,16 @@
 ---
-import '@fontsource/inter/400.css';
-import '@fontsource/inter/500.css';
-import '@fontsource/inter/600.css';
-import '@fontsource/inter/700.css';
-import '@fontsource/jetbrains-mono/400.css';
-import '@fontsource/jetbrains-mono/600.css';
-import '@fontsource/jetbrains-mono/700.css';
+// Solo el subconjunto latino. Los ficheros sin `latin-` traen además cirílico, griego,
+// vietnamita y latin-ext: 46 reglas @font-face y 42 KB de CSS que bloquea el pintado,
+// para una web en español que no va a escribir un solo carácter de esos alfabetos.
+import '@fontsource/inter/latin-400.css';
+import '@fontsource/inter/latin-500.css';
+import '@fontsource/inter/latin-600.css';
+import '@fontsource/inter/latin-700.css';
+import '@fontsource/jetbrains-mono/latin-400.css';
+import '@fontsource/jetbrains-mono/latin-600.css';
+import '@fontsource/jetbrains-mono/latin-700.css';
 import '../styles/global.css';
+import Cabecera from '../components/Cabecera.astro';
 
 interface Props {
   title: string;
@@ -47,7 +51,28 @@ const ga4Id = 'G-WR89VZBTSW';
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
+    <!-- El navegador no resuelve var() aquí: tiene que ser un color literal. Lo cambia
+         el script de abajo y el interruptor de la cabecera. -->
     <meta name="theme-color" content="#0B0D12" />
+
+    <!-- Tema claro/oscuro. Se decide aquí, antes de pintar nada, para que no haya
+         destello blanco al cargar. Manda lo que el visitante haya elegido a mano; si no
+         ha elegido nunca, se respeta lo que pida su sistema. Sin JavaScript se queda
+         oscuro, que es como se generó el HTML. -->
+    <script is:inline>
+      (function () {
+        var tema;
+        try { tema = localStorage.getItem('vatio_tema'); } catch (e) { /* modo privado */ }
+        if (tema !== 'claro' && tema !== 'oscuro') {
+          tema = window.matchMedia('(prefers-color-scheme: light)').matches ? 'claro' : 'oscuro';
+        }
+        document.documentElement.dataset.tema = tema;
+        if (tema === 'claro') {
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', '#F3F5F6');
+        }
+      })();
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Vatio" />
@@ -103,6 +128,7 @@ const ga4Id = 'G-WR89VZBTSW';
     <slot name="head" />
   </head>
   <body>
+    <Cabecera />
     <slot />
   </body>
 </html>
