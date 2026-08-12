@@ -23,6 +23,24 @@ CDN** (compilaba JSX en el navegador, ~2.5 MB por carga). Migrado a:
 La lógica de Vatio (fetch a REE, hoy/mañana, gráfico/lista, franjas por electrodoméstico,
 impuestos, countdown a las 20:15) se mantiene intacta.
 
+
+## Guías y archivo indexable (agosto 2026)
+
+AdSense rechazó el sitio el 12/08/2026 por "contenido de poco valor": de 102 páginas, 89 eran
+plantilla automática (70 meses del archivo + 19 fichas de aparatos) y el texto propio por página
+era corto. Dos cambios para corregirlo:
+
+1. **Sección `/guias/`**: ocho guías escritas, de 1.200 a 1.600 palabras cada una, con los importes
+   oficiales importados de `src/lib/` (ni un número escrito a mano en el texto, así que se
+   actualizan solas cuando en enero se tocan los peajes). El índice de guías vive en
+   `src/lib/guias.js` y el layout de artículo en `src/layouts/GuiaLayout.astro`.
+2. **Corte del archivo**: los meses anteriores a `ARCHIVO_INDEXABLE_DESDE` (`src/lib/archivo.js`)
+   llevan `noindex` y quedan fuera del sitemap. Se siguen sirviendo y enlazando igual. **Es
+   temporal**: cuando el sitio tenga recorrido propio, se baja el año o se pone a 0 y vuelven todos.
+
+`src/lib/regulados.js` es nuevo: peajes y cargos del término de energía, con la fuente del BOE
+anotada. Se actualiza cada enero junto con `potencia.js`.
+
 ## Comandos
 
 ```bash

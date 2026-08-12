@@ -1,0 +1,245 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+import { COSTE_KW_ANUAL_CON_IMPUESTOS, IMPUESTO_ELECTRICO, IVA } from '../../lib/potencia.js';
+import { ELECTRODOMESTICOS } from '../../lib/electrodomesticos.js';
+import { DESCUENTOS } from '../../lib/bono-social.js';
+
+const eur = (n: number, dec = 0) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+
+// Consumo que se puede mover de hora, calculado con el mismo catálogo que usan las fichas
+// de "cuánto cuesta poner...", para que no haya dos verdades distintas en la misma web.
+const PROGRAMABLES = ['lavadora', 'lavavajillas', 'secadora'];
+const programables = ELECTRODOMESTICOS.filter((e: any) => PROGRAMABLES.includes(e.slug));
+const kwhProgramableSemana = programables.reduce((s: number, e: any) => s + e.kwh * e.usosSemana, 0);
+const kwhProgramableAnual = kwhProgramableSemana * 52;
+// Hueco típico entre las horas baratas del día y la media diaria: 8 céntimos por kWh. Es
+// deliberadamente conservador; en días de mucho sol el hueco es bastante mayor.
+const HUECO = 0.08;
+const lavadora: any = ELECTRODOMESTICOS.find((e: any) => e.slug === 'lavadora');
+const lavadosAnuales = lavadora.usosSemana * 52;
+const ahorroHorario = kwhProgramableAnual * HUECO * (1 + IMPUESTO_ELECTRICO) * (1 + IVA);
+
+// Consumo permanente en espera de una casa: 30 W las 24 horas.
+// El coche electrico va aparte: multiplica la cifra por cinco y no lo tiene todo el mundo.
+const coche: any = ELECTRODOMESTICOS.find((e: any) => e.slug === 'coche-electrico');
+const ahorroCoche = coche.kwh * coche.usosSemana * 52 * HUECO * (1 + IMPUESTO_ELECTRICO) * (1 + IVA);
+const standbyKwh = (30 / 1000) * 24 * 365;
+const standbyEuros = standbyKwh * 0.19;
+---
+<GuiaLayout slug="bajar-la-factura-de-la-luz">
+
+  <p>
+    Casi todas las listas de consejos para ahorrar luz están ordenadas por lo fácil que es escribirlas,
+    no por lo que ahorran. Salen primero las bombillas LED y los cargadores desenchufados, y al final,
+    si aparece, la única medida que mueve cifras de tres dígitos. Esta guía está ordenada al revés:
+    <strong>de más a menos euros al año</strong>, con la cuenta hecha en cada caso.
+  </p>
+
+  <h2>1. Ajustar la potencia contratada</h2>
+
+  <p>
+    <strong>Entre {eur(1.15 * COSTE_KW_ANUAL_CON_IMPUESTOS)} y{' '}
+    {eur(3.45 * COSTE_KW_ANUAL_CON_IMPUESTOS)} euros al año.</strong> Cada kW contratado cuesta{' '}
+    {eur(COSTE_KW_ANUAL_CON_IMPUESTOS, 2)} euros al año con impuestos, se use o no. Muchas viviendas
+    arrastran una potencia decidida hace décadas, cuando no había electrodomésticos eficientes ni
+    nadie programaba nada.
+  </p>
+
+  <p>
+    Es la primera de la lista porque no cuesta nada, no cambia cómo vives y el ahorro se repite todos
+    los meses. El trámite y cómo saber cuánta te sobra están en la
+    <a href="/guias/bajar-la-potencia-contratada/">guía de la potencia contratada</a>, y el cálculo,
+    en la <a href="/calculadora-potencia/">calculadora</a>.
+  </p>
+
+  <h2>2. Comprobar si te corresponde el bono social</h2>
+
+  <p>
+    <strong>Hasta un {eur(DESCUENTOS.severo * 100, 1)} % de descuento.</strong> No es una medida de
+    ahorro, es un derecho: si tu renta está por debajo de ciertos umbrales, o si eres familia numerosa
+    o pensionista de cuantía mínima, tienes descuento directo sobre el importe de la factura. Mucha
+    gente que cumple los requisitos no lo pide, sencillamente porque no sabe que existe o porque cree
+    que el trámite es peor de lo que es.
+  </p>
+
+  <p>
+    Los umbrales dependen del número de personas de la casa y de si hay menores o alguna circunstancia
+    especial reconocida. Puedes comprobarlo en un minuto en la
+    <a href="/bono-social/">página del bono social</a>, con los importes vigentes.
+  </p>
+
+  <h2>3. Tener la tarifa que te corresponde</h2>
+
+  <p>
+    <strong>Entre 0 y 200 euros al año, según el caso.</strong> Aquí no hay una respuesta única, y
+    desconfía de quien te la dé. Con PVPC pagas el precio real de cada hora: sale bien si puedes mover
+    consumo a las horas baratas y si aguantas la variabilidad. Con una tarifa fija pagas siempre lo
+    mismo, lo cual tranquiliza y, a cambio, incluye una prima por ese seguro.
+  </p>
+
+  <p>
+    Lo que sí es seguro es que estar en una tarifa fija cara y no enterarse cuesta dinero todos los
+    meses. La comparación con datos reales está en
+    <a href="/pvpc-o-tarifa-fija/">PVPC o tarifa fija</a>, y lo que hay que mirar en una oferta, en la
+    guía de <a href="/guias/cambiar-de-comercializadora/">cambiar de comercializadora</a>.
+  </p>
+
+  <h2>4. Mover a las horas baratas lo que se puede programar</h2>
+
+  <p>
+    <strong>En torno a {eur(ahorroHorario)} euros al año.</strong> La cuenta sale así: entre lavadora,
+    lavavajillas y secadora, con la frecuencia de uso típica, una casa mueve unos{' '}
+    {eur(kwhProgramableSemana, 1)} kWh a la semana, es decir {eur(kwhProgramableAnual)} kWh al año. Llevarlos
+    del momento en que caerían por costumbre al hueco barato del día supone unos 8 céntimos menos por
+    kWh, que con impuestos son los euros de arriba.
+  </p>
+
+  <p>
+    Es una estimación prudente. En un día soleado de primavera, la diferencia entre la hora más barata
+    y la más cara supera con frecuencia los 20 céntimos por kWh, y ahí la misma lavadora cuesta el
+    triple según cuándo la pongas. Lo que no hace falta es adivinar: los precios del día siguiente se
+    publican cada tarde a partir de las 20:15 y están en la
+    <a href="/precio-luz-manana/">página del precio de mañana</a>; los de hoy, con el mejor hueco de lo
+    que queda de jornada, en <a href="/horas-baratas-hoy/">horas baratas</a>.
+  </p>
+
+  <p>
+    Y si cargas un <a href="/cuanto-cuesta/coche-electrico/">coche eléctrico</a> en casa, esta medida
+    deja de ser una más para convertirse en la primera de toda la lista. Con dos cargas semanales, el
+    coche mueve él solo unos {eur(coche.kwh * coche.usosSemana * 52)} kWh al año: elegir la hora vale
+    en torno a <strong>{eur(ahorroCoche)} euros anuales</strong>, más que la potencia y el resto de
+    aparatos juntos.
+  </p>
+
+  <div class="clave">
+    <p>
+      La forma práctica de hacerlo sin pensar: deja los aparatos cargados y programa el retardo por la
+      noche, cuando ya se conocen los precios de mañana. Es un gesto de diez segundos que convierte
+      una decisión diaria en una rutina.
+    </p>
+  </div>
+
+  <h2>5. Atacar el agua caliente y la climatización</h2>
+
+  <p>
+    <strong>De 50 a 300 euros al año en casas con termo o calefacción eléctricos.</strong> Si calientas
+    agua o la casa con electricidad, ahí está la mitad larga de tu consumo, y todo lo demás es ruido de
+    fondo. Tres cosas que sí se notan:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Programar el termo eléctrico</strong> para que caliente en las horas baratas y no
+      justo antes de la ducha de la noche. Un termo es un acumulador: guarda el calor durante horas.
+    </li>
+    <li>
+      <strong>Bajar el termostato de la calefacción un grado.</strong> Es de los pocos consejos
+      clásicos que resiste los números, porque el consumo de climatizar crece con la diferencia de
+      temperatura con la calle.
+    </li>
+    <li>
+      <strong>Usar el aire acondicionado en modo automático y con la casa cerrada</strong>, en lugar de
+      a tope y por rachas. El compresor gasta mucho más arrancando desde cero que manteniendo.
+    </li>
+  </ul>
+
+  <p>
+    Cuánto cuesta cada uno con el precio real de hoy está en las fichas de
+    <a href="/cuanto-cuesta/termo-electrico/">termo eléctrico</a>,
+    <a href="/cuanto-cuesta/calefaccion-electrica/">calefacción</a> y
+    <a href="/cuanto-cuesta/aire-acondicionado/">aire acondicionado</a>.
+  </p>
+
+  <h2>6. El consumo en espera, con matices</h2>
+
+  <p>
+    <strong>Entre 30 y 80 euros al año, pero no repartidos como crees.</strong> Una casa tiene de
+    forma permanente unos 30 W enchufados sin hacer nada: eso son {eur(standbyKwh)} kWh al año, unos{' '}
+    {eur(standbyEuros)} euros. La cifra no es despreciable, así que el consejo no es falso. Lo que es
+    falso es dónde está ese consumo.
+  </p>
+
+  <p>
+    No está en el cargador del móvil, que en espera gasta décimas de vatio. Está concentrado en unos
+    pocos aparatos: el descodificador de televisión, el equipo de sonido, el ordenador de sobremesa
+    suspendido, la impresora, el <a href="/cuanto-cuesta/router-wifi/">router</a>. Una regleta con
+    interruptor detrás del mueble del salón resuelve la mayor parte del asunto de una vez; ir
+    desenchufando cargadores uno a uno es esfuerzo diario a cambio de céntimos.
+  </p>
+
+  <h2>7. Los detalles que sí compensan</h2>
+
+  <ul>
+    <li>
+      <strong>Lavar a 30 grados en vez de a 60.</strong> Calentar el agua es casi todo el consumo de
+      un lavado, así que bajar la temperatura lo recorta cerca de la mitad. Con{' '}
+      {eur(lavadosAnuales)} lavados al año, se nota.
+    </li>
+    <li>
+      <strong>Lavavajillas en eco y siempre lleno.</strong> El programa eco dura más y gasta menos:
+      calienta el agua despacio en lugar de a golpe.
+    </li>
+    <li>
+      <strong>Tender en vez de usar la secadora</strong> cuando el tiempo acompaña. La
+      <a href="/cuanto-cuesta/secadora/"> secadora</a> es de los aparatos más caros de la casa por uso.
+    </li>
+    <li>
+      <strong>Tapar las ollas y usar el tamaño de fuego adecuado.</strong> Poco glamuroso, pero la
+      <a href="/cuanto-cuesta/vitroceramica/"> vitrocerámica</a> se usa todos los días.
+    </li>
+  </ul>
+
+  <h2>Y los que no compensan el esfuerzo</h2>
+
+  <p>
+    Para terminar, tres creencias muy repetidas que no aguantan una cuenta:
+  </p>
+
+  <ol>
+    <li>
+      <strong>Desenchufar el cargador del móvil.</strong> Un móvil entero necesita menos de 0,02 kWh
+      por carga completa. El cargador vacío, prácticamente nada. Estamos hablando de céntimos al año.
+    </li>
+    <li>
+      <strong>Apagar y encender las luces LED constantemente.</strong> Con incandescentes tenía
+      sentido discutirlo. Una bombilla LED consume tan poco que la diferencia entre dejarla encendida
+      una hora de más o no es irrelevante frente a cualquiera de los puntos anteriores.
+    </li>
+    <li>
+      <strong>Cambiar de compañía cada seis meses persiguiendo ofertas.</strong> El descuento de
+      bienvenida suele durar un año y luego revierte a un precio peor. Sale mejor tener claro el
+      precio de tu kWh y revisarlo una vez al año, con calma.
+    </li>
+  </ol>
+
+  <div class="clave">
+    <p>El resumen, si solo te llevas una cosa:</p>
+    <p>
+      Primero mira lo que pagas sin consumir (potencia y tarifa), porque ahí hay dinero garantizado y
+      no cuesta nada. Después, mueve de hora lo que se pueda programar. Y solo entonces, si te apetece,
+      ponte con las regletas y los grados del lavado. Ordenarlo al revés es la razón por la que mucha
+      gente se cansa de intentar ahorrar sin ver resultados.
+    </p>
+  </div>
+
+  <div class="fuentes">
+    <h2>Fuentes y supuestos</h2>
+    <ul>
+      <li>
+        Precio de la potencia: peajes de la CNMC (BOE-A-2025-26348) y cargos del Ministerio
+        (BOE-A-2025-26705), más impuesto eléctrico e IVA vigentes.
+      </li>
+      <li>
+        Consumos por aparato: valores típicos del catálogo de Vatio, con el rango de cada uno indicado
+        en su ficha. Varían mucho según modelo, antigüedad y programa.
+      </li>
+      <li>
+        Ahorro por mover consumo: {eur(kwhProgramableAnual)} kWh anuales programables y un hueco de 8
+        céntimos por kWh, con impuestos aplicados. Es un supuesto conservador, no una medición.
+      </li>
+      <li>Descuentos del bono social: Real Decreto 897/2017 y las prórrogas anuales vigentes.</li>
+    </ul>
+  </div>
+
+</GuiaLayout>

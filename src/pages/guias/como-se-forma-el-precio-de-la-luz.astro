@@ -1,0 +1,194 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+---
+<GuiaLayout slug="como-se-forma-el-precio-de-la-luz">
+
+  <p>
+    Cada tarde, poco después de las ocho, se publican los 24 precios que va a tener la luz al día
+    siguiente. No es una estimación ni una previsión: son precios cerrados, hora por hora, y entre el
+    más barato y el más caro de una misma jornada suele haber una diferencia de cinco a diez veces.
+    Esta guía explica de dónde salen esos números y por qué se comportan como lo hacen.
+  </p>
+
+  <h2>Una subasta al día para las 24 horas siguientes</h2>
+
+  <p>
+    El grueso de la electricidad que se consume en España se compra y se vende en el
+    <strong>mercado diario</strong>, gestionado por OMIE. Funciona como una subasta que se cierra al
+    mediodía y que reparte de golpe las 24 horas del día siguiente. Por un lado, quienes producen
+    (centrales nucleares, hidráulicas, parques eólicos, huertos solares, ciclos combinados de gas)
+    dicen cuánta energía pueden entregar en cada hora y a qué precio mínimo están dispuestos a
+    hacerlo. Por otro, quienes compran, sobre todo comercializadoras que luego revenden a hogares y
+    empresas, dicen cuánta necesitan y hasta cuánto pagarían.
+  </p>
+
+  <p>
+    Después de esa subasta hay varias sesiones más, los <strong>mercados intradiarios</strong>, que
+    sirven para ajustar los desvíos: una nube inesperada sobre media Andalucía, una central que se
+    cae, una ola de calor que dispara el aire acondicionado. Pero el precio que marca el tono del día
+    ya está puesto en la subasta del mediodía.
+  </p>
+
+  <h2>Por qué la central más cara le pone el precio a todas</h2>
+
+  <p>
+    Aquí está la pieza que casi nadie explica y que hace que todo lo demás encaje. Para cada hora, el
+    operador ordena las ofertas de venta de más barata a más cara y las va aceptando hasta cubrir
+    exactamente la demanda de esa hora. <strong>El precio de la última oferta que hace falta aceptar
+    es el precio que cobran todas</strong>, incluidas las que habían ofrecido mucho más barato. Es lo
+    que se llama un mercado marginalista.
+  </p>
+
+  <div class="clave">
+    <p>
+      Si para cubrir la demanda de las nueve de la noche hay que encender un ciclo combinado de gas
+      que necesita 180 euros por MWh para no perder dinero, esa hora se paga a 180 euros por MWh.
+      También la energía del parque eólico que había ofrecido a cero.
+    </p>
+    <p>
+      Suena raro, pero es el mecanismo que usan casi todos los mercados eléctricos europeos y tiene
+      una lógica: si a cada central se le pagara solo lo que pidió, todas tendrían que adivinar el
+      precio final e inflar sus ofertas para no quedarse cortas. Con precio único, lo racional es
+      ofertar el coste real, y así el sistema acaba encendiendo primero lo más barato.
+    </p>
+  </div>
+
+  <h2>El orden en que se enciende cada cosa</h2>
+
+  <p>
+    Como el precio lo pone la última tecnología necesaria, lo importante es saber en qué orden entran.
+    Y ese orden lo marca el <strong>coste de producir un kWh más</strong>, no el coste de haber
+    construido la central.
+  </p>
+
+  <ul>
+    <li>
+      <strong>Eólica y solar.</strong> El viento y el sol no se pagan. Producir un kWh adicional no
+      les cuesta prácticamente nada, así que ofertan muy bajo o directamente a cero: les compensa
+      vender siempre que puedan.
+    </li>
+    <li>
+      <strong>Nuclear.</strong> Tampoco puede permitirse quedarse fuera, porque parar y arrancar un
+      reactor no es cuestión de pulsar un botón. Entra casi siempre.
+    </li>
+    <li>
+      <strong>Hidráulica.</strong> El agua del embalse es un almacén. Quien la gestiona decide si la
+      turbina hoy o la guarda para una hora en que valga más, así que su oferta depende de lo que
+      espere que pase los próximos días.
+    </li>
+    <li>
+      <strong>Ciclos combinados de gas.</strong> Cada kWh que producen consume gas comprado a precio
+      de mercado y derechos de emisión de CO2. Son los más caros de operar y, por eso, los últimos en
+      entrar. Cuando hacen falta, son ellos los que fijan el precio de la hora.
+    </li>
+  </ul>
+
+  <p>
+    De ahí sale la regla que explica casi todo lo que verás en el gráfico de la portada:
+    <strong>el precio de una hora depende de cuánta demanda queda por cubrir después de haber puesto
+    toda la renovable disponible</strong>.
+  </p>
+
+  <h2>Por qué el mediodía es barato y la noche es cara</h2>
+
+  <p>
+    Con eso en la mano, la forma de la curva diaria deja de ser un misterio. Entre las once de la
+    mañana y las cinco de la tarde la fotovoltaica está a pleno rendimiento y cubre una parte enorme
+    de la demanda: queda poco hueco por llenar, no hace falta gas, y el precio se desploma. En días de
+    mucho sol y poca demanda puede quedarse en cifras casi simbólicas.
+  </p>
+
+  <p>
+    A partir de las siete de la tarde pasan dos cosas a la vez, y las dos malas: el sol se va justo
+    cuando la gente vuelve a casa, enciende luces, cocina y pone la lavadora. La demanda sube y la
+    oferta barata desaparece, así que hay que tirar de gas. Ese cruce produce el pico de la
+    tarde-noche, que en muchos días es el momento más caro de las 24 horas. Puedes comprobarlo mes a
+    mes en el <a href="/precio-luz/">histórico</a>: el perfil horario medio cambia bastante entre un
+    mes de invierno y uno de verano, pero el pico de la tarde aparece casi siempre.
+  </p>
+
+  <p>
+    El viento descoloca esta pauta con frecuencia, y para bien. Una noche de temporal puede salir más
+    barata que el mediodía del día anterior, porque la eólica sí produce de noche. Es la razón por la
+    que no sirve fiarse de una regla fija de horarios y conviene
+    <a href="/horas-baratas-hoy/">mirar las horas baratas de cada día</a>.
+  </p>
+
+  <h2>Del precio de mercado al precio que pagas tú</h2>
+
+  <p>
+    El precio de la subasta no es todavía el de tu factura. Sobre él se monta el
+    <strong>PVPC</strong>, el Precio Voluntario para el Pequeño Consumidor, que es la tarifa regulada
+    a la que puede acogerse cualquier vivienda con hasta 10 kW contratados y la referencia que publica
+    esta web. El PVPC suma al coste de la energía los peajes de red y los cargos del sistema, que
+    fijan la CNMC y el Ministerio y que son
+    <a href="/guias/como-leer-la-factura-de-la-luz/">iguales para todo el mundo</a>.
+  </p>
+
+  <p>
+    Y desde 2024 hay un cambio importante en cómo se calcula la parte de energía. Antes, el PVPC de
+    una hora era, sin más, el precio de mercado de esa hora, con lo que la factura de un mes malo
+    podía dispararse. Ahora ese precio se mezcla con el de los <strong>mercados a plazo</strong>, es
+    decir, con contratos de electricidad cerrados con meses o años de antelación, que se mueven mucho
+    menos. La mezcla se ha ido inclinando hacia el plazo en tres escalones, y 2026 es el primer año
+    con la fórmula definitiva:
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Año</th>
+          <th class="num">Peso del mercado diario</th>
+          <th class="num">Peso de los mercados a plazo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>2024</td><td class="num">75 %</td><td class="num">25 %</td></tr>
+        <tr><td>2025</td><td class="num">60 %</td><td class="num">40 %</td></tr>
+        <tr><td>2026 en adelante</td><td class="num">45 %</td><td class="num">55 %</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    El efecto práctico es que el PVPC se ha vuelto más plano y más previsible que hace unos años.
+    Sigue teniendo un precio distinto cada hora, y sigue mereciendo la pena mover la lavadora al hueco
+    barato, pero los sustos de 2021 y 2022 son más difíciles de repetir. Si comparas la media mensual
+    de aquellos años con la de ahora en el <a href="/precio-medio-mensual/">precio medio mensual</a>,
+    se ve de un vistazo.
+  </p>
+
+  <h2>Cuándo se sabe el precio de mañana</h2>
+
+  <p>
+    Los precios del día siguiente se conocen la tarde anterior, a partir de las <strong>20:15</strong>
+    aproximadamente, cuando Red Eléctrica los publica ya con todos los componentes calculados. Es el
+    momento de decidir a qué hora vas a programar el lavavajillas o enchufar el coche. En Vatio se
+    cargan solos en cuanto están disponibles, en la
+    <a href="/precio-luz-manana/">página del precio de mañana</a>.
+  </p>
+
+  <div class="clave">
+    <p>Tres ideas para quedarse:</p>
+    <p>
+      El precio de cada hora lo pone la central más cara que hace falta encender esa hora. El mediodía
+      es barato porque la solar deja poco hueco que llenar, y la tarde es cara porque el sol se va
+      cuando más se consume. Y lo que pagas tú es ese precio mezclado con contratos a plazo, más unos
+      peajes y cargos que no dependen de la compañía que tengas.
+    </p>
+  </div>
+
+  <div class="fuentes">
+    <h2>Fuentes</h2>
+    <ul>
+      <li>Precios horarios del PVPC: API pública REData/ESIOS de Red Eléctrica de España.</li>
+      <li>
+        Metodología del PVPC y ponderación de los mercados a plazo: Real Decreto 446/2023, de 13 de
+        junio, que modifica el Real Decreto 216/2014, de 28 de marzo.
+      </li>
+      <li>Funcionamiento del mercado diario e intradiario: OMIE, operador del mercado ibérico.</li>
+    </ul>
+  </div>
+
+</GuiaLayout>

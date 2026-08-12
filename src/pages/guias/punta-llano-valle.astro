@@ -1,0 +1,187 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+import { TRAMOS, REGULADO_KWH, ANIO_DATOS } from '../../lib/regulados.js';
+
+const cent = (n: number) =>
+  (n * 100).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const veces = (REGULADO_KWH.punta / REGULADO_KWH.valle).toLocaleString('es-ES', {
+  maximumFractionDigits: 0,
+});
+---
+<GuiaLayout slug="punta-llano-valle">
+
+  <p>
+    Desde junio de 2021, todas las viviendas de España tienen el día partido en tres tramos: punta,
+    llano y valle. Se repite en cada noticia sobre la luz y en cada oferta comercial, casi siempre
+    acompañado del consejo de poner la lavadora de madrugada. La parte que no se cuenta es que, si
+    tienes la tarifa regulada, <strong>esos tramos no son la señal que tienes que mirar</strong>. Esta
+    guía explica qué son exactamente, a qué se aplican y cuándo conviene hacerles caso.
+  </p>
+
+  <h2>El horario exacto</h2>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Tramo</th><th>Horas</th><th>Días</th></tr>
+      </thead>
+      <tbody>
+        {TRAMOS.map((t) => (
+          <tr>
+            <td><strong>{t.nombre}</strong></td>
+            <td>{t.horas}</td>
+            <td>{t.dias}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <figcaption>Tramos horarios de la tarifa 2.0TD, la que tienen los hogares.</figcaption>
+
+  <p>
+    Hay dos detalles que se escapan casi siempre. El primero: <strong>los sábados y domingos son valle
+    las 24 horas</strong>, de cero a cero. No hay punta en fin de semana. El segundo: eso vale también
+    para los festivos, pero solo los de <strong>ámbito nacional</strong>. Un festivo autonómico o
+    local, por muy cerrado que esté todo en tu ciudad, se factura como un día laborable cualquiera.
+  </p>
+
+  <h2>Qué se cobra por tramos y qué no</h2>
+
+  <p>
+    Aquí está el malentendido de fondo. Los tramos horarios se aplican siempre a la parte regulada de
+    la factura, y solo a veces al precio de la energía.
+  </p>
+
+  <ul>
+    <li>
+      <strong>Peajes y cargos: siempre.</strong> Son los costes de red y de sistema que van dentro del
+      precio del kWh, y se cobran por tramo tengas la tarifa que tengas y la compañía que tengas.
+    </li>
+    <li>
+      <strong>El término de potencia: siempre, pero con dos periodos.</strong> La potencia solo
+      distingue entre punta y valle, y en la práctica casi todo el mundo contrata la misma en ambos.
+    </li>
+    <li>
+      <strong>La energía: depende de tu tarifa.</strong> Si tienes una tarifa fija con discriminación
+      horaria, sí: tres precios, uno por tramo. Si tienes PVPC, no: el precio cambia
+      <strong>cada hora</strong> siguiendo el mercado, y no se parece a un escalón de tres peldaños.
+    </li>
+  </ul>
+
+  <h2>Cuánto pesa de verdad la parte por tramos</h2>
+
+  <p>
+    Los peajes y cargos que arrastra cada kWh en {ANIO_DATOS} son estos:
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Tramo</th><th class="num">Peajes y cargos por kWh</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Punta</td><td class="num">{cent(REGULADO_KWH.punta)} céntimos</td></tr>
+        <tr><td>Llano</td><td class="num">{cent(REGULADO_KWH.llano)} céntimos</td></tr>
+        <tr><td>Valle</td><td class="num">{cent(REGULADO_KWH.valle)} céntimos</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption>
+    Sin impuestos. Tarifa 2.0TD, {ANIO_DATOS}. Desglose completo en la
+    <a href="/guias/como-leer-la-factura-de-la-luz/">guía de la factura</a>.
+  </figcaption>
+
+  <p>
+    La diferencia entre punta y valle es de unas <strong>{veces} veces</strong>, así que sí, es dinero
+    real y merece la pena tenerlo en cuenta. Pero fíjate en la escala: estamos hablando de unos pocos
+    céntimos por kWh. La energía en sí puede moverse muchísimo más que eso en un mismo día.
+  </p>
+
+  <div class="clave">
+    <p>
+      Con PVPC puede darse, y se da a menudo, que la hora más barata del día caiga en pleno tramo
+      punta. Un mediodía soleado de primavera, entre las doce y las dos, es hora punta en el
+      calendario y a la vez el momento más barato de la jornada para la energía.
+    </p>
+    <p>
+      Por eso, con tarifa regulada, mirar el reloj es peor que mirar el precio. El
+      <a href="/">precio real de cada hora</a> ya lleva dentro los peajes y los cargos del tramo que
+      toque: es una única cifra que te dice lo que va a costar de verdad.
+    </p>
+  </div>
+
+  <h2>De dónde viene esta división</h2>
+
+  <p>
+    Los tramos no se inventaron para castigar a nadie, sino para aplanar la curva de demanda. La red
+    eléctrica tiene que estar dimensionada para el peor momento del año, no para la media, y ese pico
+    se paga en infraestructura que el resto del tiempo está infrautilizada. Encarecer las horas en que
+    todo el mundo consume a la vez, y abaratar las que están vacías, empuja parte del consumo hacia
+    donde sobra capacidad. Es la misma idea que los precios de los trenes en hora punta.
+  </p>
+
+  <p>
+    La reforma de 2021 sustituyó al sistema anterior, en el que había que solicitar expresamente la
+    discriminación horaria, y lo aplicó a todos los contratos domésticos de golpe. De ahí que mucha
+    gente se enterara de que existían los tramos por una factura, no por haberlos pedido.
+  </p>
+
+  <h2>Qué hacer según la tarifa que tengas</h2>
+
+  <p>
+    <strong>Si tienes PVPC.</strong> Olvídate de punta, llano y valle para decidir cuándo poner la
+    lavadora, y usa el precio hora a hora. Cada tarde, a partir de las 20:15, ya se conocen los
+    <a href="/precio-luz-manana/">precios del día siguiente</a>, así que se puede programar con un día
+    de margen. La página de <a href="/horas-baratas-hoy/">horas baratas</a> resume directamente el
+    mejor hueco de lo que queda de jornada.
+  </p>
+
+  <p>
+    <strong>Si tienes una tarifa fija con tres precios.</strong> Entonces los tramos sí son tu señal, y
+    la regla es simple: todo lo programable, al valle. Madrugada de lunes a viernes, o cualquier hora
+    del fin de semana. Ahí el consejo clásico funciona tal cual.
+  </p>
+
+  <p>
+    <strong>Si tienes una tarifa fija con precio único.</strong> Los tramos solo te afectan en la parte
+    regulada, que es pequeña, así que la hora a la que consumas apenas cambia tu factura. A cambio,
+    tampoco te beneficias de las horas realmente baratas. Si eres de los que puede programar
+    electrodomésticos, esa es exactamente la situación en la que
+    <a href="/pvpc-o-tarifa-fija/">conviene comparar PVPC y tarifa fija</a> con tus propios números.
+  </p>
+
+  <h2>Tres errores frecuentes</h2>
+
+  <ol>
+    <li>
+      <strong>Creer que el fin de semana la luz siempre es más barata.</strong> Lo son los peajes y
+      cargos, que pasan a valle. La energía sigue su propio camino, y un sábado con poco viento puede
+      salir más caro que un miércoles ventoso.
+    </li>
+    <li>
+      <strong>Programar la lavadora a las tres de la mañana por sistema.</strong> Con PVPC, la
+      madrugada es barata a menudo pero no siempre; en primavera y verano el mediodía suele ganarle.
+      Merece la pena mirarlo.
+    </li>
+    <li>
+      <strong>Pensar que el tramo cambia la potencia que puedes usar.</strong> No: puedes contratar
+      potencias distintas en punta y en valle, pero eso lo eliges tú al firmar, y saltará el
+      diferencial igual si te pasas.
+    </li>
+  </ol>
+
+  <div class="fuentes">
+    <h2>Fuentes</h2>
+    <ul>
+      <li>
+        Estructura de periodos de la tarifa 2.0TD: Circular 3/2020 de la CNMC, sobre la metodología de
+        peajes de transporte y distribución de electricidad.
+      </li>
+      <li>
+        Valores de peajes y cargos {ANIO_DATOS}: Resolución de 18 de diciembre de 2025 de la CNMC
+        (BOE-A-2025-26348) y Orden TED/1524/2025, de 23 de diciembre (BOE-A-2025-26705).
+      </li>
+    </ul>
+  </div>
+
+</GuiaLayout>

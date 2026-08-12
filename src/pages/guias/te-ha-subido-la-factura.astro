@@ -1,0 +1,235 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+---
+<GuiaLayout slug="te-ha-subido-la-factura">
+
+  <p>
+    Llega la factura, es bastante más alta que la anterior y empieza la conversación de siempre sobre
+    quién ha dejado luces encendidas. Casi nunca es eso. En una factura de la luz hay cuatro cosas que
+    pueden haber cambiado, y solo una de ellas tiene que ver con tener cuidado: los días facturados,
+    la lectura, el precio y el consumo. Esta guía las separa en orden, de la comprobación más rápida a
+    la más laboriosa.
+  </p>
+
+  <div class="clave">
+    <p>
+      La regla de oro: <strong>no compares totales</strong>. Dos facturas con el mismo total pueden
+      esconder situaciones opuestas, y dos muy distintas pueden ser la misma casa comportándose igual.
+      Lo que se compara son días, kWh y precio medio del kWh, por separado.
+    </p>
+  </div>
+
+  <h2>Paso 1: cuenta los días</h2>
+
+  <p>
+    Busca el periodo de facturación, que viene con fecha de inicio y de fin. Los ciclos no son meses
+    naturales y no todos duran lo mismo: es normal encontrar facturas de 28 días junto a otras de 35.
+    Una diferencia de una semana son en torno a un 25 % más de todo, y explica por sí sola muchos
+    sustos.
+  </p>
+
+  <p>
+    Divide el total entre los días y compara ese <strong>coste por día</strong> con el de la factura
+    anterior. Si el coste diario es parecido, ya tienes la respuesta y puedes dejar de buscar.
+  </p>
+
+  <h2>Paso 2: mira si la lectura es real o estimada</h2>
+
+  <p>
+    En algún punto de la factura pone si las lecturas del contador son <strong>reales</strong> o
+    <strong>estimadas</strong>. Una estimada es un cálculo de la distribuidora cuando no ha podido
+    leer el contador. Si estima de más, la siguiente factura, ya con lectura real, viene baja para
+    compensar; si estima de menos, la siguiente llega con el acumulado y parece un disparate.
+  </p>
+
+  <p>
+    Con los contadores digitales actuales esto es menos frecuente que antes, pero sigue pasando. Si
+    ves dos facturas seguidas con un vaivén grande y una de ellas era estimada, ya está explicado: mira
+    las dos juntas como si fueran una sola.
+  </p>
+
+  <h2>Paso 3: separa el precio del consumo</h2>
+
+  <p>
+    Este es el paso que resuelve la mayoría de los casos, y solo requiere una división. Coge el importe
+    del <strong>término de energía</strong> (no el total de la factura) y divídelo entre los
+    <strong>kWh consumidos</strong>. Eso te da tu precio medio real del kWh en ese periodo. Haz lo
+    mismo con la factura anterior o con la del mismo mes del año pasado.
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Qué cambió</th><th>Qué significa</th><th>A dónde ir</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Subieron los kWh, el precio medio está igual</td>
+          <td>Has consumido más</td>
+          <td>Paso 4</td>
+        </tr>
+        <tr>
+          <td>Subió el precio medio, los kWh están igual</td>
+          <td>Es la tarifa o el mercado</td>
+          <td>Paso 5</td>
+        </tr>
+        <tr>
+          <td>Subieron los dos</td>
+          <td>Invierno o verano duro con precios altos</td>
+          <td>Pasos 4 y 5</td>
+        </tr>
+        <tr>
+          <td>No subió ninguno de los dos</td>
+          <td>Está en la potencia o en conceptos añadidos</td>
+          <td>Paso 6</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Paso 4: si lo que subió es el consumo</h2>
+
+  <p>
+    Por orden de probabilidad:
+  </p>
+
+  <ul>
+    <li>
+      <strong>La estación.</strong> Es la causa número uno y la más olvidada. Una casa con calefacción
+      o aire acondicionado eléctricos puede doblar el consumo entre un mes suave y uno duro. La
+      comparación honesta no es contra el mes pasado, es contra <strong>el mismo mes del año
+      anterior</strong>.
+    </li>
+    <li>
+      <strong>Alguien más en casa.</strong> Teletrabajo, vacaciones escolares, una visita larga. Estar
+      en casa a mediodía cambia el consumo bastante más de lo que parece.
+    </li>
+    <li>
+      <strong>Un aparato nuevo.</strong> Un congelador extra, una
+      <a href="/cuanto-cuesta/secadora/">secadora</a>, un
+      <a href="/cuanto-cuesta/deshumidificador/">deshumidificador</a>, un
+      <a href="/cuanto-cuesta/coche-electrico/">coche eléctrico</a>. Cada ficha estima lo que suma al
+      mes con el precio real del día.
+    </li>
+    <li>
+      <strong>Una avería silenciosa.</strong> Un termo cuya resistencia está llena de cal y tarda el
+      doble en calentar, un frigorífico que no cierra bien, una bomba de agua que arranca sola por una
+      fuga, un radiador con el termostato roto. No se ven, no hacen ruido y consumen sin parar.
+    </li>
+  </ul>
+
+  <h3>Cómo cazar un consumo fantasma</h3>
+
+  <ol>
+    <li>Apaga todo lo que puedas apagar y desenchufa lo que no sea imprescindible.</li>
+    <li>Apunta la lectura del contador y la hora.</li>
+    <li>Vuelve dos horas después y apunta otra vez.</li>
+    <li>
+      La diferencia dividida entre dos son los kW que tira tu casa "en reposo". Por encima de 0,1 o
+      0,15 kW hay algo funcionando que no deberías tener funcionando.
+    </li>
+    <li>
+      Repite la medición encendiendo los circuitos del cuadro de uno en uno hasta encontrar cuál
+      dispara el número.
+    </li>
+  </ol>
+
+  <h2>Paso 5: si lo que subió es el precio</h2>
+
+  <p>
+    Compara tu precio medio del kWh con la <a href="/precio-medio-mensual/">media del PVPC de ese
+    mes</a>, que es la referencia pública y neutral. Y en el <a href="/precio-luz/">histórico mes a
+    mes</a> tienes también el mismo mes de años anteriores, que es lo que hace falta para saber si tu
+    subida es la del mercado o solo tuya.
+  </p>
+
+  <ul>
+    <li>
+      <strong>Si el PVPC de ese mes también subió</strong> en una proporción parecida, tu factura está
+      siguiendo al mercado y no hay nada roto. La respuesta está en consumir en mejores horas, no en
+      reclamar.
+    </li>
+    <li>
+      <strong>Si el PVPC no subió y el tuyo sí</strong>, el problema es tu contrato. Lo más frecuente:
+      se acabó el descuento de bienvenida, que suele durar doce meses, y has vuelto al precio de
+      tarifa. También pasa que una tarifa indexada de mercado libre lleve un margen alto.
+    </li>
+    <li>
+      <strong>Si estás en una tarifa fija</strong>, el precio no debería moverse dentro del periodo
+      contratado. Si se ha movido, busca en la factura la fecha de renovación: probablemente el
+      contrato se renovó solo con precios nuevos.
+    </li>
+  </ul>
+
+  <h2>Paso 6: revisa los conceptos que no son luz</h2>
+
+  <p>
+    Si ni el consumo ni el precio del kWh explican la subida, mira línea a línea:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Un cambio de potencia.</strong> Si alguien subió la potencia contratada, el término fijo
+      sube todos los meses a partir de ahí. Compruébalo en los datos del contrato.
+    </li>
+    <li>
+      <strong>Servicios añadidos.</strong> Mantenimiento de la instalación, seguros de
+      electrodomésticos, asistencia. A veces entran en la misma llamada en la que se contrató la luz.
+      Se pueden dar de baja.
+    </li>
+    <li>
+      <strong>Regularizaciones.</strong> Refacturaciones de periodos anteriores por lecturas mal
+      tomadas o por cambios de precios regulados. Deben venir identificadas.
+    </li>
+    <li>
+      <strong>Impuestos.</strong> El impuesto eléctrico y el IVA tuvieron tipos reducidos temporales
+      entre 2021 y 2024. Al volver a los tipos generales, la misma factura de antes de impuestos sube.
+      El desglose está en la <a href="/guias/como-leer-la-factura-de-la-luz/">guía de la factura</a>.
+    </li>
+  </ul>
+
+  <h2>Cuándo y cómo reclamar</h2>
+
+  <p>
+    Si después de todo esto sigues pensando que hay un error, el orden de la reclamación importa,
+    porque hay dos empresas distintas implicadas:
+  </p>
+
+  <ol>
+    <li>
+      <strong>Reclama primero a tu comercializadora</strong>, que es con quien tienes el contrato. Por
+      escrito y guardando el número de incidencia. Todo lo que sea precios, conceptos facturados o
+      servicios añadidos es cosa suya.
+    </li>
+    <li>
+      <strong>Si el problema es la lectura o el contador</strong>, quien lo resuelve es la
+      distribuidora de tu zona, aunque el trámite normalmente lo canaliza la comercializadora. Puedes
+      pedir una verificación del contador.
+    </li>
+    <li>
+      <strong>Si no hay respuesta o no te convence</strong>, existe una hoja de reclamaciones y, por
+      encima, los organismos de consumo y energía de tu comunidad autónoma. La reclamación no suspende
+      el pago: si dejas de pagar, el suministro puede cortarse aunque tengas razón.
+    </li>
+  </ol>
+
+  <div class="clave">
+    <p>
+      Antes de llamar a nadie, ten a mano: el periodo de facturación, los kWh, el precio medio del kWh
+      que has calculado, la potencia contratada y la media del PVPC de ese mes. Con esos cinco datos,
+      una conversación que suele durar veinte minutos se resuelve en cinco.
+    </p>
+  </div>
+
+  <div class="fuentes">
+    <h2>Fuentes</h2>
+    <ul>
+      <li>Medias mensuales del PVPC: API pública REData/ESIOS de Red Eléctrica de España.</li>
+      <li>
+        Reparto de competencias entre comercializadora y distribuidora, y vía de reclamación: Ley
+        24/2013, de 26 de diciembre, del Sector Eléctrico, y guías de la CNMC para consumidores.
+      </li>
+    </ul>
+  </div>
+
+</GuiaLayout>

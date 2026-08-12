@@ -1,0 +1,346 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+import {
+  TERMINO_POTENCIA, PUNTA_ANUAL, VALLE_ANUAL, COSTE_KW_ANUAL,
+  COSTE_KW_ANUAL_CON_IMPUESTOS, IMPUESTO_ELECTRICO, IVA, ANIO_DATOS,
+} from '../../lib/potencia.js';
+import { TERMINO_ENERGIA, REGULADO_KWH } from '../../lib/regulados.js';
+
+// Las cifras salen de los mismos ficheros que usan la calculadora de potencia y la ficha
+// del bono social. Si en enero se actualizan los peajes, esta guía se actualiza sola: no
+// hay ni un número escrito a mano en el texto.
+const eur = (n: number, dec = 2) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+const cent = (n: number) =>
+  (n * 100).toLocaleString('es-ES', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+const pct = (n: number) =>
+  (n * 100).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// Factura de ejemplo: piso con 4,6 kW y 250 kWh en 30 días. El reparto por periodos es el
+// habitual en una vivienda sin nadie en casa por la mañana; se dice en el texto que es un
+// supuesto, no un dato.
+const EJ = { kw: 4.6, dias: 30, kwh: { punta: 60, llano: 90, valle: 100 }, energia: 0.11 };
+const ejPotencia = (EJ.kw * COSTE_KW_ANUAL * EJ.dias) / 365;
+const ejKwh = EJ.kwh.punta + EJ.kwh.llano + EJ.kwh.valle;
+const ejEnergiaMercado = ejKwh * EJ.energia;
+const ejRegulado =
+  EJ.kwh.punta * REGULADO_KWH.punta +
+  EJ.kwh.llano * REGULADO_KWH.llano +
+  EJ.kwh.valle * REGULADO_KWH.valle;
+const ejEnergia = ejEnergiaMercado + ejRegulado;
+const ejBase = ejPotencia + ejEnergia;
+const ejImpuesto = ejBase * IMPUESTO_ELECTRICO;
+const ejContador = 0.8 * (EJ.dias / 30);
+const ejAntesIva = ejBase + ejImpuesto + ejContador;
+const ejIva = ejAntesIva * IVA;
+const ejTotal = ejAntesIva + ejIva;
+---
+<GuiaLayout slug="como-leer-la-factura-de-la-luz">
+
+  <p>
+    Una factura de la luz tiene entre diez y quince conceptos, y la mayoría de la gente solo mira el
+    último. El problema es que ese total no dice nada por sí solo: puede haber subido porque has
+    gastado más, porque ha subido el precio, porque te han cambiado el contrato o porque la lectura de
+    este mes es estimada. Separar las líneas es lo único que permite saber cuál de las cuatro cosas ha
+    pasado, y de paso enseña qué partes se pueden tocar y cuáles no.
+  </p>
+
+  <div class="clave">
+    <p>
+      Toda factura se divide en dos bloques que se comportan de forma completamente distinta: lo que
+      pagas por <strong>tener</strong> luz disponible (la potencia) y lo que pagas por
+      <strong>gastarla</strong> (la energía). El primero es fijo y se paga aunque estés un mes fuera
+      de casa. El segundo depende de cuánto y cuándo consumes.
+    </p>
+  </div>
+
+  <h2>1. El término de potencia: lo que pagas por estar enchufado</h2>
+
+  <p>
+    La potencia contratada es el máximo que puedes tener funcionando a la vez. Se paga por kW
+    contratado y por día, todos los días del año, gastes lo que gastes. Desde 2021 se contratan dos
+    potencias distintas: una para las horas <strong>punta y llano</strong> y otra para las horas
+    <strong>valle</strong>, aunque en una vivienda normal casi siempre se dejan iguales.
+  </p>
+
+  <p>
+    Este precio no lo pone tu compañía. Son dos conceptos regulados que se suman, y en {ANIO_DATOS}{' '}
+    valen esto en la tarifa 2.0TD, que es la de los hogares:
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Concepto</th>
+          <th>Quién lo fija</th>
+          <th class="num">Punta y llano</th>
+          <th class="num">Valle</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Peajes de transporte y distribución</td>
+          <td>CNMC</td>
+          <td class="num">{eur(TERMINO_POTENCIA.punta.peajes, 4)}</td>
+          <td class="num">{eur(TERMINO_POTENCIA.valle.peajes, 4)}</td>
+        </tr>
+        <tr>
+          <td>Cargos del sistema eléctrico</td>
+          <td>Ministerio</td>
+          <td class="num">{eur(TERMINO_POTENCIA.punta.cargos, 4)}</td>
+          <td class="num">{eur(TERMINO_POTENCIA.valle.cargos, 4)}</td>
+        </tr>
+        <tr>
+          <td><strong>Total</strong></td>
+          <td></td>
+          <td class="num"><strong>{eur(PUNTA_ANUAL, 4)}</strong></td>
+          <td class="num"><strong>{eur(VALLE_ANUAL, 4)}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption>Euros por kW contratado y año, sin impuestos. Tarifa 2.0TD, {ANIO_DATOS}.</figcaption>
+
+  <p>
+    Si dejas las dos potencias iguales, cada kW contratado te cuesta
+    <strong>{eur(COSTE_KW_ANUAL)} euros al año</strong> antes de impuestos, o
+    <strong>{eur(COSTE_KW_ANUAL_CON_IMPUESTOS)} euros</strong> con el impuesto eléctrico y el IVA ya
+    puestos. Esa cifra es la más útil de toda esta guía, porque convierte un ajuste administrativo en
+    dinero: bajar de 5,75 a 4,6 kW, que es un escalón muy habitual, son unos{' '}
+    {eur(1.15 * COSTE_KW_ANUAL_CON_IMPUESTOS)} euros al año que dejas de pagar sin cambiar de hábitos.
+    Cómo saber si te sobra está en la
+    <a href="/guias/bajar-la-potencia-contratada/">guía de la potencia contratada</a>, y el cálculo
+    hecho en la <a href="/calculadora-potencia/">calculadora</a>.
+  </p>
+
+  <h2>2. El término de energía: lo que pagas por gastar</h2>
+
+  <p>
+    Aquí es donde entra el precio de la luz del que va toda esta web. Pero cuidado, porque el precio
+    del kWh que aparece en tu factura no es solo el de la energía: lleva dentro tres cosas sumadas.
+  </p>
+
+  <ul>
+    <li>
+      <strong>La energía.</strong> Es la única parte que depende de tu contrato. Con PVPC cambia cada
+      hora siguiendo el mercado; con una tarifa fija de mercado libre es el precio que firmaste.
+    </li>
+    <li>
+      <strong>Los peajes de transporte y distribución.</strong> Pagan las torres de alta tensión y los
+      cables del barrio. Los fija la CNMC.
+    </li>
+    <li>
+      <strong>Los cargos del sistema.</strong> Pagan las primas a renovables, el déficit de tarifa de
+      años anteriores, el extracoste de los sistemas eléctricos de las islas y el bono social. Los
+      fija el Ministerio.
+    </li>
+  </ul>
+
+  <p>
+    Peajes y cargos son <strong>iguales para todo el mundo</strong>, tengas la compañía que tengas, y
+    cambian según el tramo horario. En {ANIO_DATOS}, por cada kWh consumido:
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Tramo</th>
+          <th class="num">Peajes</th>
+          <th class="num">Cargos</th>
+          <th class="num">Total regulado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Punta</td>
+          <td class="num">{cent(TERMINO_ENERGIA.punta.peajes)}</td>
+          <td class="num">{cent(TERMINO_ENERGIA.punta.cargos)}</td>
+          <td class="num"><strong>{cent(REGULADO_KWH.punta)}</strong></td>
+        </tr>
+        <tr>
+          <td>Llano</td>
+          <td class="num">{cent(TERMINO_ENERGIA.llano.peajes)}</td>
+          <td class="num">{cent(TERMINO_ENERGIA.llano.cargos)}</td>
+          <td class="num"><strong>{cent(REGULADO_KWH.llano)}</strong></td>
+        </tr>
+        <tr>
+          <td>Valle</td>
+          <td class="num">{cent(TERMINO_ENERGIA.valle.peajes)}</td>
+          <td class="num">{cent(TERMINO_ENERGIA.valle.cargos)}</td>
+          <td class="num"><strong>{cent(REGULADO_KWH.valle)}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption>
+    Céntimos por kWh, sin impuestos. Tarifa 2.0TD, {ANIO_DATOS}. Los tramos horarios están explicados
+    en la <a href="/guias/punta-llano-valle/">guía de punta, llano y valle</a>.
+  </figcaption>
+
+  <p>
+    Fíjate en la diferencia: un kWh gastado en hora punta arrastra{' '}
+    {cent(REGULADO_KWH.punta)} céntimos de costes regulados, y el mismo kWh en valle solo{' '}
+    {cent(REGULADO_KWH.valle)}. Es decir, <strong>mover consumo a la madrugada o al fin de semana
+    ahorra por dos vías</strong>: por el precio de la energía, que suele ser más bajo, y por estos
+    peajes y cargos, que bajan muchísimo. Los precios que muestra la portada de Vatio son el PVPC
+    publicado por Red Eléctrica sin impuestos, que ya incluye la energía y esta parte regulada.
+  </p>
+
+  <h2>3. Lo que se suma al final</h2>
+
+  <p>
+    Con la potencia y la energía calculadas, quedan tres conceptos más:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Alquiler del contador.</strong> Menos de un euro al mes en la mayoría de contadores
+      digitales. Es un precio regulado y solo desaparece si el contador es de tu propiedad.
+    </li>
+    <li>
+      <strong>Impuesto especial sobre la electricidad.</strong> Un {pct(IMPUESTO_ELECTRICO)} % que se
+      aplica sobre la suma de potencia y energía, antes del IVA. Entre 2021 y 2024 estuvo rebajado de
+      forma temporal por la crisis de precios.
+    </li>
+    <li>
+      <strong>IVA.</strong> El tipo general del {pct(IVA)} % sobre todo lo anterior, incluido el
+      impuesto eléctrico y el alquiler del contador. También tuvo tipos reducidos temporales en
+      aquellos años.
+    </li>
+  </ul>
+
+  <p>
+    El orden importa, porque los impuestos se aplican en cascada: el eléctrico va sobre la base, y el
+    IVA va sobre la base más el eléctrico. Por eso, cada euro que te ahorras en la parte de arriba se
+    convierte en algo más de un euro y veinte céntimos de ahorro real en el total.
+  </p>
+
+  <h2>Una factura de ejemplo, número a número</h2>
+
+  <p>
+    Un piso con <strong>{eur(EJ.kw, 1)} kW</strong> contratados que consume
+    <strong>{ejKwh} kWh en {EJ.dias} días</strong>, repartidos como en una casa donde no hay nadie por
+    la mañana: {EJ.kwh.punta} kWh en punta, {EJ.kwh.llano} en llano y {EJ.kwh.valle} en valle. Para la
+    energía se ha usado un precio medio de {cent(EJ.energia)} céntimos el kWh, que es un valor de
+    referencia razonable; el real lo tienes en el <a href="/precio-medio-mensual/">histórico
+    mensual</a>.
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Concepto</th><th>Cómo sale</th><th class="num">Euros</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Término de potencia</td>
+          <td>{eur(EJ.kw, 1)} kW × {eur(COSTE_KW_ANUAL)} € al año × {EJ.dias}/365 días</td>
+          <td class="num">{eur(ejPotencia)}</td>
+        </tr>
+        <tr>
+          <td>Energía</td>
+          <td>{ejKwh} kWh × {cent(EJ.energia)} céntimos</td>
+          <td class="num">{eur(ejEnergiaMercado)}</td>
+        </tr>
+        <tr>
+          <td>Peajes y cargos de energía</td>
+          <td>Cada tramo a su precio</td>
+          <td class="num">{eur(ejRegulado)}</td>
+        </tr>
+        <tr>
+          <td>Alquiler del contador</td>
+          <td>Precio regulado</td>
+          <td class="num">{eur(ejContador)}</td>
+        </tr>
+        <tr>
+          <td>Impuesto eléctrico</td>
+          <td>{pct(IMPUESTO_ELECTRICO)} % sobre potencia y energía</td>
+          <td class="num">{eur(ejImpuesto)}</td>
+        </tr>
+        <tr>
+          <td>IVA</td>
+          <td>{pct(IVA)} % sobre todo lo anterior</td>
+          <td class="num">{eur(ejIva)}</td>
+        </tr>
+        <tr>
+          <td><strong>Total</strong></td>
+          <td></td>
+          <td class="num"><strong>{eur(ejTotal)}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption>
+    Ejemplo orientativo con los precios regulados de {ANIO_DATOS}. Tu factura llevará además el
+    periodo exacto de facturación y las lecturas del contador.
+  </figcaption>
+
+  <p>
+    Lo interesante de verlo así es la proporción. En esta factura, la potencia se lleva{' '}
+    {eur((ejPotencia / ejBase) * 100, 0)} de cada 100 euros de la base imponible, y eso es dinero que
+    no depende en absoluto de lo cuidadoso que seas con el consumo. En una casa que gasta poco, el
+    peso del término fijo es todavía mayor: es el primer sitio donde mirar.
+  </p>
+
+  <h2>Qué depende de tu compañía y qué no</h2>
+
+  <p>
+    De todo lo anterior, tu comercializadora solo decide <strong>una cosa</strong>: el precio de la
+    energía, y en su caso el margen que le añade. Peajes, cargos, impuestos y alquiler del contador
+    son idénticos vengan de donde vengan. Por eso, cuando una oferta promete un descuento enorme
+    "sobre tu factura", conviene mirar sobre qué parte lo aplica: sobre el total no puede ser, porque
+    más de la mitad de esa factura no es suya.
+  </p>
+
+  <p>
+    Y hay una segunda empresa en juego que no eliges: la <strong>distribuidora</strong>, que es la
+    dueña de los cables de tu calle y del contador. Es la que ejecuta los cambios de potencia y la que
+    arregla las averías, y la que te toca por zona geográfica. Cambiar de comercializadora no cambia
+    de distribuidora, y por eso <a href="/guias/cambiar-de-comercializadora/">cambiar de compañía
+    nunca implica obra ni corte de luz</a>.
+  </p>
+
+  <h2>Cómo comprobar que tu factura cuadra</h2>
+
+  <ol>
+    <li>
+      Mira el <strong>periodo facturado</strong> y cuenta los días. Una factura de 38 días parece cara
+      y no lo es: es larga.
+    </li>
+    <li>
+      Comprueba si las lecturas son <strong>reales o estimadas</strong>. Suele venir marcado. Una
+      estimada alta se compensa sola en la siguiente, pero explica un pico raro.
+    </li>
+    <li>
+      Divide el importe de la energía entre los kWh consumidos. Eso te da tu precio medio real del
+      kWh, que es lo único comparable entre facturas y entre ofertas.
+    </li>
+    <li>
+      Compara ese precio medio con la <a href="/precio-medio-mensual/">media del PVPC de ese mes</a>.
+      Si estás muy por encima de forma sostenida, el problema es la tarifa, no el consumo.
+    </li>
+  </ol>
+
+  <p>
+    Si después de esto la subida sigue sin explicarse, el siguiente paso está en la guía de
+    <a href="/guias/te-ha-subido-la-factura/">qué hacer cuando te sube la factura</a>.
+  </p>
+
+  <div class="fuentes">
+    <h2>Fuentes</h2>
+    <ul>
+      <li>
+        Peajes de transporte y distribución {ANIO_DATOS}: Resolución de 18 de diciembre de 2025 de la
+        CNMC (BOE-A-2025-26348), anexo I.
+      </li>
+      <li>
+        Cargos del sistema eléctrico {ANIO_DATOS}: Orden TED/1524/2025, de 23 de diciembre
+        (BOE-A-2025-26705). La tarifa 2.0TD es el segmento tarifario 1 de esas tablas.
+      </li>
+      <li>Precios horarios del PVPC: API pública REData/ESIOS de Red Eléctrica de España.</li>
+    </ul>
+  </div>
+
+</GuiaLayout>

@@ -1,0 +1,105 @@
+---
+// Índice de guías. Es la puerta de entrada a la parte escrita del sitio: el resto de
+// páginas son datos, y estas son las que explican qué significan.
+import Layout from '../../layouts/Layout.astro';
+import { GUIAS, rutaGuia, fechaLarga } from '../../lib/guias.js';
+
+const temas = [...new Set(GUIAS.map((g) => g.tema))];
+const porTema = temas.map((t) => ({ tema: t, guias: GUIAS.filter((g) => g.tema === t) }));
+
+const title = 'Guías del precio de la luz y de la factura | Vatio';
+const description =
+  'Guías para entender la factura de la luz: cómo se forma el precio cada hora, qué es cada línea del recibo, cómo bajar la potencia contratada y cómo comparar ofertas.';
+
+const siteUrl = (Astro.site ?? new URL('https://mivatio.es')).href.replace(/\/$/, '');
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Guías de Vatio',
+  description,
+  inLanguage: 'es-ES',
+  url: `${siteUrl}/guias/`,
+  hasPart: GUIAS.map((g) => ({
+    '@type': 'Article',
+    headline: g.titulo,
+    description: g.description,
+    url: `${siteUrl}${rutaGuia(g.slug)}`,
+    dateModified: g.actualizada,
+  })),
+};
+---
+<Layout title={title} description={description} canonicalPath="/guias">
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
+
+  <div class="min-h-screen w-full" style="background-color:var(--color-fondo);">
+    <div class="mx-auto max-w-2xl px-4 py-8">
+
+      <nav aria-label="Migas" class="flex flex-wrap items-center gap-1 text-xs text-tenue">
+        <a href="/" class="hover:text-acento">Inicio</a>
+        <span aria-hidden="true">/</span>
+        <span class="text-suave">Guías</span>
+      </nav>
+
+      <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-tinta sm:text-3xl">
+        Guías del precio de la luz
+      </h1>
+      <p class="mt-3 text-base leading-relaxed text-suave">
+        El resto de Vatio son datos: cuánto cuesta el kWh a cada hora, qué media dejó cada mes,
+        cuánto gasta cada aparato. Aquí está lo otro, lo que hace falta para que esos números
+        signifiquen algo: de dónde sale el precio, qué estás pagando en cada línea de la factura y
+        qué se puede tocar para pagar menos.
+      </p>
+      <p class="mt-3 text-sm leading-relaxed text-tenue">
+        Los importes oficiales que aparecen (peajes, cargos, impuestos, umbrales del bono social)
+        están tomados del BOE y de la CNMC, no de comparadores, y se revisan cada enero, que es
+        cuando se publican los del año.
+      </p>
+
+      {porTema.map(({ tema, guias }) => (
+        <section class="mt-10">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.16em] text-acento">{tema}</h2>
+          <ul class="mt-3 grid gap-3">
+            {guias.map((g) => (
+              <li>
+                <a href={rutaGuia(g.slug)}
+                  class="block rounded-2xl border p-4 transition-colors hover:border-suave"
+                  style="border-color:var(--color-borde);background-color:var(--color-superficie);">
+                  <h3 class="text-base font-bold leading-snug text-tinta">{g.titulo}</h3>
+                  <p class="mt-1.5 text-sm leading-relaxed text-suave">{g.resumen}</p>
+                  <p class="mt-2 text-xs text-tenue">
+                    {g.minutos} min · revisada el {fechaLarga(g.actualizada)}
+                  </p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+
+      <section class="mt-12 rounded-2xl border p-4"
+        style="border-color:var(--color-borde);background-color:var(--color-superficie);">
+        <h2 class="text-sm font-bold text-tinta">Y las herramientas</h2>
+        <p class="mt-1.5 text-sm leading-relaxed text-suave">
+          Lo que se explica en las guías se puede calcular aquí mismo con los datos del día.
+        </p>
+        <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <a href="/" class="text-acento hover:underline">Precio de la luz hoy</a>
+          <a href="/horas-baratas-hoy/" class="text-acento hover:underline">Horas baratas</a>
+          <a href="/calculadora-potencia/" class="text-acento hover:underline">Calculadora de potencia</a>
+          <a href="/bono-social/" class="text-acento hover:underline">Bono social</a>
+          <a href="/precio-luz/" class="text-acento hover:underline">Histórico</a>
+        </div>
+      </section>
+
+      <footer class="mt-10 border-t pt-6" style="border-color:var(--color-borde);">
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+          <a href="/quienes-somos" class="text-suave hover:text-acento">Quiénes somos</a>
+          <a href="/contacto" class="text-suave hover:text-acento">Contacto</a>
+          <a href="/aviso-legal" class="text-suave hover:text-acento">Aviso legal</a>
+          <a href="/privacidad" class="text-suave hover:text-acento">Privacidad</a>
+        </div>
+        <p class="mt-3 text-xs text-tenue">© {new Date().getFullYear()} Vatio</p>
+      </footer>
+    </div>
+  </div>
+</Layout>

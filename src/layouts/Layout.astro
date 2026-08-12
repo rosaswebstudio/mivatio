@@ -17,6 +17,8 @@ interface Props {
   description: string;
   canonicalPath?: string;
   image?: string;
+  /** Deja la pagina fuera del indice de Google sin borrarla ni esconderla del sitio. */
+  noindex?: boolean;
 }
 
 const {
@@ -24,6 +26,7 @@ const {
   description,
   canonicalPath = '/',
   image = '/og-image.png',
+  noindex = false,
 } = Astro.props;
 
 const siteFallback = 'https://mivatio.es';
@@ -46,7 +49,7 @@ const ga4Id = 'G-WR89VZBTSW';
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="robots" content={noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large'} />
     <meta name="google-site-verification" content="W7IcP3sAD62Q9U1u6nOUyXmvqroHBWtKscRJMHZt7MM" />
 
     <!-- PWA -->

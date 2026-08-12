@@ -1,0 +1,216 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+import { COSTE_KW_ANUAL, COSTE_KW_ANUAL_CON_IMPUESTOS, ESCALONES, ANIO_DATOS } from '../../lib/potencia.js';
+
+const eur = (n: number, dec = 2) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+const escalonesTexto = ESCALONES.slice(0, 8)
+  .map((e) => e.toLocaleString('es-ES', { minimumFractionDigits: 2 }))
+  .join(', ');
+---
+<GuiaLayout slug="bajar-la-potencia-contratada">
+
+  <p>
+    De todo lo que se puede hacer para pagar menos luz, este es el que más dinero mueve por menos
+    esfuerzo, y el que menos gente hace. No exige cambiar de hábitos, ni levantarse de madrugada, ni
+    comprar nada: es una llamada de teléfono o un formulario, y el ahorro se repite todos los meses
+    durante años.
+  </p>
+
+  <h2>Por qué la potencia es dinero garantizado</h2>
+
+  <p>
+    La potencia contratada es el máximo de kilovatios que puedes tener funcionando a la vez en casa.
+    Se paga por cada kW contratado y por cada día del año, <strong>consumas o no consumas</strong>. Un
+    mes de vacaciones con todo apagado sigue teniendo término de potencia.
+  </p>
+
+  <p>
+    En {ANIO_DATOS}, cada kW contratado cuesta <strong>{eur(COSTE_KW_ANUAL)} euros al año</strong> sin
+    impuestos, o <strong>{eur(COSTE_KW_ANUAL_CON_IMPUESTOS)} euros</strong> con el impuesto eléctrico
+    y el IVA aplicados. Ese es el precio regulado, igual para todas las compañías. Traducido a
+    escalones reales:
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Si bajas de</th><th>a</th><th class="num">Ahorro al año, con impuestos</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>4,60 kW</td><td>3,45 kW</td><td class="num">{eur(1.15 * COSTE_KW_ANUAL_CON_IMPUESTOS)} €</td></tr>
+        <tr><td>5,75 kW</td><td>4,60 kW</td><td class="num">{eur(1.15 * COSTE_KW_ANUAL_CON_IMPUESTOS)} €</td></tr>
+        <tr><td>6,90 kW</td><td>4,60 kW</td><td class="num">{eur(2.3 * COSTE_KW_ANUAL_CON_IMPUESTOS)} €</td></tr>
+        <tr><td>9,20 kW</td><td>5,75 kW</td><td class="num">{eur(3.45 * COSTE_KW_ANUAL_CON_IMPUESTOS)} €</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption>
+    Suponiendo la misma potencia en los dos periodos. Precios regulados de {ANIO_DATOS}.
+  </figcaption>
+
+  <p>
+    Un dato para poner esto en contexto: en una casa de consumo medio, el término de potencia se lleva
+    en torno a la cuarta parte de la factura antes de impuestos. Es la parte que no baja por mucho que
+    apagues luces.
+  </p>
+
+  <h2>Cuánta tienes contratada ahora</h2>
+
+  <p>
+    Viene en tu factura, en el apartado de datos del contrato, expresada en kW y normalmente con dos
+    decimales. Desde 2021 aparecen <strong>dos potencias</strong>, una para punta y llano y otra para
+    valle. Si nunca has tocado nada, lo más probable es que sean iguales, y que el valor venga de
+    cuando se dio de alta la vivienda, que puede ser hace treinta años y con otros electrodomésticos.
+  </p>
+
+  <p>
+    Ese es justo el caso típico: instalaciones sobredimensionadas de origen, heredadas de contrato en
+    contrato sin que nadie las haya revisado nunca.
+  </p>
+
+  <h2>Cuánta necesitas de verdad: dos métodos</h2>
+
+  <h3>El método de la suma</h3>
+
+  <p>
+    Consiste en pensar en el peor momento posible de un día normal y sumar los vatios de todo lo que
+    puede estar encendido a la vez. No de todo lo que tienes: de lo que puede coincidir. El
+    frigorífico y el router están siempre; el horno y la vitrocerámica sí coinciden en una comida de
+    domingo; la lavadora, si la programas, no tiene por qué coincidir con nada.
+  </p>
+
+  <p>
+    A esa suma hay que añadirle un <strong>margen de en torno al 20 %</strong>, y no es un capricho:
+    los motores y los compresores (frigorífico, lavadora, aire acondicionado) tiran durante un instante
+    bastante más de lo que dicen sus etiquetas al arrancar, y es en esos picos cuando salta el
+    interruptor. La <a href="/calculadora-potencia/">calculadora de potencia</a> hace esta cuenta con
+    los aparatos que marques y te dice el escalón que te toca.
+  </p>
+
+  <h3>El método empírico</h3>
+
+  <p>
+    Más rápido y sorprendentemente fiable: <strong>¿cuándo te saltó la luz por última vez?</strong> Si
+    llevas años sin que se te vaya la corriente por tener demasiadas cosas encendidas, es que estás
+    lejos del límite y probablemente te sobre al menos un escalón. Si te salta un par de veces al año
+    en momentos identificables (horno más vitro más lavavajillas), estás justo donde debes.
+  </p>
+
+  <p>
+    Una variante útil: durante una o dos semanas, enciende a propósito todo lo que enciendes en un día
+    exigente y observa. Si aguanta sin pestañear, tienes margen.
+  </p>
+
+  <div class="clave">
+    <p>
+      Los escalones habituales en vivienda son {escalonesTexto} kW. Desde 2021 se puede pedir
+      cualquier valor, pero la mayoría de instalaciones y ofertas siguen moviéndose en estos, y bajar
+      un solo peldaño ya se nota en la factura.
+    </p>
+  </div>
+
+  <h2>Cuándo conviene no tocar nada</h2>
+
+  <p>
+    Hay casos en los que apurar la potencia sale caro en incomodidad:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Coche eléctrico.</strong> Un cargador doméstico normal tira de 3,7 kW él solo, y mientras
+      carga la casa sigue funcionando. Aquí conviene pensar en qué periodo cargas: la potencia del
+      periodo valle es muchísimo más barata que la de punta, así que si cargas de madrugada puedes
+      plantearte potencias distintas en cada periodo. Pregúntalo al contratar, porque no todas las
+      combinaciones están permitidas.
+    </li>
+    <li>
+      <strong>Cocina de inducción de dos o tres zonas simultáneas.</strong> Las placas modernas pueden
+      superar los 3 kW ellas solas cuando se usan varias zonas a fondo.
+    </li>
+    <li>
+      <strong>Calefacción o agua caliente eléctricas.</strong> Un termo o unos emisores tienen
+      consumos altos y sostenidos, y suelen coincidir con la hora de más actividad en la casa.
+    </li>
+    <li>
+      <strong>Bomba de calor o aire acondicionado en varias estancias.</strong> Sobre todo el arranque
+      del compresor.
+    </li>
+  </ul>
+
+  <h2>El trámite, paso a paso</h2>
+
+  <ol>
+    <li>
+      <strong>Se pide a tu comercializadora</strong>, no a la distribuidora. Por teléfono, por su
+      oficina virtual o por correo. Ella lo tramita con la distribuidora de tu zona.
+    </li>
+    <li>
+      <strong>Necesitas saber la potencia que quieres.</strong> Tenerlo claro antes de llamar evita
+      que te vendan otra cosa.
+    </li>
+    <li>
+      <strong>Se ejecuta a distancia.</strong> Con los contadores digitales actuales, si la nueva
+      potencia está dentro de lo que permite el boletín de tu instalación, se reprograma en remoto y
+      no viene nadie a casa.
+    </li>
+    <li>
+      <strong>Hay un coste único de derechos de enganche</strong>, en torno a 9 euros más IVA, que
+      cobra la distribuidora y aparece en la siguiente factura. Con los ahorros de la tabla de arriba,
+      se recupera en semanas.
+    </li>
+    <li>
+      <strong>La nueva potencia aparece en la siguiente factura</strong>, prorrateada si el cambio cae
+      a mitad de periodo.
+    </li>
+  </ol>
+
+  <div class="clave">
+    <p>
+      El límite importante: <strong>solo se puede cambiar la potencia una vez cada 12 meses</strong>.
+      Por eso no conviene bajar dos escalones de golpe por si acaso, ni quedarse tan justo que a la
+      primera racha de frío estés rearmando el cuadro a diario. Si dudas entre dos valores, baja al
+      más alto de los dos: seguirás ahorrando y no te quedas atrapado un año.
+    </p>
+  </div>
+
+  <h2>Qué pasa si te quedas corto</h2>
+
+  <p>
+    No pasa nada grave, y es reversible en el acto. El limitador que llevan dentro los contadores
+    digitales corta el suministro cuando superas la potencia contratada durante un rato. Se recupera
+    subiendo el interruptor general del cuadro, después de apagar algo. No hay avería, no hay que
+    llamar a nadie y no se rompe ningún aparato.
+  </p>
+
+  <p>
+    Lo molesto es la frecuencia. Un corte al año es una anécdota; tres por semana en invierno es
+    inaceptable, y no lo puedes arreglar hasta que pasen los doce meses. Ese es el motivo real para no
+    pasarse de optimista.
+  </p>
+
+  <h2>Y después</h2>
+
+  <p>
+    Ajustada la potencia, el siguiente sitio donde hay dinero es la energía: cuánto consumes y a qué
+    hora. Está desarrollado en la guía de
+    <a href="/guias/bajar-la-factura-de-la-luz/">cómo bajar la factura ordenado por impacto</a>. Y si
+    tus ingresos encajan en los umbrales, conviene comprobar el
+    <a href="/bono-social/">bono social</a>, que es un descuento directo sobre el importe.
+  </p>
+
+  <div class="fuentes">
+    <h2>Fuentes</h2>
+    <ul>
+      <li>
+        Término de potencia {ANIO_DATOS}: Resolución de 18 de diciembre de 2025 de la CNMC
+        (BOE-A-2025-26348) para los peajes y Orden TED/1524/2025 (BOE-A-2025-26705) para los cargos.
+      </li>
+      <li>
+        Límite de un cambio de potencia cada doce meses y derechos de enganche: normativa de
+        suministro eléctrico y guía de la CNMC sobre modificación de las condiciones del contrato.
+      </li>
+    </ul>
+  </div>
+
+</GuiaLayout>

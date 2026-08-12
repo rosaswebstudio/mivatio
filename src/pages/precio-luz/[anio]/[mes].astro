@@ -10,6 +10,7 @@ import GraficaLinea from '../../../components/GraficaLinea.astro';
 import PerfilHorario from '../../../components/PerfilHorario.astro';
 import archivo from '../../../data/mensual.json';
 import { ELECTRODOMESTICOS } from '../../../lib/electrodomesticos.js';
+import { ARCHIVO_INDEXABLE_DESDE } from '../../../lib/archivo.js';
 import {
   listaMeses, serieDiaria, cent, eur, hh, franjaHoraria, extremosHorarios,
 } from '../../../lib/mensual.js';
@@ -74,6 +75,10 @@ const description = enCurso
   ? `Precio de la luz en ${m.nombre} según el PVPC: media de ${cent(m.media)} céntimos por kWh en los ${m.n} días que lleva el mes, con el precio de cada día y la hora más barata. Datos oficiales de Red Eléctrica.`
   : `Precio de la luz en ${m.nombre} según el PVPC: media de ${cent(m.media)} céntimos por kWh, mínimo de ${cent(m.min.v)} y máximo de ${cent(m.max.v)}. Precio de cada día del mes y hora a hora. Datos oficiales de Red Eléctrica.`;
 const rutaCanonica = m.ruta;
+// Los meses anteriores al corte se sirven y se enlazan igual que el resto, pero no van al
+// indice: son la misma plantilla repetida decenas de veces y hacen que el sitio parezca
+// generado en masa. Ver src/lib/archivo.js.
+const noindex = m.anio < ARCHIVO_INDEXABLE_DESDE;
 const siteUrl = (Astro.site ?? new URL('https://mivatio.es')).href.replace(/\/$/, '');
 
 const faqs = [
@@ -126,7 +131,7 @@ const jsonLd = {
   ],
 };
 ---
-<Layout title={title} description={description} canonicalPath={rutaCanonica}>
+<Layout title={title} description={description} canonicalPath={rutaCanonica} noindex={noindex}>
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
 
   <div class="min-h-screen w-full" style="background-color:var(--color-fondo);">
