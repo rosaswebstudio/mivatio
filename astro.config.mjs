@@ -3,20 +3,22 @@ import { defineConfig } from 'astro/config';
 import preact from '@astrojs/preact';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
-import { ARCHIVO_INDEXABLE_DESDE } from './src/lib/archivo.js';
 
-// Los meses viejos del archivo llevan noindex, así que tampoco tienen que salir en el
-// sitemap: ofrecer al buscador una URL que luego le dice que no la indexe es contradictorio
-// y ensucia el informe de cobertura de Search Console.
-const mesViejo = /\/precio-luz\/(\d{4})\/[a-zé]+\/$/;
-const indexable = (url) => {
-  const m = url.match(mesViejo);
-  return !m || Number(m[1]) >= ARCHIVO_INDEXABLE_DESDE;
-};
+// El archivo mensual va entero al sitemap. Antes se recortaba a la vez que se le ponia
+// noindex a los meses anteriores a 2024, para no ofrecerle a Google una URL y decirle
+// acto seguido que no la indexara.
+//
+// Aquello se hizo tras el primer rechazo de AdSense, y fue un error por dos motivos. Uno:
+// noindex es una instruccion para el indice de Google Search, y la revision de AdSense no
+// consulta ese indice, entra por la portada y sigue enlaces, asi que seguia viendo las 111
+// paginas. Y dos: esas paginas no eran el problema. Cada mes trae 918 palabras con el
+// precio de cada dia, la hora mas cara y la mas barata y el coste por aparato, y solo 32
+// palabras se repiten entre unas y otras. Se estaba escondiendo contenido bueno y
+// perdiendo su trafico a cambio de nada.
 
 export default defineConfig({
   site: 'https://mivatio.es',
-  integrations: [preact(), sitemap({ filter: indexable })],
+  integrations: [preact(), sitemap()],
   vite: {
     plugins: [tailwindcss()],
   },

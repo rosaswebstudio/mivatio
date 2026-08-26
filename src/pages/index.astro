@@ -4,9 +4,17 @@ import Vatio from '../components/Vatio.jsx';
 import TablaHoras from '../components/TablaHoras.astro';
 import { ELECTRODOMESTICOS } from '../lib/electrodomesticos.js';
 import TendenciaLuz from '../components/TendenciaLuz.astro';
+import { GUIAS } from '../lib/guias.js';
 import mensual from '../data/mensual.json';
 import { listaMeses, ultimosDias, cent as centH } from '../lib/mensual.js';
 import { cargarPrecios, fechaMadrid, fechaLarga, resumenDia, franjas } from '../lib/datos-build.js';
+
+// Guias destacadas en portada. La web enseña el precio; lo que convierte ese precio en una
+// decision (si te sobra potencia, por que te ha subido la factura, si compensa cambiarte)
+// esta escrito, y hasta ahora no se veia sin entrar en el menu. Se coge una de cada tema.
+const guiasDestacadas = [...new Set(GUIAS.map((g) => g.tema))]
+  .map((tema) => GUIAS.find((g) => g.tema === tema))
+  .slice(0, 6);
 
 // Los precios de hoy se traen EN EL BUILD y se escriben en el HTML.
 //
@@ -242,6 +250,29 @@ const jsonLd = {
                   class="h-4 w-4 shrink-0 text-acento transition-transform group-hover:translate-x-0.5" aria-hidden="true">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <!-- Guias: el contenido escrito de la web, enlazado desde la portada -->
+        <section class="px-4 pt-8">
+          <div class="flex items-baseline justify-between gap-3">
+            <h2 class="text-base font-bold text-tinta">Guías para entender tu factura</h2>
+            <a href="/guias/" class="shrink-0 text-xs font-semibold text-acento hover:underline">Ver todas →</a>
+          </div>
+          <p class="mt-2 text-sm leading-relaxed text-suave">
+            Saber el precio de la hora es el principio. Esto es lo que hace falta para
+            aprovecharlo: de qué se compone lo que pagas, qué parte depende de ti y cuáles de
+            los consejos que se repiten aguantan una cuenta.
+          </p>
+          <div class="mt-3 grid gap-2 sm:grid-cols-2">
+            {guiasDestacadas.map((g) => (
+              <a href={`/guias/${g.slug}/`} class="rounded-2xl border border-borde bg-superficie p-4 transition-colors hover:border-acento">
+                <p class="text-xs font-semibold uppercase tracking-wide text-tenue">{g.tema}</p>
+                <p class="mt-1 text-sm font-semibold leading-snug text-tinta">{g.titulo}</p>
+                <p class="mt-1.5 text-xs leading-relaxed text-suave">{g.resumen}</p>
+                <p class="mt-2 text-[11px] font-semibold text-tenue">{g.minutos} min de lectura</p>
               </a>
             ))}
           </div>

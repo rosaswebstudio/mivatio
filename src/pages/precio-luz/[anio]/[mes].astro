@@ -10,7 +10,6 @@ import GraficaLinea from '../../../components/GraficaLinea.astro';
 import PerfilHorario from '../../../components/PerfilHorario.astro';
 import archivo from '../../../data/mensual.json';
 import { ELECTRODOMESTICOS } from '../../../lib/electrodomesticos.js';
-import { ARCHIVO_INDEXABLE_DESDE } from '../../../lib/archivo.js';
 import {
   listaMeses, serieDiaria, cent, eur, hh, franjaHoraria, extremosHorarios,
 } from '../../../lib/mensual.js';
@@ -78,7 +77,6 @@ const rutaCanonica = m.ruta;
 // Los meses anteriores al corte se sirven y se enlazan igual que el resto, pero no van al
 // indice: son la misma plantilla repetida decenas de veces y hacen que el sitio parezca
 // generado en masa. Ver src/lib/archivo.js.
-const noindex = m.anio < ARCHIVO_INDEXABLE_DESDE;
 const siteUrl = (Astro.site ?? new URL('https://mivatio.es')).href.replace(/\/$/, '');
 
 const faqs = [
@@ -131,7 +129,7 @@ const jsonLd = {
   ],
 };
 ---
-<Layout title={title} description={description} canonicalPath={rutaCanonica} noindex={noindex}>
+<Layout title={title} description={description} canonicalPath={rutaCanonica}>
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
 
   <div class="min-h-screen w-full" style="background-color:var(--color-fondo);">
