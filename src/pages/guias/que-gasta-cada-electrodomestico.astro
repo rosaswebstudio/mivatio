@@ -1,0 +1,128 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+import { ELECTRODOMESTICOS } from '../../lib/electrodomesticos.js';
+
+// El ranking sale del mismo catalogo que alimenta las fichas de "cuánto cuesta poner...",
+// para que no haya dos verdades distintas en la misma web. Si se ajusta un consumo alli,
+// esta guia se reordena sola.
+const PRECIO = 0.15; // €/kWh con impuestos, precio de referencia dicho en el texto
+const anual = (a: any) => a.kwh * a.usosSemana * 52;
+const ranking = [...ELECTRODOMESTICOS].sort((a: any, b: any) => anual(b) - anual(a));
+const kwh = (n: number) => Math.round(n).toLocaleString('es-ES');
+const eur = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 0 });
+const eur2 = (n: number) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+---
+<GuiaLayout slug="que-gasta-cada-electrodomestico">
+
+  <p>
+    Casi todo el mundo se equivoca al señalar quién le sube la factura. Se sospecha del
+    microondas porque hace ruido y calienta, o del televisor porque está muchas horas
+    encendido, y se ignora al aparato que lleva funcionando desde 2019 sin parar ni un minuto.
+    La intuición falla aquí porque mezcla dos cosas distintas: <strong>lo que un aparato
+    consume mientras funciona</strong> y <strong>cuántas horas al año funciona</strong>. Solo
+    la segunda paga la factura.
+  </p>
+
+  <h2>Los veinte aparatos, por lo que gastan al año</h2>
+
+  <p>
+    Esta tabla sale del mismo catálogo que usan las fichas de "cuánto cuesta poner..." de esta
+    web, con consumos típicos y una frecuencia de uso normal en una casa. Están en kilovatios
+    hora al año, y en euros a {eur2(PRECIO)} €/kWh, que es un precio de referencia con
+    impuestos incluidos.
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Aparato</th><th>kWh al año</th><th>Euros al año</th></tr>
+      </thead>
+      <tbody>
+        {ranking.map((a: any) => (
+          <tr>
+            <td><a href={`/cuanto-cuesta/${a.slug}/`}>{a.nombre}</a></td>
+            <td>{kwh(anual(a))}</td>
+            <td>{eur(anual(a) * PRECIO)} €</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    Los consumos son valores típicos, no medidas de tu casa: un mismo aparato varía mucho
+    según modelo, antigüedad y programa. Cada ficha enlazada arriba lleva su rango y te deja
+    ajustar el consumo a tu caso con el precio real de hoy.
+  </p>
+
+  <h2>Lo que enseña el orden</h2>
+
+  <h3>1. Todo lo que calienta o enfría está arriba</h3>
+
+  <p>
+    No es casualidad. Cambiar la temperatura de algo, ya sea aire, agua o comida, exige mucha
+    más energía que mover un motor o encender una pantalla. Por eso la calefacción eléctrica,
+    el aire acondicionado y el termo ocupan la parte alta, y por eso dentro de la lavadora lo
+    caro no es girar el tambor: es calentar el agua.
+  </p>
+
+  <p>
+    Regla práctica: si un aparato tiene una resistencia dentro, es candidato a estar arriba.
+  </p>
+
+  <h3>2. Las horas mandan sobre los vatios</h3>
+
+  <p>
+    Un secador de pelo consume muchísimo mientras funciona, más que un frigorífico, y sin
+    embargo está al final de la lista. Lo usas cinco minutos. El frigorífico consume poco en
+    cada momento pero lleva 8.760 horas seguidas al año, y eso lo coloca por encima de la
+    lavadora y del horno juntos.
+  </p>
+
+  <p>
+    Es el error de intuición más común y el que hace perder el tiempo a mucha gente: se
+    persigue el aparato aparatoso y se ignora el que no se apaga nunca.
+  </p>
+
+  <h3>3. Los pequeños no arreglan una factura</h3>
+
+  <p>
+    Router, televisión, microondas y ordenador suman entre todos bastante menos que el termo
+    él solo. Apagarlos con disciplina es un buen hábito y no cambia tu recibo. Si tu objetivo
+    es que baje de verdad, el esfuerzo tiene que ir a los cinco primeros de la tabla.
+  </p>
+
+  <h2>Qué hacer con cada zona de la tabla</h2>
+
+  <ul>
+    <li>
+      <strong>La parte alta (climatización, agua caliente).</strong> Aquí no se ahorra
+      apagando, se ahorra cambiando de tecnología o de ajuste. Un grado menos de aire
+      acondicionado, un termostato de termo más bajo, o pasar de resistencia a bomba de calor.
+      Está en <a href="/guias/calefaccion-electrica/">qué sistema de calefacción sale más
+      barato</a> y en <a href="/guias/termo-electrico/">el termo eléctrico</a>.
+    </li>
+    <li>
+      <strong>La parte media (lavadora, lavavajillas, secadora).</strong> Aquí sí se ahorra
+      moviendo la hora, porque son los aparatos programables. Con PVPC, pasar estos lavados a
+      las horas baratas del día es dinero directo, y lo puedes ver en el
+      <a href="/horas-baratas-hoy/">panel de horas baratas de hoy</a>.
+    </li>
+    <li>
+      <strong>La parte baja.</strong> Ignórala para ahorrar. Aquí solo hay una excepción, y es
+      el conjunto de aparatos que están enchufados sin usarse:
+      <a href="/guias/consumo-fantasma/">el consumo fantasma</a>.
+    </li>
+  </ul>
+
+  <h2>Y el que no está en la lista</h2>
+
+  <p>
+    Falta la partida que no es un aparato: <strong>el término de potencia</strong>. Se paga
+    todos los meses aunque no enciendas nada, y mucha gente tiene contratados más kilovatios
+    de los que usa. Es el único ahorro de esta web que no exige cambiar ningún hábito, y está
+    en <a href="/guias/bajar-la-potencia-contratada/">cómo saber si te sobra potencia</a>.
+  </p>
+
+</GuiaLayout>

@@ -1,0 +1,150 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+
+// Energia util para calentar un litro de agua de 20 a 100 grados: unos 0,093 kWh. Se divide
+// entre el rendimiento de cada sistema para saber la energia que hay que comprar.
+const UTIL = 0.093;
+const PRECIO_LUZ = 0.15;
+const PRECIO_GAS = 0.08; // €/kWh de gas natural, orden de magnitud dicho en el texto
+const SISTEMAS = [
+  { nombre: 'Inducción', rend: 0.88, energia: 'luz' },
+  { nombre: 'Vitrocerámica radiante', rend: 0.7, energia: 'luz' },
+  { nombre: 'Placa eléctrica de hierro', rend: 0.6, energia: 'luz' },
+  { nombre: 'Gas natural', rend: 0.45, energia: 'gas' },
+];
+const eur3 = (n: number) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+const eur = (n: number, d = 2) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (n: number) => Math.round(n * 100);
+---
+<GuiaLayout slug="cocinar-induccion-vitro-o-gas">
+
+  <p>
+    Es una discusión con dos partes que suelen mezclarse y conviene separar: cuánta energía
+    necesita cada sistema para hacer lo mismo, y cuánto cuesta esa energía. La inducción gana la
+    primera con claridad. La segunda depende del precio del gas y de la luz, y por eso la
+    respuesta no es la misma todos los años.
+  </p>
+
+  <h2>Dónde se pierde la energía en cada sistema</h2>
+
+  <ul>
+    <li>
+      <strong>Inducción, en torno al {pct(0.88)} %.</strong> No calienta la placa: genera un
+      campo magnético que hace calentarse al propio fondo de la cazuela. Como el calor nace
+      dentro del recipiente, casi nada se escapa al aire. Por eso el cristal se queda templado
+      salvo por lo que le devuelve la olla.
+    </li>
+    <li>
+      <strong>Vitrocerámica radiante, en torno al {pct(0.7)} %.</strong> Una resistencia calienta
+      el cristal y el cristal calienta la olla. Hay dos pasos, y en cada uno se pierde calor
+      hacia la cocina. Además sigue caliente un buen rato después de apagarla.
+    </li>
+    <li>
+      <strong>Gas, en torno al {pct(0.45)} %.</strong> La llama es más grande que el fondo del
+      recipiente y buena parte del calor sube por los lados. Es lo que ves cuando la llama
+      asoma por el borde de la sartén: eso es energía que estás pagando para calentar la cocina.
+    </li>
+  </ul>
+
+  <h2>La cuenta: hervir un litro de agua</h2>
+
+  <p>
+    Calentar un litro de agua del grifo hasta hervir necesita unos {eur3(UTIL)} kWh de energía
+    útil. Cada sistema tiene que comprar más que eso, según lo que pierda:
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Sistema</th><th>Rendimiento</th><th>Energía a comprar</th><th>Coste</th></tr>
+      </thead>
+      <tbody>
+        {SISTEMAS.map((s) => {
+          const kwh = UTIL / s.rend;
+          const precio = s.energia === 'luz' ? PRECIO_LUZ : PRECIO_GAS;
+          return (
+            <tr>
+              <td>{s.nombre}</td>
+              <td>{pct(s.rend)} %</td>
+              <td>{eur3(kwh)} kWh de {s.energia}</td>
+              <td>{eur3(kwh * precio)} €</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    Son céntimos por operación, y ahí está la primera conclusión honesta: <strong>cocinar no es
+    lo que te sube la factura</strong>. En el ranking de la casa, la placa está a media tabla,
+    muy lejos de la climatización o el agua caliente. Puedes verlo en
+    <a href="/guias/que-gasta-cada-electrodomestico/">qué gasta cada electrodoméstico</a>.
+  </p>
+
+  <p>
+    La segunda: entre la inducción y la vitrocerámica gana la inducción de forma consistente,
+    porque usan la misma energía y una desperdicia menos. Entre la inducción y el gas, la cuenta
+    depende de la diferencia de precio entre kWh de luz y kWh de gas en ese momento; con los
+    valores de la tabla salen parecidos, y basta con que se muevan un poco para que cambie el
+    ganador.
+  </p>
+
+  <h2>Lo que no aparece en la tabla y sí decide</h2>
+
+  <ul>
+    <li>
+      <strong>El tiempo.</strong> La inducción hierve agua notablemente antes que cualquier otro
+      sistema. En una cocina en la que se cocina todos los días, eso vale más que los céntimos.
+    </li>
+    <li>
+      <strong>El control.</strong> El gas responde al instante y la inducción también; la
+      vitrocerámica radiante es la que peor lleva los cambios rápidos de temperatura, porque
+      tiene que calentar y enfriar el cristal.
+    </li>
+    <li>
+      <strong>El calor en la cocina.</strong> Todo lo que se pierde acaba en la habitación. En
+      verano, una cocina de gas calienta la casa mientras cocinas, y si tienes aire
+      acondicionado lo estás pagando dos veces.
+    </li>
+    <li>
+      <strong>Los recipientes.</strong> La inducción exige menaje ferromagnético. La prueba es
+      un imán: si se pega al fondo, vale. Cambiar la placa puede implicar cambiar las cazuelas,
+      y eso hay que meterlo en el presupuesto.
+    </li>
+    <li>
+      <strong>La potencia contratada.</strong> Es la sorpresa más frecuente al pasar de gas a
+      inducción. Dos fuegos a tope pueden pedir bastante potencia, y si obliga a subir el
+      contrato, eso se paga todos los meses del año. Hazte la cuenta con
+      <a href="/guias/bajar-la-potencia-contratada/">la guía de potencia</a> antes de decidir.
+      Casi todas las placas de inducción tienen un limitador de potencia configurable, que sirve
+      justo para no tener que subir el contrato.
+    </li>
+    <li>
+      <strong>La seguridad y el mantenimiento.</strong> Sin llama no hay combustión dentro de
+      casa, ni revisiones periódicas de la instalación de gas.
+    </li>
+  </ul>
+
+  <h2>Cómo gastar menos, con la placa que ya tengas</h2>
+
+  <ul>
+    <li><strong>Tapa la olla.</strong> Es lo que más ahorra de esta lista, y es gratis.</li>
+    <li><strong>Usa la cantidad de agua que necesitas</strong>, no la que cabe.</li>
+    <li><strong>Ajusta el fuego al diámetro del recipiente.</strong> En gas, que la llama no asome por el borde; en vitro, no usar una zona grande para un cazo pequeño.</li>
+    <li><strong>Apaga antes de terminar</strong> en vitrocerámica y en placa eléctrica: siguen dando calor varios minutos.</li>
+    <li><strong>Para calentar poca agua, el microondas o un hervidor</strong> suelen salir mejor que cualquier placa.</li>
+    <li><strong>Olla rápida para lo que tarda</strong>: legumbres y guisos largos, donde el ahorro sí es apreciable.</li>
+  </ul>
+
+  <p>
+    Y si tienes tarifa regulada, la hora también cuenta. Comer a mediodía suele caer en una de
+    las franjas baratas del día: puedes comprobarlo en el
+    <a href="/horas-baratas-hoy/">panel de horas baratas de hoy</a> y ver el coste real en la
+    ficha de <a href="/cuanto-cuesta/vitroceramica/">cuánto cuesta cocinar con la
+    vitrocerámica</a>.
+  </p>
+
+</GuiaLayout>

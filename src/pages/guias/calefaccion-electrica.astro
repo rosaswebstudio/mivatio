@@ -1,0 +1,134 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+
+const PRECIO = 0.15;
+// Rendimiento: cuanto calor entrega cada sistema por kWh electrico consumido. Una
+// resistencia entrega 1. Una bomba de calor multiplica, y ese multiplicador es el COP.
+const SISTEMAS = [
+  { nombre: 'Radiador de aceite, convector o emisor térmico', cop: 1 },
+  { nombre: 'Acumulador de calor (con tarifa nocturna)', cop: 1 },
+  { nombre: 'Suelo radiante eléctrico', cop: 1 },
+  { nombre: 'Aire acondicionado en modo calor', cop: 3 },
+  { nombre: 'Bomba de calor moderna (aerotermia)', cop: 4 },
+];
+const KWH_CALOR = 2000; // kWh de calor al año en un piso medio, dicho en el texto
+const eur = (n: number, d = 0) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d });
+---
+<GuiaLayout slug="calefaccion-electrica">
+
+  <p>
+    Hay una pregunta que se hace mucho y tiene una respuesta incómoda: ¿qué radiador eléctrico
+    gasta menos, el de aceite, el convector o el emisor térmico de bajo consumo? La respuesta
+    es que <strong>gastan exactamente lo mismo</strong>. Y entenderla es lo que te ahorra
+    dinero, porque desplaza la pregunta a donde sí hay diferencias enormes.
+  </p>
+
+  <h2>Por qué todas las resistencias gastan igual</h2>
+
+  <p>
+    Un radiador eléctrico, sea del tipo que sea, funciona pasando corriente por una
+    resistencia. Toda la electricidad que entra se convierte en calor: no hay pérdidas por
+    ningún lado, porque el calor es precisamente lo que quieres. Su rendimiento es del 100 %.
+  </p>
+
+  <p>
+    Eso significa que un aparato de 1.500 vatios entrega 1,5 kWh de calor por cada hora
+    encendido, tenga aceite dentro, sea de mica o lo vendan como de bajo consumo. Un radiador
+    de 1.500 W que gastara menos que otro de 1.500 W estaría incumpliendo la conservación de
+    la energía.
+  </p>
+
+  <p>
+    Lo que sí cambia entre ellos es <strong>cómo reparten ese calor</strong>: el de aceite
+    calienta despacio y sigue dando calor un rato después de apagarse, el convector calienta
+    rápido y se enfría rápido. Eso afecta a la comodidad y a cuántas horas necesitas tenerlo
+    encendido, no a lo que consume mientras lo está.
+  </p>
+
+  <h2>Dónde sí hay una diferencia grande</h2>
+
+  <p>
+    En no usar una resistencia. Una bomba de calor no fabrica calor: lo mueve. Coge calor del
+    aire de fuera, aunque esté frío, y lo mete dentro. Como transportar cuesta menos que
+    fabricar, por cada kilovatio hora de electricidad entrega tres o cuatro de calor. Ese
+    multiplicador es el COP, y está explicado en detalle en
+    <a href="/guias/bomba-de-calor-o-radiadores/">bomba de calor o radiadores</a>.
+  </p>
+
+  <p>
+    Traducido a la factura, para calentar {eur(KWH_CALOR)} kWh de calor al año, que es una
+    cifra razonable en un piso de tamaño medio:
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Sistema</th><th>Calor por kWh consumido</th><th>Electricidad al año</th><th>Coste</th></tr>
+      </thead>
+      <tbody>
+        {SISTEMAS.map((s) => (
+          <tr>
+            <td>{s.nombre}</td>
+            <td>{s.cop} kWh</td>
+            <td>{eur(KWH_CALOR / s.cop)} kWh</td>
+            <td>{eur((KWH_CALOR / s.cop) * PRECIO)} €</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    Ahí está toda la historia: entre el mejor y el peor sistema eléctrico hay una diferencia de
+    cientos de euros al año, y no está entre marcas de radiador, está entre resistencia y bomba
+    de calor.
+  </p>
+
+  <h2>El aparato que ya tienes</h2>
+
+  <p>
+    Este es el punto que más gente se pierde. <strong>Un aire acondicionado con bomba de calor
+    es una bomba de calor.</strong> Si tienes un split en el salón para el verano, en invierno
+    calienta esa habitación por aproximadamente un tercio de lo que costaría el radiador
+    eléctrico que tienes al lado.
+  </p>
+
+  <p>
+    Mucha gente pasa el invierno con un convector enchufado teniendo colgado en la misma pared
+    el aparato que le calentaría por la tercera parte. Si te reconoces, ese es tu ahorro del
+    año y no cuesta nada probarlo.
+  </p>
+
+  <h2>Los acumuladores y la tarifa nocturna</h2>
+
+  <p>
+    Un acumulador es una resistencia con inercia: calienta de madrugada, guarda el calor en un
+    bloque cerámico y lo suelta durante el día. Su rendimiento sigue siendo 1, así que no
+    consume menos kilovatios hora. Lo que hace es comprarlos en la franja barata.
+  </p>
+
+  <p>
+    Con PVPC eso puede tener sentido, porque las horas de madrugada suelen ser de las más
+    baratas del día. Pero ojo con la comparación: una bomba de calor consumiendo a precio de
+    tarde sigue saliendo más barata que un acumulador consumiendo a precio de madrugada, porque
+    la diferencia de rendimiento es mayor que la diferencia de precio horario. Puedes mirar el
+    hueco real de cualquier día en el <a href="/horas-baratas-hoy/">panel de horas baratas</a>.
+  </p>
+
+  <h2>Antes de elegir sistema</h2>
+
+  <p>
+    Todo lo anterior asume que el calor se queda dentro de casa. Si no se queda, cualquier
+    sistema sale caro: estarás pagando por calentar la calle. Con diferencia, la primera
+    inversión que hay que valorar no es el aparato, sino
+    <a href="/guias/donde-se-escapa-el-calor/">por dónde se escapa el calor de tu casa</a>.
+  </p>
+
+  <p>
+    Y una advertencia sobre la potencia contratada: pasar a calefacción eléctrica potente puede
+    obligarte a subir la potencia, que se paga todo el año aunque solo la uses en invierno. La
+    cuenta de eso está en <a href="/guias/bajar-la-potencia-contratada/">la guía de potencia</a>.
+  </p>
+
+</GuiaLayout>

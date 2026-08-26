@@ -1,0 +1,143 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+
+// Cuentas del texto. Un vatio permanente durante todo el año son 8,76 kWh.
+const PRECIO = 0.15;
+const HORAS_ANIO = 8760;
+const anualDe = (vatios: number) => (vatios * HORAS_ANIO) / 1000;
+const eur = (n: number) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const kwh = (n: number) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+---
+<GuiaLayout slug="consumo-fantasma">
+
+  <p>
+    El consumo fantasma existe, se puede medir y sale en la factura. Lo que pasa es que casi
+    todo lo que se cuenta sobre él está mal: ni son los cargadores del móvil, ni desenchufar
+    la tele por la noche te va a cambiar el recibo, ni es una cantidad despreciable. Vamos por
+    partes, con la única cuenta que hace falta.
+  </p>
+
+  <h2>La cuenta que lo resuelve todo</h2>
+
+  <p>
+    Un aparato que consume un vatio de forma permanente gasta {kwh(anualDe(1))} kWh al año,
+    porque el año tiene 8.760 horas. A {eur(PRECIO)} €/kWh, eso es
+    <strong>{eur(anualDe(1) * PRECIO)} € al año por cada vatio</strong> que dejes encendido
+    sin usar.
+  </p>
+
+  <p>Con ese número, todo lo demás se calcula solo:</p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Consumo en espera</th><th>kWh al año</th><th>Euros al año</th></tr>
+      </thead>
+      <tbody>
+        {[0.3, 0.5, 1, 3, 8, 15].map((w) => (
+          <tr>
+            <td>{eur(w).replace(',00', '')} W</td>
+            <td>{kwh(anualDe(w))}</td>
+            <td>{eur(anualDe(w) * PRECIO)} €</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>El mito: los cargadores</h2>
+
+  <p>
+    Es el consejo que más se repite y el que menos sirve. Un cargador de móvil moderno
+    enchufado sin nada conectado consume del orden de una décima de vatio, muchas veces
+    menos. En la tabla de arriba ni siquiera aparecería: son céntimos al año, no euros.
+  </p>
+
+  <p>
+    Desenchufarlo tiene sentido por seguridad si es un cargador viejo o de dudosa
+    procedencia, y por orden en casa. Como medida de ahorro es ruido.
+  </p>
+
+  <h2>Lo que sí consume en espera</h2>
+
+  <p>
+    Desde 2013 la normativa europea de diseño ecológico obliga a que la mayoría de aparatos
+    domésticos no pasen de medio vatio en espera, o de un vatio si mantienen una pantalla
+    encendida. Eso resolvió el problema en los aparatos nuevos y dejó el problema concentrado
+    en tres sitios:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Descodificadores de televisión y equipos del operador.</strong> Muchos no se
+      apagan de verdad, solo apagan el piloto, y siguen conectados a la red por si acaso.
+      Están entre los peores del hogar.
+    </li>
+    <li>
+      <strong>Routers y repetidores wifi.</strong> No están en espera, están funcionando las
+      24 horas, y por eso aparecen en el catálogo de aparatos de esta web con consumo propio y
+      no como fantasma.
+    </li>
+    <li>
+      <strong>Consolas en modo reposo</strong>, sobre todo con descargas o actualizaciones
+      automáticas activadas. Algunas pasan de los diez vatios en ese estado.
+    </li>
+    <li>
+      <strong>Aparatos anteriores a 2010</strong>, de cuando no había límite legal. Un equipo
+      de música o una televisión de aquella época pueden estar en varios vatios ellos solos.
+    </li>
+  </ul>
+
+  <p>
+    Fuera del salón hay otro grupo que nadie cuenta: los aparatos con reloj o pantalla
+    permanente. Horno, microondas y placa de inducción con display encendido consumen poco
+    cada uno, pero son tres aparatos que no se apagan nunca.
+  </p>
+
+  <h2>Cuánto es en total</h2>
+
+  <p>
+    En una casa normal, la suma de todo lo que consume sin estar en uso ronda un porcentaje de
+    un solo dígito de la factura. No es la causa de un recibo alto, pero tampoco es cero:
+    quince vatios permanentes repartidos por la casa son {eur(anualDe(15) * PRECIO)} € al año
+    que se van sin que nadie los disfrute.
+  </p>
+
+  <p>
+    La perspectiva correcta es esta: el consumo fantasma es dinero que se puede recuperar sin
+    renunciar a nada, pero está muy por debajo de lo que se juega con la climatización o el
+    agua caliente. Antes de perseguir vatios sueltos conviene mirar
+    <a href="/guias/que-gasta-cada-electrodomestico/">qué gasta de verdad cada aparato</a>.
+  </p>
+
+  <h2>Qué hacer, por orden de rentabilidad</h2>
+
+  <ol>
+    <li>
+      <strong>Una regleta con interruptor para el conjunto de la tele.</strong> Televisión,
+      descodificador, barra de sonido y consola en la misma regleta, y un solo gesto los apaga
+      todos. Es el único sitio donde suele haber varios vatios juntos.
+    </li>
+    <li>
+      <strong>Revisar el modo reposo de la consola</strong> y desactivar las descargas
+      automáticas si no las necesitas.
+    </li>
+    <li>
+      <strong>Desenchufar lo que no se usa nunca.</strong> El segundo televisor de la
+      habitación de invitados, la impresora, el equipo de música heredado.
+    </li>
+    <li>
+      <strong>El router, no.</strong> Apagarlo por la noche ahorra unos pocos euros al año y
+      te deja sin conexión y sin actualizaciones. Solo si te vas de viaje varios días.
+    </li>
+  </ol>
+
+  <p>
+    Y si quieres saber qué está consumiendo de verdad en tu casa en lugar de estimarlo, un
+    medidor de enchufe cuesta poco y responde en una tarde. Es la forma de convertir esta guía
+    en tus números en lugar de los de una tabla.
+  </p>
+
+</GuiaLayout>

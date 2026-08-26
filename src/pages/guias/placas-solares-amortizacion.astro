@@ -1,0 +1,144 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+
+// Instalacion domestica de referencia. Todas las cifras se dicen en el texto y son rangos
+// del mercado, no un presupuesto: lo que importa aqui es el metodo de la cuenta.
+const KWP = 3;
+const PRODUCCION_POR_KWP = 1500; // kWh al año por kWp en buena parte de España
+const produccion = KWP * PRODUCCION_POR_KWP;
+const PRECIO_COMPRA = 0.15;   // lo que pagas por un kWh de la red
+const PRECIO_EXCEDENTE = 0.06; // lo que te compensan por un kWh vertido
+const eur = (n: number, d = 0) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d });
+const dec = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 1 });
+const ahorroCon = (auto: number) =>
+  produccion * auto * PRECIO_COMPRA + produccion * (1 - auto) * PRECIO_EXCEDENTE;
+---
+<GuiaLayout slug="placas-solares-amortizacion">
+
+  <p>
+    La pregunta que se hace todo el mundo es cuánto producen las placas. Es la pregunta
+    equivocada. Lo que decide si una instalación se paga sola no es cuánta electricidad genera,
+    sino <strong>qué parte de esa electricidad consumes tú en el mismo momento en que se
+    genera</strong>. Dos casas idénticas con las mismas placas pueden tardar cinco años o
+    quince en amortizarlas según eso.
+  </p>
+
+  <h2>Por qué manda el autoconsumo y no la producción</h2>
+
+  <p>
+    Cada kilovatio hora que producen tus placas puede acabar en dos sitios:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Lo consumes en casa en ese instante.</strong> Entonces te ahorras comprarlo, es
+      decir, vale lo que te habría costado a ti: en torno a {eur(PRECIO_COMPRA, 2)} € con
+      impuestos.
+    </li>
+    <li>
+      <strong>Se vierte a la red.</strong> Entonces te lo compensan en la factura, pero a un
+      precio bastante menor, del orden de {eur(PRECIO_EXCEDENTE, 2)} € y variable según la
+      comercializadora. El detalle de cómo funciona esa compensación está en
+      <a href="/guias/autoconsumo-y-excedentes/">la guía de autoconsumo y excedentes</a>.
+    </li>
+  </ul>
+
+  <p>
+    El mismo kilovatio hora vale, por tanto, más del doble si lo usas que si lo regalas. De ahí
+    que la cuenta dependa de tus horarios.
+  </p>
+
+  <h2>La cuenta, con el mismo equipo y distinta vida</h2>
+
+  <p>
+    Una instalación doméstica típica de {KWP} kWp produce del orden de {eur(produccion)} kWh al
+    año en buena parte de España. Lo que cambia es qué porcentaje de eso se autoconsume:
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Perfil</th><th>Autoconsumo</th><th>Ahorro al año</th><th>Se paga en (4.500 €)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Casa vacía de 9 a 18</td><td>25 %</td><td>{eur(ahorroCon(0.25))} €</td><td>{dec(4500 / ahorroCon(0.25))} años</td></tr>
+        <tr><td>Alguien en casa parte del día</td><td>40 %</td><td>{eur(ahorroCon(0.4))} €</td><td>{dec(4500 / ahorroCon(0.4))} años</td></tr>
+        <tr><td>Teletrabajo, o electrodomésticos programados a mediodía</td><td>60 %</td><td>{eur(ahorroCon(0.6))} €</td><td>{dec(4500 / ahorroCon(0.6))} años</td></tr>
+        <tr><td>Con batería o aerotermia funcionando de día</td><td>80 %</td><td>{eur(ahorroCon(0.8))} €</td><td>{dec(4500 / ahorroCon(0.8))} años</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    Misma inversión, mismas placas, mismo sol. La diferencia entre la primera fila y la última
+    es de años enteros, y depende de a qué hora pones la lavadora.
+  </p>
+
+  <h2>Lo que puedes hacer para subir tu autoconsumo</h2>
+
+  <p>
+    Y esto es gratis, a diferencia de la instalación:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Mover a mediodía todo lo programable</strong>: lavadora, lavavajillas, secadora y
+      termo. Es el mismo gesto que ya recomendamos con PVPC, así que si algún día quitas las
+      placas te sigue sirviendo.
+    </li>
+    <li>
+      <strong>Climatizar en las horas de sol</strong> y dejar la casa a temperatura para la
+      tarde, en vez de encender el aire al llegar del trabajo.
+    </li>
+    <li>
+      <strong>Cargar el coche eléctrico de día</strong>, si lo tienes y puedes.
+    </li>
+    <li>
+      <strong>Dimensionar bien.</strong> Poner más placas de las que puedes consumir no acelera
+      la amortización: multiplica los excedentes, que se pagan a menos de la mitad.
+    </li>
+  </ul>
+
+  <h2>Sobre las baterías</h2>
+
+  <p>
+    Una batería sube el autoconsumo de forma clara, pero cuesta lo suyo, y su propia
+    amortización hay que hacerla aparte. La cuenta honesta es: cuánto sube tu ahorro anual al
+    ponerla, y cuántos años tarda ese incremento en pagar la batería, teniendo en cuenta que
+    tiene vida útil limitada. Con los precios actuales, en muchos casos domésticos sale mejor
+    empezar sin batería y planteársela después.
+  </p>
+
+  <h2>Lo que hay que comprobar antes de pedir presupuesto</h2>
+
+  <ul>
+    <li>
+      <strong>La cubierta.</strong> Orientación (el sur manda, pero este y oeste funcionan),
+      inclinación, sombras de chimeneas, antenas o edificios vecinos, y estado del tejado: si
+      hay que rehacerlo en cinco años, primero el tejado.
+    </li>
+    <li>
+      <strong>Si es un piso, la comunidad.</strong> El autoconsumo colectivo es posible pero
+      exige acuerdo de la comunidad y un reparto de coeficientes.
+    </li>
+    <li>
+      <strong>Las ayudas y bonificaciones vigentes</strong>, que cambian por comunidad autónoma
+      y por ayuntamiento, y que pueden mover la amortización varios años. Consúltalas para tu
+      caso concreto en el momento de decidir, porque no son estables.
+    </li>
+    <li>
+      <strong>Varios presupuestos.</strong> La dispersión de precios en este sector es enorme
+      para instalaciones equivalentes.
+    </li>
+  </ul>
+
+  <p>
+    Y antes de nada, una comprobación que suele salir más rentable que las placas y no cuesta
+    dinero: revisar si te sobra potencia contratada, en
+    <a href="/guias/bajar-la-potencia-contratada/">la guía de potencia</a>, y ver qué se está
+    llevando tu factura en
+    <a href="/guias/que-gasta-cada-electrodomestico/">qué gasta cada electrodoméstico</a>.
+  </p>
+
+</GuiaLayout>

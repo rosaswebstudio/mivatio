@@ -1,0 +1,141 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+import { ELECTRODOMESTICOS } from '../../lib/electrodomesticos.js';
+
+const PRECIO = 0.15;
+const aa: any = ELECTRODOMESTICOS.find((e: any) => e.slug === 'aire-acondicionado');
+// Regla habitual del sector: cada grado por debajo exige en torno a un 7 % mas de consumo.
+const POR_GRADO = 0.07;
+const eur = (n: number, d = 2) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (n: number) => Math.round(n * 100);
+---
+<GuiaLayout slug="aire-acondicionado-consumo">
+
+  <p>
+    El aire acondicionado es, en verano, el aparato que más manda en la factura de una casa.
+    Y a diferencia de casi todos los demás, su consumo no lo decide el modelo: lo decides tú
+    cada vez que tocas el mando. Entre poner 24 grados y poner 21 hay bastante más diferencia
+    en el recibo que en la sensación de frescor.
+  </p>
+
+  <h2>Cuánto consume mientras funciona</h2>
+
+  <p>
+    Un equipo de una casa media ronda los {eur(aa.kwh, 1)} kWh por cada hora de uso, con un
+    rango habitual de {eur(aa.rango[0], 1)} a {eur(aa.rango[1], 1)} kWh según el tamaño del
+    aparato, lo aislada que esté la habitación y cuánto calor haga fuera. A {eur(PRECIO)} €/kWh
+    son unos {eur(aa.kwh * PRECIO)} € por hora.
+  </p>
+
+  <p>
+    Ese número tiene truco, y conviene entenderlo porque cambia toda la estrategia: un aire
+    acondicionado <strong>no consume igual todo el rato</strong>. Al arrancar, con la
+    habitación caliente, el compresor trabaja a tope. Cuando la estancia alcanza la
+    temperatura, pasa a mantenerla y consume bastante menos, sobre todo si el equipo es
+    inverter. Por eso las dos primeras medias horas son las caras.
+  </p>
+
+  <h2>Lo que cuesta cada grado</h2>
+
+  <p>
+    La cifra que maneja el sector es que <strong>cada grado que bajas el termostato añade en
+    torno a un {pct(POR_GRADO)} % al consumo</strong>. No es una constante física exacta,
+    porque depende de la diferencia con la temperatura exterior, pero como regla de decisión
+    funciona bien. Partiendo de 24 grados y de {eur(aa.kwh, 1)} kWh/hora:
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Termostato</th><th>Consumo por hora</th><th>Coste 6 h al día, 30 días</th></tr>
+      </thead>
+      <tbody>
+        {[24, 23, 22, 21, 20].map((t) => {
+          const factor = Math.pow(1 + POR_GRADO, 24 - t);
+          return (
+            <tr>
+              <td>{t} °C</td>
+              <td>{eur(aa.kwh * factor)} kWh</td>
+              <td>{eur(aa.kwh * factor * PRECIO * 6 * 30, 0)} €</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    Bajar de 24 a 20 grados encarece el mes en torno a un {pct(Math.pow(1 + POR_GRADO, 4) - 1)} %.
+    Es la palanca más grande que tienes y la más barata de accionar.
+  </p>
+
+  <h2>Los ajustes que sí importan</h2>
+
+  <ul>
+    <li>
+      <strong>La temperatura, ya lo has visto.</strong> Entre 24 y 26 grados se está bien en
+      una casa, y cada grado por encima es dinero que no pagas.
+    </li>
+    <li>
+      <strong>El ventilador, alto.</strong> Mucha gente pone la velocidad baja por el ruido, y
+      eso alarga el tiempo que tarda en enfriar, que es la parte cara. Velocidad alta hasta
+      alcanzar la temperatura y luego baja.
+    </li>
+    <li>
+      <strong>Las lamas hacia arriba.</strong> El aire frío pesa y baja solo. Apuntando al
+      techo se reparte por la habitación; apuntando al suelo se queda en una esquina y el
+      termostato tarda más en darse por satisfecho.
+    </li>
+    <li>
+      <strong>Cerrar y bajar persianas antes de encenderlo.</strong> Enfriar una habitación
+      con el sol entrando por la ventana es trabajar en contra de la física.
+    </li>
+    <li>
+      <strong>Limpiar los filtros.</strong> Un filtro sucio reduce el caudal de aire y obliga
+      al equipo a trabajar más tiempo para el mismo resultado. Es mantenimiento de diez
+      minutos que se nota.
+    </li>
+  </ul>
+
+  <h2>Lo que no funciona</h2>
+
+  <p>
+    <strong>Poner 18 grados para que enfríe antes.</strong> No enfría antes. Un aire
+    acondicionado no tiene un acelerador: da todo lo que puede hasta llegar a la temperatura
+    fijada. Poner 18 solo consigue que no pare cuando ya estabas cómodo.
+  </p>
+
+  <p>
+    <strong>Apagarlo y encenderlo cada rato.</strong> Como la parte cara es bajar la
+    temperatura de la habitación, apagar media hora y volver a encender te hace pagar otra vez
+    ese arranque. Para ausencias cortas sale mejor subir el termostato un par de grados que
+    apagar.
+  </p>
+
+  <h2>Cuándo encenderlo, si tienes PVPC</h2>
+
+  <p>
+    Aquí hay una buena noticia poco conocida. Con tarifa regulada, las horas más baratas del
+    día en primavera y verano suelen caer <strong>al mediodía</strong>, cuando la solar hunde
+    el precio del mercado. Es decir, justo cuando más falta hace el aire. Puedes comprobarlo
+    cualquier día en el <a href="/horas-baratas-hoy/">panel de horas baratas de hoy</a>: no
+    hace falta renunciar al frescor a la hora de comer, muchas veces es la hora más barata
+    para tenerlo puesto.
+  </p>
+
+  <p>
+    Lo caro suele ser la tarde-noche. Si puedes adelantar el enfriado de la casa un par de
+    horas y dejarla cerrada, llegas a la franja cara con la habitación ya fría y el equipo
+    solo manteniendo.
+  </p>
+
+  <p>
+    El coste con el precio real de hoy, hora a hora, está en la ficha de
+    <a href="/cuanto-cuesta/aire-acondicionado/">cuánto cuesta poner el aire acondicionado</a>.
+    Y si lo que te preocupa es el invierno, la comparación entre sistemas de calor está en
+    <a href="/guias/calefaccion-electrica/">calefacción eléctrica</a>: tu aire acondicionado,
+    en modo calor, probablemente sea lo más barato que tienes en casa.
+  </p>
+
+</GuiaLayout>

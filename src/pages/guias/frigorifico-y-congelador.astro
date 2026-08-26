@@ -1,0 +1,127 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+import { ELECTRODOMESTICOS } from '../../lib/electrodomesticos.js';
+
+const PRECIO = 0.15;
+const nevera: any = ELECTRODOMESTICOS.find((e: any) => e.slug === 'frigorifico');
+const anual = nevera.kwh * 365;
+const secador: any = ELECTRODOMESTICOS.find((e: any) => e.slug === 'secador-de-pelo');
+const anualSecador = secador.kwh * secador.usosSemana * 52;
+const eur = (n: number, d = 2) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d });
+---
+<GuiaLayout slug="frigorifico-y-congelador">
+
+  <p>
+    El frigorífico es el aparato peor entendido de la casa. Consume poco en cada momento, tan
+    poco que nadie lo tiene por un gasto, y sin embargo termina el año por encima de la
+    lavadora, el horno y el secador de pelo juntos. La explicación cabe en una frase: es el
+    único que no se apaga nunca.
+  </p>
+
+  <h2>La cuenta de las 8.760 horas</h2>
+
+  <p>
+    Un frigorífico normal ronda los {eur(nevera.kwh, 1)} kWh al día, con un rango
+    de {eur(nevera.rango[0], 1)} a {eur(nevera.rango[1], 1)} según el tamaño y la antigüedad. Al
+    año son unos {eur(anual, 0)} kWh, es decir <strong>{eur(anual * PRECIO, 0)} €</strong>.
+  </p>
+
+  <p>
+    Compáralo con el secador de pelo, que consume mucho más mientras funciona y termina el año
+    en {eur(anualSecador, 0)} kWh, unos {eur(anualSecador * PRECIO, 0)} €. La diferencia no
+    está en la potencia, está en las horas.
+  </p>
+
+  <h2>Lo que decide su consumo no es la potencia</h2>
+
+  <p>
+    Un frigorífico gasta según lo que le cueste sacar calor de dentro y soltarlo fuera. Todo lo
+    que dificulte cualquiera de esas dos cosas se paga en la factura, y casi nada de eso viene
+    escrito en la ficha del aparato.
+  </p>
+
+  <ul>
+    <li>
+      <strong>Dónde está colocado.</strong> Es el factor número uno y el que más se descuida.
+      Pegado al horno, a la vitrocerámica o al radiador, o en una cocina que en verano se pone
+      a 30 grados, tiene que trabajar contra un ambiente caliente todo el día.
+    </li>
+    <li>
+      <strong>Si respira por detrás.</strong> El condensador de la parte trasera necesita
+      espacio para soltar el calor. Empotrado a ras de pared o con la rejilla llena de polvo,
+      el compresor funciona más rato.
+    </li>
+    <li>
+      <strong>La goma de la puerta.</strong> Una junta vieja o deformada deja entrar aire
+      caliente de forma continua. La prueba es de un minuto: cierra la puerta con un billete a
+      medio meter; si sale sin resistencia, la goma ya no sella.
+    </li>
+    <li>
+      <strong>La temperatura fijada.</strong> Unos 5 grados en el frigorífico y unos 18 bajo
+      cero en el congelador es suficiente. Cada grado por debajo es consumo permanente para
+      nada.
+    </li>
+    <li>
+      <strong>El hielo acumulado.</strong> En los congeladores sin sistema antiescarcha, una
+      capa de hielo actúa como aislante entre el aire y el evaporador, y obliga al aparato a
+      trabajar más. Descongelar cuando empieza a notarse es de las tareas con mejor relación
+      esfuerzo-ahorro.
+    </li>
+  </ul>
+
+  <h2>Costumbres que ayudan y costumbres que no</h2>
+
+  <p><strong>Ayudan:</strong></p>
+
+  <ul>
+    <li>Dejar enfriar la comida antes de meterla, en vez de meter la olla caliente.</li>
+    <li>Abrir menos veces y menos tiempo, que suena a tópico y es exactamente el motivo por el que existe el sonido de aviso de puerta abierta.</li>
+    <li>Tener el congelador razonablemente lleno: la masa congelada mantiene el frío entre arranques del compresor.</li>
+    <li>Limpiar el polvo de la rejilla trasera una o dos veces al año.</li>
+  </ul>
+
+  <p><strong>No ayudan:</strong></p>
+
+  <ul>
+    <li>
+      <strong>Apagarlo por la noche o cuando te vas un fin de semana.</strong> Volver a bajar
+      la temperatura de todo lo que hay dentro cuesta más que mantenerla, y además arriesgas la
+      comida.
+    </li>
+    <li>
+      <strong>Bajar la temperatura antes de meter la compra.</strong> El aparato ya reacciona
+      solo cuando detecta que ha subido.
+    </li>
+  </ul>
+
+  <h2>Cuándo compensa cambiar uno viejo</h2>
+
+  <p>
+    Esta es la única pregunta de esta guía que puede valer cientos de euros. Un frigorífico de
+    hace quince o veinte años puede consumir el doble o el triple que uno equivalente actual,
+    y como funciona 8.760 horas al año, esa diferencia se acumula sin parar.
+  </p>
+
+  <p>
+    La cuenta se hace igual que cualquier amortización: coge el consumo anual del que tienes
+    (si no lo sabes, un medidor de enchufe te lo dice en un par de días), réstale el consumo
+    anual que declara el que comprarías, multiplica por el precio del kWh y divide el precio
+    del aparato nuevo entre ese ahorro. Eso te da los años que tarda en pagarse.
+  </p>
+
+  <p>
+    Para leer bien ese consumo declarado y no fiarte solo de la letra, está
+    <a href="/guias/etiqueta-energetica/">la etiqueta energética traducida a euros</a>. Y ojo
+    con una trampa habitual: un frigorífico nuevo mucho más grande que el viejo puede consumir
+    más en términos absolutos aunque su clase sea mejor.
+  </p>
+
+  <p>
+    El coste de tu nevera con el precio real de hoy está en
+    <a href="/cuanto-cuesta/frigorifico/">cuánto cuesta tener el frigorífico</a>, y su posición
+    frente al resto de la casa, en
+    <a href="/guias/que-gasta-cada-electrodomestico/">qué gasta cada electrodoméstico</a>.
+  </p>
+
+</GuiaLayout>

@@ -1,0 +1,142 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+
+const PRECIO = 0.15;
+const KWH_CALOR = 3000; // necesidad de calor anual de referencia, dicha en el texto
+const eur = (n: number, d = 0) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d });
+const coste = (cop: number) => (KWH_CALOR / cop) * PRECIO;
+const ahorro = coste(1) - coste(3.5);
+const anios = (inv: number) => inv / ahorro;
+const dec = (n: number) => n.toLocaleString('es-ES', { maximumFractionDigits: 1 });
+---
+<GuiaLayout slug="bomba-de-calor-o-radiadores">
+
+  <p>
+    Un radiador eléctrico convierte un kilovatio hora de electricidad en un kilovatio hora de
+    calor. No puede hacerlo mejor: el 100 % es el techo. Una bomba de calor convierte ese mismo
+    kilovatio hora en tres o cuatro de calor. No incumple ninguna ley de la física, y entender
+    por qué es lo que permite decidir con cabeza.
+  </p>
+
+  <h2>Por qué una bomba de calor da más de lo que consume</h2>
+
+  <p>
+    Porque no fabrica calor: lo mueve. Fuera de tu casa, incluso a cinco grados, hay
+    muchísima energía térmica. Una bomba de calor usa electricidad para hacer funcionar un
+    compresor que captura ese calor del aire exterior y lo suelta dentro.
+  </p>
+
+  <p>
+    La electricidad no se convierte en calor, se gasta en transportarlo. Y transportar cuesta
+    mucho menos que fabricar. Es exactamente el mismo mecanismo de un frigorífico, que saca
+    calor de dentro y lo suelta por detrás: una bomba de calor es un frigorífico puesto del
+    revés.
+  </p>
+
+  <h2>COP y SCOP: los dos números</h2>
+
+  <ul>
+    <li>
+      <strong>COP</strong> es cuántos kilovatios hora de calor entrega por cada uno de
+      electricidad, medido en unas condiciones concretas. Un COP de 4 significa cuatro por uno.
+    </li>
+    <li>
+      <strong>SCOP</strong> es la media estacional, a lo largo de todo el invierno y con las
+      temperaturas reales que va habiendo. Es el número honesto, y el que hay que mirar al
+      comparar equipos.
+    </li>
+  </ul>
+
+  <p>
+    El rendimiento baja cuando hace mucho frío fuera, porque hay menos calor que capturar y el
+    equipo tiene que trabajar más. Por eso en un clima suave el SCOP es alto y en zonas de
+    inviernos duros conviene mirar bien las prestaciones a temperaturas bajas antes de decidir.
+  </p>
+
+  <h2>La cuenta</h2>
+
+  <p>
+    Para una vivienda que necesita del orden de {eur(KWH_CALOR)} kWh de calor al invierno,
+    a {eur(PRECIO, 2)} €/kWh de electricidad:
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Sistema</th><th>Rendimiento</th><th>Electricidad</th><th>Coste del invierno</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Radiador o emisor eléctrico</td><td>1</td><td>{eur(KWH_CALOR)} kWh</td><td>{eur(coste(1))} €</td></tr>
+        <tr><td>Aire acondicionado en modo calor</td><td>3</td><td>{eur(KWH_CALOR / 3)} kWh</td><td>{eur(coste(3))} €</td></tr>
+        <tr><td>Bomba de calor moderna</td><td>3,5</td><td>{eur(KWH_CALOR / 3.5)} kWh</td><td>{eur(coste(3.5))} €</td></tr>
+        <tr><td>Bomba de calor en clima suave</td><td>4,5</td><td>{eur(KWH_CALOR / 4.5)} kWh</td><td>{eur(coste(4.5))} €</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    El ahorro frente a la resistencia ronda los <strong>{eur(ahorro)} € por invierno</strong>.
+    Con eso, una instalación se paga en:
+  </p>
+
+  <ul>
+    <li>Equipo de 2.000 €: unos <strong>{dec(anios(2000))} años</strong>.</li>
+    <li>Equipo de 4.000 €: unos <strong>{dec(anios(4000))} años</strong>.</li>
+    <li>Equipo de 8.000 €: unos <strong>{dec(anios(8000))} años</strong>.</li>
+  </ul>
+
+  <p>
+    Y hay un matiz que mejora la cuenta: casi todos estos equipos <strong>dan frío en
+    verano</strong>. Si ibas a comprar aire acondicionado de todas formas, el sobrecoste real de
+    la bomba de calor es mucho menor que su precio completo, porque estás resolviendo las dos
+    estaciones con un solo aparato.
+  </p>
+
+  <h2>El caso que casi nadie aprovecha</h2>
+
+  <p>
+    Si ya tienes un split de aire acondicionado en el salón, <strong>probablemente ya tienes una
+    bomba de calor</strong> y no la usas en invierno. Casi todos los equipos que se venden desde
+    hace años son de frío y calor. Cuesta cero euros comprobarlo: mira si el mando tiene el modo
+    calor, o busca "bomba de calor" en la ficha del modelo.
+  </p>
+
+  <p>
+    Pasar el invierno con un convector enchufado teniendo colgado en la misma pared el aparato
+    que calentaría por un tercio es un error común y caro.
+  </p>
+
+  <h2>Lo que hay que mirar antes de instalar una</h2>
+
+  <ul>
+    <li>
+      <strong>El aislamiento de la casa.</strong> Cualquier sistema rinde peor en una vivienda
+      que pierde calor, y la bomba de calor especialmente, porque trabaja mejor manteniendo una
+      temperatura estable que recuperándola a golpes. Primero,
+      <a href="/guias/donde-se-escapa-el-calor/">por dónde se escapa el calor</a>.
+    </li>
+    <li>
+      <strong>El tipo de emisor.</strong> Rinde mucho mejor con suelo radiante o radiadores de
+      baja temperatura que con radiadores clásicos que piden agua muy caliente. Sustituir la
+      caldera por una bomba de calor manteniendo los radiadores de siempre puede dar un
+      rendimiento bastante peor del que promete el catálogo.
+    </li>
+    <li>
+      <strong>La potencia contratada.</strong> Suele hacer falta menos que con calefacción de
+      resistencia, y eso es un ahorro adicional todo el año. Compruébalo con
+      <a href="/guias/bajar-la-potencia-contratada/">la guía de potencia</a>.
+    </li>
+    <li>
+      <strong>Ruido y ubicación de la unidad exterior</strong>, sobre todo en un patio interior o
+      pegada a la ventana de un dormitorio.
+    </li>
+  </ul>
+
+  <p>
+    La comparación con el resto de sistemas eléctricos, incluidos los acumuladores y la tarifa
+    nocturna, está en <a href="/guias/calefaccion-electrica/">calefacción eléctrica: qué sistema
+    sale más barato</a>.
+  </p>
+
+</GuiaLayout>

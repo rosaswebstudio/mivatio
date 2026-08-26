@@ -1,0 +1,136 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+
+const PRECIO = 0.15;
+const eur = (n: number, d = 0) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d });
+// Ejemplo de dos frigorificos con el mismo uso y distinto consumo declarado.
+const A = 100;
+const B = 250;
+---
+<GuiaLayout slug="etiqueta-energetica">
+
+  <p>
+    La etiqueta energética es la información más útil que llevan los electrodomésticos y la que
+    peor se lee. La mayoría de la gente mira la letra, asume que cuanto más cerca de la A
+    mejor, y no baja la vista a la cifra que hay debajo, que es la única que se puede convertir
+    en euros.
+  </p>
+
+  <h2>La A de hoy no es la A de antes</h2>
+
+  <p>
+    Esto explica bastante confusión en las tiendas. Durante años la escala se fue quedando
+    corta y se resolvió añadiendo signos: A+, A++, A+++. Llegó un punto en que casi todo lo que
+    se vendía era A+ o mejor y la etiqueta dejó de distinguir nada.
+  </p>
+
+  <p>
+    En marzo de 2021 se reescalaron los frigoríficos, congeladores, lavadoras, lavavajillas y
+    televisores, y poco después las bombillas. Se volvió a la escala simple de <strong>A a
+    G</strong>, se eliminaron los signos más, y se subió el listón a propósito: la nueva A se
+    dejó prácticamente vacía para dejar sitio a mejoras futuras.
+  </p>
+
+  <p>
+    La consecuencia práctica: <strong>un aparato que antes era A+++ hoy puede ser una B o una
+    C</strong>, sin haber cambiado nada. No es que el modelo haya empeorado, es que la regla ha
+    cambiado. Y por eso no se pueden comparar una etiqueta vieja y una nueva: no hablan el
+    mismo idioma.
+  </p>
+
+  <h2>El número que sí importa</h2>
+
+  <p>
+    Debajo de la letra, la etiqueta trae el <strong>consumo anual en kilovatios hora</strong>.
+    Ese es el dato con el que se decide, porque es el único que se multiplica por el precio de
+    la luz y da euros.
+  </p>
+
+  <p>
+    Dos frigoríficos, uno declarando {A} kWh al año y otro {B}, a {eur(PRECIO, 2)} €/kWh:
+  </p>
+
+  <ul>
+    <li>El primero: <strong>{eur(A * PRECIO)} €</strong> al año.</li>
+    <li>El segundo: <strong>{eur(B * PRECIO)} €</strong> al año.</li>
+    <li>Diferencia: {eur((B - A) * PRECIO)} € al año, o {eur((B - A) * PRECIO * 10)} € en diez años.</li>
+  </ul>
+
+  <p>
+    Con esa cifra ya puedes decidir de verdad: si el aparato más eficiente cuesta menos de esa
+    diferencia acumulada durante los años que piensas tenerlo, sale a cuenta. Si cuesta más, no.
+    La letra sola no permite hacer esa cuenta; el número, sí.
+  </p>
+
+  <h2>Cuidado con lo que mide ese número</h2>
+
+  <p>
+    El consumo anual de la etiqueta sale de un ciclo de prueba normalizado, igual para todos los
+    fabricantes. Eso lo hace <strong>excelente para comparar dos aparatos entre sí</strong> y
+    solo aproximado para predecir tu factura, porque tu uso no es el de la prueba.
+  </p>
+
+  <ul>
+    <li>
+      En <strong>lavadoras y lavavajillas</strong>, el dato se refiere a cien ciclos del
+      programa eco. Si tú lavas cuatro veces por semana y casi nunca en eco, tu consumo real
+      será otro.
+    </li>
+    <li>
+      En <strong>frigoríficos</strong>, se mide en condiciones de laboratorio con una
+      temperatura ambiente fija. El tuyo, en una cocina que en agosto se pone a 30 grados,
+      gastará más. Está desarrollado en
+      <a href="/guias/frigorifico-y-congelador/">frigorífico y congelador</a>.
+    </li>
+  </ul>
+
+  <p>
+    Con lo cual la regla es: usa el número para comparar candidatos, no para presupuestar.
+  </p>
+
+  <h2>La trampa del tamaño</h2>
+
+  <p>
+    Es el error más caro y el más frecuente. La clase energética se calcula <strong>en relación
+    al tamaño del aparato</strong>. Un frigorífico enorme de clase B puede consumir bastante más
+    kilovatios hora al año que uno mediano de clase D, porque tiene mucho más volumen que
+    enfriar.
+  </p>
+
+  <p>
+    Es decir: comprar un aparato más grande "pero de mejor clase" puede subirte la factura. Por
+    eso hay que comparar los kWh al año, no las letras, y hacerlo entre aparatos del tamaño que
+    de verdad necesitas.
+  </p>
+
+  <h2>Lo demás que trae la etiqueta</h2>
+
+  <p>
+    La versión nueva incluye un código QR que lleva a la base de datos europea de productos,
+    donde está la ficha completa del modelo. Es la forma de verificar que lo que dice la caja
+    coincide con lo registrado, y de comparar modelos sin fiarse de la web de la tienda.
+  </p>
+
+  <p>
+    Y trae pictogramas propios de cada tipo de aparato: capacidad, consumo de agua por ciclo,
+    duración del programa, ruido en decibelios. El ruido, en un aparato que vive en una cocina
+    abierta al salón, es de esos datos que se agradecen después.
+  </p>
+
+  <h2>Cuándo merece la pena pagar por una clase mejor</h2>
+
+  <p>
+    Depende casi por completo de cuántas horas al año funciona el aparato. En los que están
+    encendidos siempre, como el frigorífico, la diferencia de consumo se acumula sin descanso y
+    la clase se paga sola. En los que se usan un rato a la semana, como el horno, la diferencia
+    tarda muchísimo en compensar el sobreprecio.
+  </p>
+
+  <p>
+    El orden de qué aparatos son cuáles está en
+    <a href="/guias/que-gasta-cada-electrodomestico/">qué gasta de verdad cada electrodoméstico
+    de tu casa</a>: los de arriba de esa tabla son donde la etiqueta merece atención.
+  </p>
+
+</GuiaLayout>

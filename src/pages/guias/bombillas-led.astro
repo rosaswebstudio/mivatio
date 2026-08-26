@@ -1,0 +1,128 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+
+const PRECIO = 0.15;
+const HORAS_DIA = 4;
+const anual = (w: number) => (w * HORAS_DIA * 365) / 1000;
+const eur = (n: number, d = 2) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d });
+const PUNTOS = 15; // puntos de luz de una vivienda media, dicho en el texto
+---
+<GuiaLayout slug="bombillas-led">
+
+  <p>
+    El cambio a LED ya está hecho en casi todas las casas, así que esta guía no va de
+    convencerte de nada. Va de lo que sigue mal elegido, que es la luz que dan: mucha gente ha
+    sustituido bombillas mirando solo los vatios y ha acabado con un salón que parece una
+    consulta médica.
+  </p>
+
+  <h2>Lo que se ahorra, para cerrar el tema</h2>
+
+  <p>
+    Una LED da la luz de una incandescente de 60 W con unos 8 o 9 W, y la de una halógena de
+    42 W con unos 7. Con {HORAS_DIA} horas al día y {eur(PRECIO)} €/kWh:
+  </p>
+
+  <div class="tabla-scroll">
+    <table>
+      <thead>
+        <tr><th>Bombilla</th><th>Consumo</th><th>kWh al año</th><th>Euros al año</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Incandescente</td><td>60 W</td><td>{eur(anual(60), 0)}</td><td>{eur(anual(60) * PRECIO)} €</td></tr>
+        <tr><td>Halógena</td><td>42 W</td><td>{eur(anual(42), 0)}</td><td>{eur(anual(42) * PRECIO)} €</td></tr>
+        <tr><td>Bajo consumo (CFL)</td><td>14 W</td><td>{eur(anual(14), 0)}</td><td>{eur(anual(14) * PRECIO)} €</td></tr>
+        <tr><td>LED</td><td>9 W</td><td>{eur(anual(9), 0)}</td><td>{eur(anual(9) * PRECIO)} €</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    En una vivienda con unos {PUNTOS} puntos de luz, pasar de halógenas a LED ronda los
+    <strong>{eur(( anual(42) - anual(9)) * PRECIO * PUNTOS, 0)} € al año</strong>. Se nota, pero
+    no es lo que arregla una factura alta: la iluminación es una parte pequeña del consumo de
+    una casa moderna, muy por debajo de la climatización o el agua caliente. Compruébalo en
+    <a href="/guias/que-gasta-cada-electrodomestico/">qué gasta cada electrodoméstico</a>.
+  </p>
+
+  <p>
+    Por eso la razón para cambiar una bombilla que aún funciona no es tanto el ahorro como que
+    duran mucho más y ya no hay que subirse a la escalera cada temporada.
+  </p>
+
+  <h2>Los vatios ya no dicen nada</h2>
+
+  <p>
+    Con las incandescentes, los vatios funcionaban como medida de luz porque todas convertían la
+    electricidad en luz con la misma (mala) eficiencia. Con las LED eso se rompió: dos bombillas
+    de 9 W de fabricantes distintos pueden dar cantidades de luz muy diferentes.
+  </p>
+
+  <p>
+    <strong>La unidad de luz son los lúmenes.</strong> Como referencia rápida:
+  </p>
+
+  <ul>
+    <li><strong>400-500 lm</strong>: una bombilla de 40 W de las de antes. Ambiente, mesilla.</li>
+    <li><strong>800 lm</strong>: la clásica de 60 W. Es el estándar de una habitación.</li>
+    <li><strong>1.100-1.500 lm</strong>: para cocinas, baños y zonas de trabajo.</li>
+  </ul>
+
+  <p>
+    Los vatios de la LED solo sirven para comparar entre bombillas que den los mismos lúmenes:
+    ahí, menos vatios es mejor. Ese cociente, lúmenes por vatio, es la eficiencia real, y es lo
+    que refleja la etiqueta energética, que en bombillas también se reescaló y ahora va de A a
+    G. Está explicado en <a href="/guias/etiqueta-energetica/">la etiqueta energética traducida
+    a euros</a>.
+  </p>
+
+  <h2>La temperatura de color, que es lo que más se falla</h2>
+
+  <p>
+    Se mide en kelvin y decide si tu casa parece acogedora o un almacén.
+  </p>
+
+  <ul>
+    <li><strong>2700 K, luz cálida.</strong> Amarillenta, como la de toda la vida. Salón, dormitorios, comedor.</li>
+    <li><strong>4000 K, neutra.</strong> Blanca sin llegar a azulada. Cocina, baño, zona de estudio.</li>
+    <li><strong>6000 K o más, fría.</strong> Azulada. Garajes, trasteros, talleres. En un salón resulta desagradable, y por la noche es la peor para el descanso.</li>
+  </ul>
+
+  <p>
+    Comprar por precio sin mirar este número es el motivo de la mayoría de arrepentimientos con
+    las LED. Y conviene que todas las bombillas de una misma estancia tengan la misma
+    temperatura: mezclar cálida y neutra en el mismo techo se nota mucho.
+  </p>
+
+  <h2>Tres detalles prácticos</h2>
+
+  <ul>
+    <li>
+      <strong>Regulables.</strong> Una LED corriente en un circuito con regulador parpadea o
+      zumba. Si tienes reguladores, la bombilla tiene que decir expresamente que es regulable, y
+      aun así puede que el regulador antiguo no sea compatible.
+    </li>
+    <li>
+      <strong>El índice de reproducción cromática (CRI o IRC).</strong> Indica cómo de fieles se
+      ven los colores bajo esa luz. Por encima de 80 está bien para casa; por encima de 90 se
+      agradece donde importe el color, como un baño con espejo o una cocina.
+    </li>
+    <li>
+      <strong>Encierro y calor.</strong> Las LED sufren con el calor. En una luminaria cerrada
+      sin ventilación duran bastante menos de lo que promete la caja, así que ahí conviene una
+      que indique que es apta para luminaria cerrada.
+    </li>
+  </ul>
+
+  <h2>Lo que de verdad reduce la factura de iluminación</h2>
+
+  <p>
+    No es la bombilla, es el interruptor. Apagar al salir de la habitación, aprovechar la luz
+    natural y no iluminar de más una estancia entera cuando basta con una lámpara de lectura
+    pesan más que la diferencia entre dos modelos de LED. Y en zonas de paso como pasillos,
+    portales o garajes, un detector de presencia paga su coste rápido porque ahí es donde la luz
+    se queda encendida sola.
+  </p>
+
+</GuiaLayout>

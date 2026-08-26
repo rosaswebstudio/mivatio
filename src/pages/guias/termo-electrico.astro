@@ -1,0 +1,130 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+import { ELECTRODOMESTICOS } from '../../lib/electrodomesticos.js';
+
+const PRECIO = 0.15;
+const termo: any = ELECTRODOMESTICOS.find((e: any) => e.slug === 'termo-electrico');
+const anual = termo.kwh * 365;
+const eur = (n: number, d = 2) =>
+  n.toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d });
+---
+<GuiaLayout slug="termo-electrico">
+
+  <p>
+    En una casa sin calefacción eléctrica, el termo suele ser el aparato que más consume del
+    año, por delante de la lavadora, el horno y la televisión juntos. Y es también uno de los
+    más fáciles de domar, porque casi todo su gasto depende de dos ajustes que se tocan una vez
+    y ya está.
+  </p>
+
+  <h2>Cuánto consume</h2>
+
+  <p>
+    Un termo de unos 80 litros, para dos personas, ronda los {eur(termo.kwh, 1)} kWh al día,
+    con un rango habitual de {eur(termo.rango[0], 1)} a {eur(termo.rango[1], 1)} kWh. Al año
+    son del orden de {eur(anual, 0)} kWh, o unos <strong>{eur(anual * PRECIO, 0)} €</strong>
+    a {eur(PRECIO)} €/kWh.
+  </p>
+
+  <p>
+    Ese consumo tiene dos partes que conviene separar, porque se atacan de forma distinta:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Calentar el agua que gastas.</strong> Depende de cuánta agua caliente uses y de
+      lo fría que entre, que en invierno es bastante más fría. Esta parte solo baja usando
+      menos agua caliente.
+    </li>
+    <li>
+      <strong>Mantener caliente el depósito.</strong> El termo pierde calor por las paredes
+      todo el día y vuelve a encenderse para compensar, aunque nadie abra un grifo. Esta parte
+      es la que se puede recortar con ajustes, y es mayor de lo que la gente cree.
+    </li>
+  </ul>
+
+  <h2>Los dos ajustes que valen dinero</h2>
+
+  <h3>1. El termostato, a unos 60 grados</h3>
+
+  <p>
+    Muchos termos vienen de fábrica bastante más altos. Cuanto más caliente está el depósito,
+    más rápido pierde calor hacia la habitación, así que subir el termostato encarece la parte
+    de mantenimiento todo el año.
+  </p>
+
+  <p>
+    ¿Por qué 60 y no menos? Porque por debajo de esa temperatura el agua estancada de un
+    depósito puede favorecer la proliferación de legionela. 60 grados es el punto donde
+    coinciden el ahorro y la seguridad, y es la recomendación habitual. No bajes de ahí para
+    ahorrar unos euros.
+  </p>
+
+  <h3>2. Programarlo para que caliente de madrugada</h3>
+
+  <p>
+    Un termo es un acumulador: calienta cuando tú decides y guarda el agua para cuando la
+    necesites. Eso lo convierte en el aparato ideal para mover a las horas baratas, porque el
+    agua no sabe a qué hora se calentó.
+  </p>
+
+  <p>
+    Con PVPC, las horas de madrugada suelen estar entre las más baratas del día. Si tu termo
+    tiene programador, o si le pones un enchufe programable, puedes concentrar el calentado
+    ahí. Consulta el hueco real de hoy en el
+    <a href="/horas-baratas-hoy/">panel de horas baratas</a>: en un día normal, la diferencia
+    entre la franja barata y la cara justifica de sobra el gesto.
+  </p>
+
+  <h2>¿Apagarlo cuando no estás?</h2>
+
+  <p>
+    Para ausencias de un día no compensa: lo que ahorras en mantenimiento lo vuelves a gastar
+    calentando el depósito entero desde frío al volver. Para ausencias de varios días, sí, y
+    claramente: un termo manteniendo agua caliente para nadie durante una semana de vacaciones
+    es dinero tirado.
+  </p>
+
+  <p>
+    Al volver de una ausencia larga, deja que alcance los 60 grados antes de usarlo, por lo
+    que decíamos de la temperatura.
+  </p>
+
+  <h2>Lo demás que ayuda</h2>
+
+  <ul>
+    <li>
+      <strong>Ajustar el tamaño.</strong> Un depósito grande para una persona pierde calor de
+      más todo el año. Si vas a cambiarlo, dimensiónalo para quien vive en la casa hoy.
+    </li>
+    <li>
+      <strong>Aislar el termo y los primeros metros de tubería</strong>, sobre todo si está en
+      un lugar frío como una galería o un garaje. Es barato y ataca justo la parte de
+      mantenimiento.
+    </li>
+    <li>
+      <strong>Reducir el agua caliente que se va por el desagüe.</strong> Un cabezal de ducha
+      eficiente baja el consumo de agua caliente sin que se note en la ducha, y eso es
+      electricidad que no hay que calentar.
+    </li>
+  </ul>
+
+  <h2>Si te estás planteando cambiarlo</h2>
+
+  <p>
+    Un termo eléctrico convencional es una resistencia: convierte un kilovatio hora de
+    electricidad en un kilovatio hora de calor, ni más ni menos. Un termo con bomba de calor,
+    llamado también termo aerotermia, hace lo mismo que una bomba de calor de climatización y
+    entrega varias veces más calor por cada kWh consumido. Cuesta bastante más de entrada, así
+    que la decisión es de amortización, con la misma lógica que está explicada en
+    <a href="/guias/bomba-de-calor-o-radiadores/">bomba de calor o radiadores</a>.
+  </p>
+
+  <p>
+    El coste de tu termo con el precio real de hoy está en la ficha de
+    <a href="/cuanto-cuesta/termo-electrico/">cuánto cuesta calentar el agua con el termo</a>, y
+    su sitio en el ranking de la casa, en
+    <a href="/guias/que-gasta-cada-electrodomestico/">qué gasta cada electrodoméstico</a>.
+  </p>
+
+</GuiaLayout>
