@@ -4,6 +4,7 @@
 // es lo único que lleva JavaScript.
 import Layout from '../../layouts/Layout.astro';
 import { ELECTRODOMESTICOS } from '../../lib/electrodomesticos.js';
+import { fichaDe } from '../../lib/fichas-aparatos.js';
 import { cargarPrecios, franjas, resumenDia } from '../../lib/datos-build.js';
 import mensual from '../../data/mensual.json';
 import { listaMeses } from '../../lib/mensual.js';
@@ -52,6 +53,33 @@ const fechaLarga = new Date(fecha + 'T12:00:00').toLocaleDateString('es-ES', {
 });
 
 const otros = ELECTRODOMESTICOS.filter((e) => e.slug !== ap.slug);
+
+// Contenido propio del aparato (como leer su etiqueta, que dispara su consumo, que mito
+// sobre el es falso). Vive en src/lib/fichas-aparatos.js.
+const ficha = fichaDe(ap.slug);
+
+// Peso real en la factura del ano. Consumo medio de un hogar en Espana segun el IDAE:
+// se usa solo como denominador para dar escala, y por eso se redondea.
+const CONSUMO_HOGAR = 3000;
+const kwhAnio = ap.kwh * ap.usosSemana * 52;
+const pesoPct = Math.round((kwhAnio / CONSUMO_HOGAR) * 100);
+
+// Veredicto por peso: un router y un termo no merecen el mismo consejo aunque la pagina
+// tenga la misma forma.
+const veredictoPeso =
+  pesoPct >= 20
+    ? `Es uno de los consumos grandes de la casa: por sí solo se lleva alrededor de una quinta parte de la factura o más. Cualquier mejora aquí (cambiar el aparato, ajustar su uso, reducir horas) se nota en el recibo de forma directa, al contrario de lo que pasa con los aparatos pequeños.`
+    : pesoPct >= 8
+      ? `Está en la franja media: no es el culpable de una factura disparada, pero sí uno de los cinco o seis aparatos que de verdad suman. Merece la pena ajustar su uso, aunque sin esperar milagros.`
+      : pesoPct >= 2
+        ? `Es un consumo pequeño dentro de la factura. Ajustarlo está bien, pero si el recibo se te ha ido de las manos el motivo está en otra parte: busca entre calefacción, agua caliente, aire acondicionado y frigorífico, que es donde se concentra la mayoría del gasto de un hogar.`
+        : `Es un consumo testimonial: aunque lo eliminaras por completo, la factura apenas se movería. Vale la pena saberlo para no perder tiempo optimizando lo que no cuenta.`;
+
+// Veredicto por programabilidad: es la diferencia real entre una lavadora y un frigorifico,
+// y decide si la mitad de esta pagina (la franja barata) le sirve al lector o no.
+const veredictoHora = ap.programable
+  ? `Y es de los aparatos que sí se pueden mover de hora: moviendo todos sus usos a la franja barata en lugar de a la cara, el ahorro con los precios de hoy serían unos ${eur(ahorroAnual)} al año. Esa es la parte que depende solo de organizarse.`
+  : `Lo que aquí no funciona es elegir la hora: este aparato se usa cuando hace falta, no cuando la luz está barata, así que la franja barata es información de contexto más que un plan de ahorro. El margen está en el aparato y en cómo lo usas, no en el reloj.`;
 
 // Lo mismo, pero con la media del mes en curso y con la del mes más caro y el más barato
 // que se recuerdan. Da la escala real de lo que está en juego: el margen entre horas de un
@@ -247,6 +275,45 @@ const card = 'rounded-2xl border border-borde bg-superficie p-4';
             <p class="text-xs font-semibold uppercase tracking-wide text-medio">Cómo gastar menos</p>
             <p class="mt-1 text-sm leading-relaxed text-suave">{ap.consejo}</p>
           </div>
+        </section>
+
+        <!-- Lo propio de ESTE aparato: como se mira su consumo real, que lo dispara y que
+             creencia extendida sobre el es falsa. Ver src/lib/fichas-aparatos.js. -->
+        {ficha && (
+          <section class="px-4 pt-10">
+            <h2 class="text-lg font-bold text-tinta">
+              {ap.nombre}: lo que conviene saber
+            </h2>
+            <div class="mt-5 grid gap-6">
+              <div>
+                <h3 class="text-sm font-bold text-acento">{ficha.etiqueta.h}</h3>
+                <p class="mt-2 text-sm leading-relaxed text-suave" set:html={ficha.etiqueta.p} />
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-acento">{ficha.queCambia.h}</h3>
+                <p class="mt-2 text-sm leading-relaxed text-suave" set:html={ficha.queCambia.p} />
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-acento">{ficha.errores.h}</h3>
+                <p class="mt-2 text-sm leading-relaxed text-suave" set:html={ficha.errores.p} />
+              </div>
+            </div>
+          </section>
+        )}
+
+        <!-- Cuanto pesa de verdad en la factura del ano. Es calculo, no plantilla: el
+             veredicto cambia segun el aparato pese mucho o poco y segun se pueda mover
+             de hora o no, que es la diferencia entre un frigorifico y una lavadora. -->
+        <section class="px-4 pt-10">
+          <h2 class="text-lg font-bold text-tinta">Cuánto pesa en la factura del año</h2>
+          <p class="mt-2 text-sm leading-relaxed text-suave">
+            Con {kwh(ap.kwh)} kWh por {ap.unidad} y {ap.usosSemana} {ap.usosSemana === 1 ? ap.unidad : ap.unidadPlural} a la semana,
+            {' '}{ap.accion} suma unos <strong class="text-tinta">{kwh(kwhAnio)} kWh al año</strong>. Sobre los
+            {' '}{CONSUMO_HOGAR.toLocaleString('es-ES')} kWh que gasta un hogar español medio, es
+            {' '}<strong class="text-tinta">{pesoPct}%</strong> de la factura eléctrica.
+          </p>
+          <p class="mt-2 text-sm leading-relaxed text-suave">{veredictoPeso}</p>
+          <p class="mt-2 text-sm leading-relaxed text-suave">{veredictoHora}</p>
         </section>
 
         <!-- Otros aparatos -->

@@ -11,7 +11,7 @@ import PerfilHorario from '../../../components/PerfilHorario.astro';
 import archivo from '../../../data/mensual.json';
 import { ELECTRODOMESTICOS } from '../../../lib/electrodomesticos.js';
 import {
-  listaMeses, serieDiaria, cent, eur, hh, franjaHoraria, extremosHorarios,
+  listaMeses, serieDiaria, cent, eur, hh, franjaHoraria, extremosHorarios, analisisMes,
 } from '../../../lib/mensual.js';
 
 export function getStaticPaths() {
@@ -42,6 +42,9 @@ m.diaMedia.forEach((v: number | null, i: number) => {
   if (v < diaBarato.v) diaBarato = { d: i + 1, v };
   if (v > diaCaro.v) diaCaro = { d: i + 1, v };
 });
+
+// Conclusiones propias de este mes (ver analisisMes en src/lib/mensual.js).
+const analisis = analisisMes({ m, meses, indice: meses.indexOf(m) });
 
 const { barata, cara } = extremosHorarios(m.horas);
 const { mejor: franjaBarata, peor: franjaCara } = franjaHoraria(m.horas, 3);
@@ -336,6 +339,26 @@ const jsonLd = {
             ))}
           </div>
         </nav>
+
+        <!-- Lectura del mes: cuanto se movio el precio de un dia a otro, si hubo horas
+             regaladas o negativas, que separo el fin de semana del laborable y que puesto
+             ocupa el mes en todo el archivo. Ver analisisMes en src/lib/mensual.js: son
+             conclusiones calculadas, asi que cada mes dice algo distinto. -->
+        {analisis.length > 0 && (
+          <section class="px-4 pt-10">
+            <h2 class="text-lg font-bold text-tinta">Qué cuenta {m.nombre}</h2>
+            <div class="mt-5 grid gap-6">
+              {analisis.map((b) => (
+                <div>
+                  <h3 class="text-sm font-bold text-acento">{b.h}</h3>
+                  {b.p.map((texto) => (
+                    <p class="mt-2 text-sm leading-relaxed text-suave" set:html={texto} />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section class="px-4 pt-6">
           <a href="/" class="flex items-center justify-between gap-3 rounded-2xl border border-borde bg-superficie px-4 py-3.5 transition-colors hover:border-acento/50">

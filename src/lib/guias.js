@@ -225,6 +225,138 @@ export const GUIAS = [
     minutos: 8,
     actualizada: '2026-08-26',
   },
+  {
+    slug: 'kw-y-kwh',
+    tema: 'Factura',
+    titulo: 'kW y kWh: por qué no son lo mismo y por qué importa',
+    description:
+      'La diferencia entre potencia y energía explicada con la factura delante: qué mide cada una, cuál pagas por tenerla y cuál por consumirla, y por qué confundirlas lleva a decisiones caras.',
+    resumen:
+      'Una es el grifo y la otra el agua. En la factura las pagas por separado y por motivos distintos.',
+    minutos: 8,
+    actualizada: '2026-10-07',
+  },
+  {
+    slug: 'leer-el-contador-de-la-luz',
+    tema: 'Factura',
+    titulo: 'Cómo leer el contador de la luz y comprobar tu factura',
+    description:
+      'Qué botones tiene un contador digital, qué significa cada lectura, cómo comprobar si tu factura es real o estimada y cómo medir lo que gasta tu casa en un día.',
+    resumen:
+      'El contador contesta en treinta segundos preguntas que la factura tarda un mes en responder.',
+    minutos: 9,
+    actualizada: '2026-10-07',
+  },
+  {
+    slug: 'factura-estimada-y-regularizacion',
+    tema: 'Factura',
+    titulo: 'Facturas estimadas y regularizaciones: qué son y qué hacer',
+    description:
+      'Por qué llega una factura estimada, cómo reconocerla, qué pasa cuando llega la regularización y cómo evitar el susto de un recibo que multiplica por tres al anterior.',
+    resumen:
+      'La estimada no es un error; la sorpresa llega después, cuando se cuadran las cuentas.',
+    minutos: 8,
+    actualizada: '2026-10-07',
+  },
+  {
+    slug: 'alquiler-del-contador',
+    tema: 'Factura',
+    titulo: 'El alquiler del contador: qué es y si se puede evitar',
+    description:
+      'Qué concepto es ese de tu factura, quién lo cobra y por qué, cuánto supone al año y qué pasa realmente si compras tu propio contador.',
+    resumen:
+      'Son unos céntimos al mes que casi nadie mira, y hay una decisión que tomar detrás.',
+    minutos: 6,
+    actualizada: '2026-10-07',
+  },
+  {
+    slug: 'quien-puede-tener-pvpc',
+    tema: 'Contrato',
+    titulo: 'Quién puede contratar el PVPC y a quién le conviene',
+    description:
+      'Los requisitos para estar en la tarifa regulada, qué diferencia hay con el mercado libre, qué perfil de consumo le saca partido y cómo se solicita el cambio.',
+    resumen:
+      'No todo el mundo puede, y no a todo el mundo le conviene. Las dos cosas tienen condiciones concretas.',
+    minutos: 9,
+    actualizada: '2026-10-07',
+  },
+  {
+    slug: 'bateria-virtual-de-excedentes',
+    tema: 'Contrato',
+    titulo: 'Batería virtual de excedentes: qué es y cuándo compensa',
+    description:
+      'Cómo funciona la batería virtual frente a la compensación simple de excedentes, qué se puede descontar con cada una y qué preguntar antes de contratarla.',
+    resumen:
+      'No guarda electricidad en ningún sitio: guarda euros. Y eso cambia toda la cuenta.',
+    minutos: 9,
+    actualizada: '2026-10-07',
+  },
+  {
+    slug: 'por-que-la-luz-es-cara-por-la-tarde',
+    tema: 'Mercado',
+    titulo: 'Por qué la luz es cara a las nueve de la noche',
+    description:
+      'La curva diaria de precios explicada: por qué el hueco barato cae a mediodía, por qué el pico llega al anochecer y cómo cambia esa forma entre verano e invierno.',
+    resumen:
+      'El precio de cada hora lo decide la última central que hace falta encender. Esa es toda la explicación.',
+    minutos: 9,
+    actualizada: '2026-10-07',
+  },
+  {
+    slug: 'precio-negativo-de-la-luz',
+    tema: 'Mercado',
+    titulo: 'Precios negativos de la luz: qué significan y qué pasa en tu factura',
+    description:
+      'Por qué el mercado eléctrico llega a marcar precios por debajo de cero, cuándo ocurre en España, qué ve un consumidor con PVPC en esas horas y qué no cambia aunque el precio sea negativo.',
+    resumen:
+      'No es un error del sistema. Es lo que pasa cuando sobra energía y parar cuesta más que regalarla.',
+    minutos: 8,
+    actualizada: '2026-10-07',
+  },
+  {
+    slug: 'enchufes-inteligentes',
+    tema: 'Consumo de la casa',
+    titulo: 'Enchufes inteligentes y programadores: cuáles sirven para ahorrar',
+    description:
+      'Qué hace un enchufe con wifi frente a un temporizador de toda la vida, qué aparatos tiene sentido programar, cuánto consumen ellos mismos y qué límites de potencia hay que respetar.',
+    resumen:
+      'El aparato de 15 euros que convierte la franja barata en ahorro automático. Con tres advertencias.',
+    minutos: 8,
+    actualizada: '2026-10-07',
+  },
+  {
+    slug: 'medir-el-consumo-de-casa',
+    tema: 'Consumo de la casa',
+    titulo: 'Cómo medir de verdad lo que consume cada aparato de tu casa',
+    description:
+      'Tres formas de medir el consumo real, de la más barata a la más completa: el contador, el medidor de enchufe y el monitor de consumo. Qué mide cada una y cómo interpretar el resultado.',
+    resumen:
+      'Dejar de estimar y empezar a medir cambia la lista de sospechosos casi siempre.',
+    minutos: 9,
+    actualizada: '2026-10-07',
+  },
+  {
+    slug: 'cargar-el-coche-electrico-en-casa',
+    tema: 'Consumo de la casa',
+    titulo: 'Cargar el coche eléctrico en casa: potencia, coste y cuánto se ahorra',
+    description:
+      'Qué potencia hace falta, en cuántas horas carga cada opción, cuánto cuesta realmente cada 100 km y por qué programar la carga es el mayor ahorro por horario que puede hacer un hogar.',
+    resumen:
+      'Es el consumo doméstico más grande que existe y el más fácil de mover a la hora barata.',
+    minutos: 10,
+    actualizada: '2026-10-07',
+  },
+  {
+    slug: 'termostato-y-programacion',
+    tema: 'La casa y la energía',
+    titulo: 'El termostato: lo que más ahorra de toda la calefacción',
+    description:
+      'Qué temperatura poner, por qué subir el termostato no calienta más rápido, cómo programar por franjas y qué cambia entre un sistema de inercia y uno de respuesta rápida.',
+    resumen:
+      'Un grado son en torno a un 7% de consumo. Es la pieza más barata y la que más mueve la factura.',
+    minutos: 9,
+    actualizada: '2026-10-07',
+  },
 ];
 
 export const guia = (slug) => {

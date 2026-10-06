@@ -1,0 +1,136 @@
+---
+import GuiaLayout from '../../layouts/GuiaLayout.astro';
+---
+<GuiaLayout slug="por-que-la-luz-es-cara-por-la-tarde">
+
+  <p>
+    Si miras la curva de precios de cualquier día en esta web verás casi siempre la misma forma: un
+    valle profundo a mediodía y un pico alto entre las ocho y las diez de la noche. No es una
+    decisión de nadie ni un impuesto horario: es el resultado mecánico de cómo se forma el precio.
+  </p>
+
+  <h2>La regla que lo explica todo</h2>
+
+  <p>
+    El mercado eléctrico mayorista funciona con un sistema marginalista. Cada hora, las centrales
+    ofrecen la energía que pueden producir y a qué precio, de más barata a más cara. El operador
+    las va aceptando por orden hasta cubrir la demanda prevista para esa hora. Y entonces viene lo
+    importante:
+  </p>
+
+  <p>
+    <strong>todas cobran el precio de la última que ha hecho falta aceptar.</strong>
+  </p>
+
+  <p>
+    Es decir, el precio de cada hora no lo marca lo que cuesta producir de media: lo marca la
+    tecnología más cara que ha sido necesaria para que no falte ni un megavatio. Si con sol y
+    viento se cubre casi todo, la última central es barata y el precio es bajo. Si hay que encender
+    un ciclo combinado de gas, el precio de esa hora es el del gas.
+  </p>
+
+  <h2>Por qué a mediodía baja</h2>
+
+  <p>
+    En las horas centrales coinciden dos cosas:
+  </p>
+
+  <ul>
+    <li>
+      <strong>La fotovoltaica produce a tope.</strong> España ha instalado una cantidad enorme de
+      potencia solar, y su coste variable es prácticamente cero: una vez puesto el panel, el sol no
+      se factura.
+    </li>
+    <li>
+      <strong>La demanda es alta pero manejable.</strong> Están funcionando la industria y las
+      oficinas, pero el consumo doméstico todavía no ha arrancado.
+    </li>
+  </ul>
+
+  <p>
+    El resultado es que esas horas se cubren con renovables y la última central aceptada es barata.
+    Es la razón de que el hueco barato del PVPC haya pasado, en pocos años, de estar de madrugada a
+    estar en pleno día. Quien siga poniendo la lavadora a las tres de la mañana por costumbre está
+    usando el mapa de hace una década.
+  </p>
+
+  <h2>Por qué al anochecer sube</h2>
+
+  <p>
+    Entre las siete y las diez de la noche pasa justo lo contrario, y pasa de golpe:
+  </p>
+
+  <ul>
+    <li>
+      <strong>La solar desaparece.</strong> No baja: se apaga. En una hora el sistema pierde una
+      cantidad gigantesca de generación barata.
+    </li>
+    <li>
+      <strong>La demanda doméstica se dispara.</strong> Todo el mundo llega a casa a la vez:
+      luces, cocina, televisión, calefacción o aire, lavadoras, duchas.
+    </li>
+  </ul>
+
+  <p>
+    El sistema tiene que sustituir mucha generación barata por otra, justo cuando más se consume.
+    Y lo que queda disponible para cubrir ese hueco son las centrales de respuesta rápida, que son
+    las caras. Esa es toda la explicación del pico de las nueve.
+  </p>
+
+  <p>
+    A esa forma de la curva, con un valle central profundo y una subida muy vertical al atardecer,
+    se le llama en el sector la <strong>curva de pato</strong>, por el perfil que dibuja la demanda
+    que queda por cubrir una vez descontadas las renovables.
+  </p>
+
+  <h2>Cómo cambia entre verano e invierno</h2>
+
+  <p>
+    La forma no es la misma todo el año, y por eso conviene mirar el precio en lugar de confiar en
+    una regla fija:
+  </p>
+
+  <ul>
+    <li>
+      <strong>En verano</strong> el valle del mediodía es profundo y largo, porque hay muchas horas
+      de sol y mucha producción. El pico se desplaza más tarde, porque anochece tarde y el aire
+      acondicionado sigue funcionando.
+    </li>
+    <li>
+      <strong>En invierno</strong> el valle es más corto y menos profundo: menos horas de sol,
+      menos radiación. El pico llega antes, hacia las 19:00-20:00, y suele ser más alto, porque se
+      suma la calefacción. En invierno, además, la madrugada vuelve a competir como franja barata.
+    </li>
+    <li>
+      <strong>El viento lo desordena todo.</strong> Un día de temporal puede dejar precios bajos a
+      cualquier hora, incluso en el pico de la tarde, porque la eólica produce de noche igual que
+      de día. Por eso dos días seguidos del mismo mes pueden tener curvas completamente distintas.
+    </li>
+  </ul>
+
+  <h2>Qué hacer con esto</h2>
+
+  <ul>
+    <li>
+      <strong>Mueve lo que se pueda mover al valle.</strong> Lavadora, lavavajillas, secadora,
+      termo, carga del coche eléctrico, depuradora de piscina. Son aparatos a los que les da
+      exactamente igual la hora.
+    </li>
+    <li>
+      <strong>No intentes mover lo que no se mueve.</strong> La cena se hace cuando se cena y la
+      calefacción se pone cuando hace frío. Perseguir esos consumos solo genera frustración.
+    </li>
+    <li>
+      <strong>Mira el precio del día concreto.</strong> La forma típica es una guía, no una ley: un
+      día de mucho viento puede no tener pico, y uno nublado y sin viento puede no tener valle.
+    </li>
+  </ul>
+
+  <p>
+    En la portada de esta web tienes el precio de hoy hora a hora con la franja barata marcada, y en
+    <a href="/precio-luz-manana/">el precio de mañana</a> lo mismo en cuanto se publica, a partir de
+    la tarde. Y si quieres ver el mecanismo completo de formación del precio, está en
+    <a href="/guias/como-se-forma-el-precio-de-la-luz/">cómo se forma el precio de la luz</a>.
+  </p>
+
+</GuiaLayout>

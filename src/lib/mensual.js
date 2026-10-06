@@ -215,3 +215,126 @@ export function serieMensual(meses) {
     etiqueta: `${MESES_CORTOS[m.mes - 1]} '${String(m.anio).slice(2)}`,
   }));
 }
+
+/**
+ * Lectura escrita de un mes concreto.
+ *
+ * Las tablas de abajo ya dan el dato; esto da la conclusión, y la conclusión cambia de
+ * un mes a otro porque lo que se mide es el COMPORTAMIENTO del precio, no su nivel:
+ * cuánto se movió de un día a otro, si hubo horas regaladas o incluso negativas, cuánto
+ * separó el fin de semana del día laborable y qué puesto ocupa el mes en todo el archivo.
+ * Dos meses con la misma media pueden haber sido completamente distintos de vivir.
+ */
+export function analisisMes({ m, meses, indice }) {
+  const bloques = [];
+  const dias = (m.diaMedia || []).filter((v) => typeof v === 'number');
+  if (dias.length < 10) return bloques;
+
+  const c2 = (v) => cent(v, 2);
+  const diaMin = Math.min(...dias);
+  const diaMax = Math.max(...dias);
+
+  /* --- 1. Cuánto se movió el precio dentro del mes --------------------- */
+  {
+    const veces = diaMin > 0.001 ? diaMax / diaMin : null;
+    const p = [];
+    if (veces && veces >= 3) {
+      p.push(
+        `${m.nombre} fue un mes movido: entre el día más barato (${c2(diaMin)} céntimos de media) y el más caro (${c2(diaMax)}) hubo ${veces.toLocaleString('es-ES', { maximumFractionDigits: 1 })} veces de diferencia. Con saltos así, mover un consumo grande (la lavadora, la secadora, cargar el coche) de un día a otro de la misma semana cambia más la factura que elegir la hora dentro del día.`
+      );
+    } else if (veces && veces >= 1.8) {
+      p.push(
+        `Dentro de ${m.nombre} el precio osciló de forma apreciable: el día más barato cerró en ${c2(diaMin)} céntimos de media y el más caro en ${c2(diaMax)}, ${veces >= 2 ? "algo más del doble" : "cerca del doble"}. Es un comportamiento normal para el PVPC, donde el viento y la demanda mueven el precio de un día para otro.`
+      );
+    } else {
+      p.push(
+        `${m.nombre} fue un mes tranquilo: entre el día más barato (${c2(diaMin)} céntimos) y el más caro (${c2(diaMax)}) apenas hubo recorrido. Cuando el precio se mantiene así de plano día tras día, lo único que queda para ahorrar es elegir bien la hora dentro de cada jornada.`
+      );
+    }
+    bloques.push({ h: `Cuánto se movió el precio dentro de ${m.nombre}`, p });
+  }
+
+  /* --- 2. Horas regaladas o negativas (solo cuando ocurre) -------------- */
+  if (m.min && typeof m.min.v === 'number') {
+    const p = [];
+    if (m.min.v < 0) {
+      p.push(
+        `En ${m.nombre} la luz llegó a tener <strong>precio negativo</strong>: el día ${m.min.d} a las ${hh(m.min.h)} el PVPC marcó ${c2(m.min.v)} céntimos el kWh. No es un error. Ocurre cuando hay más producción renovable de la que el sistema puede absorber en esa hora y sale más barato pagar por colocar la energía que parar las plantas.`
+      );
+      p.push(
+        `Para una casa con PVPC significa que esa hora el término de energía no costó nada; lo que se sigue pagando son los peajes, los impuestos y el término de potencia. Son horas que conviene aprovechar para lo que se pueda mover: el termo, el coche, la lavadora.`
+      );
+      bloques.push({ h: 'El mes en que la luz valió menos que cero', p });
+    } else if (m.min.v < 0.01) {
+      p.push(
+        `El mínimo de ${m.nombre} fue de ${c2(m.min.v)} céntimos el kWh, el día ${m.min.d} a las ${hh(m.min.h)}: prácticamente regalada. Son horas de exceso de producción renovable, y aunque duren poco, es cuando sale a cuenta poner en marcha todo lo que se pueda programar.`
+      );
+      bloques.push({ h: 'La hora más barata del mes', p });
+    }
+  }
+
+  /* --- 3. Laborables frente a fin de semana ---------------------------- */
+  if (m.anio && m.mes && dias.length >= 20) {
+    const finde = [];
+    const laboral = [];
+    (m.diaMedia || []).forEach((v, i) => {
+      if (typeof v !== 'number') return;
+      const d = new Date(Date.UTC(m.anio, m.mes - 1, i + 1)).getUTCDay();
+      (d === 0 || d === 6 ? finde : laboral).push(v);
+    });
+    if (finde.length >= 6 && laboral.length >= 10) {
+      const mf = finde.reduce((a, b) => a + b, 0) / finde.length;
+      const ml = laboral.reduce((a, b) => a + b, 0) / laboral.length;
+      const dif = ml - mf;
+      const pctDif = ml ? (dif / ml) * 100 : 0;
+      const p = [];
+      if (pctDif >= 8) {
+        p.push(
+          `El fin de semana salió notablemente más barato que el día laborable: ${c2(mf)} céntimos de media en sábados y domingos frente a ${c2(ml)} de lunes a viernes, un ${pctDif.toLocaleString('es-ES', { maximumFractionDigits: 0 })}% menos. La industria para, la demanda baja y el precio con ella.`
+        );
+        p.push(
+          `Es un patrón que se repite casi todos los meses y que casi nadie aprovecha: dejar la colada, la plancha y el lavavajillas para el sábado por la mañana ahorra, sin tener que mirar ninguna tabla.`
+        );
+      } else if (pctDif >= 2) {
+        p.push(
+          `Los fines de semana de ${m.nombre} salieron algo más baratos que los días laborables (${c2(mf)} frente a ${c2(ml)} céntimos de media), la diferencia habitual que deja la caída de demanda industrial. No es espectacular, pero va en la dirección de siempre.`
+        );
+      } else {
+        p.push(
+          `En ${m.nombre} apenas hubo diferencia entre el fin de semana y el día laborable (${c2(mf)} frente a ${c2(ml)} céntimos de media). Cuando pasa esto, el precio no lo está marcando la demanda sino la generación: un mes de poco viento o de mucha, que afecta igual los siete días.`
+        );
+      }
+      bloques.push({ h: 'Fin de semana o día laborable', p });
+    }
+  }
+
+  /* --- 4. El mes dentro del archivo completo ---------------------------- */
+  if (Array.isArray(meses) && meses.length >= 12 && typeof indice === 'number') {
+    const orden = [...meses].sort((a, b) => a.media - b.media);
+    const pos = orden.findIndex((x) => x.clave === m.clave) + 1;
+    if (pos > 0) {
+      const tot = orden.length;
+      const p = [];
+      if (pos <= 3) {
+        p.push(
+          `Puesto en contexto, ${m.nombre} fue <strong>uno de los meses más baratos</strong> de todo el archivo: el número ${pos} de los ${tot} registrados desde 2021, con ${c2(m.media)} céntimos de media.`
+        );
+      } else if (pos >= tot - 2) {
+        p.push(
+          `Puesto en contexto, ${m.nombre} fue <strong>de los meses más caros</strong> de todo el archivo: el número ${tot - pos + 1} empezando por arriba, de los ${tot} registrados desde 2021, con ${c2(m.media)} céntimos de media.`
+        );
+      } else {
+        p.push(
+          `En el conjunto del archivo, ${m.nombre} ocupa el puesto ${pos} de ${tot} meses ordenados de más barato a más caro, con ${c2(m.media)} céntimos de media.`
+        );
+      }
+      const factura = m.media * 270;
+      p.push(
+        `Trasladado a una casa, con un consumo de 270 kWh al mes (lo típico de un hogar de tres personas) el término de energía de ese mes habría salido por unos ${factura.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €, a los que luego hay que sumar el término de potencia, los peajes y los impuestos.`
+      );
+      bloques.push({ h: `${m.nombre} frente al resto del archivo`, p });
+    }
+  }
+
+  return bloques;
+}
