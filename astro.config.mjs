@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import preact from '@astrojs/preact';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
+import { conLastmod } from './src/lib/lastmod.js';
 
 // El archivo mensual va entero al sitemap. Antes se recortaba a la vez que se le ponia
 // noindex a los meses anteriores a 2024, para no ofrecerle a Google una URL y decirle
@@ -16,9 +17,11 @@ import tailwindcss from '@tailwindcss/vite';
 // palabras se repiten entre unas y otras. Se estaba escondiendo contenido bueno y
 // perdiendo su trafico a cambio de nada.
 
+const site = 'https://mivatio.es';
+
 export default defineConfig({
-  site: 'https://mivatio.es',
-  integrations: [preact(), sitemap()],
+  site,
+  integrations: [preact(), sitemap({ serialize: conLastmod(site) })],
   vite: {
     plugins: [tailwindcss()],
   },
